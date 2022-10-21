@@ -9,3 +9,13 @@ unstructured meshes.  It is intended to be used to explore the
 co-design space of hardware and software to support computational
 fluid dynamics simulation packages.
 
+## Configuration
+
+`-DUSE_KOKKOS` will enable Kokkos support, and requires Kokkos to be
+found on the CMake module path.
+
+`-DUSE_OPENACC` will enable OpenACC support, and requires the C++
+compiler to support it.
+
+
+

@@ -14,4 +14,7 @@ include(BuildType)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 
+include(pkgs/KokkosSupport)
+include(pkgs/OpenACCSupport)
+
 add_subdirectory(src)
