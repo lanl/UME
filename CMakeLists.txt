@@ -11,9 +11,10 @@ project(UME LANGUAGES CXX)
 
 include(BuildType)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 
+include(pkgs/MPISupport)
 include(pkgs/KokkosSupport)
 include(pkgs/OpenACCSupport)
 
