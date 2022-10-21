@@ -1,6 +1,5 @@
-# Ume
+# UME: Unstructured Mesh Explorations
 
-UME: Unstructured Mesh Explorations
 ume (うめ): plum
 
 ## Description
