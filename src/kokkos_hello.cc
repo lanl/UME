@@ -59,7 +59,7 @@
 // lambdas have their places.
 //
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   // You must call initialize() before you may call Kokkos.
   //
   // With no arguments, this initializes the default execution space
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
   // typeid here, so the name might get a bit mangled by the linker,
   // but you should still be able to figure out what it is.
   printf("Hello World on Kokkos execution space %s\n",
-         typeid(Kokkos::DefaultExecutionSpace).name());
+      typeid(Kokkos::DefaultExecutionSpace).name());
 
   // Run lambda on the default Kokkos execution space in parallel,
   // with a parallel for loop count of 15.  The lambda's argument is

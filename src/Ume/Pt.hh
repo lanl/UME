@@ -3,17 +3,14 @@
 
 namespace Ume {
 
-template<unsigned D> struct Pt {
+template <unsigned D> struct Pt {
 public:
-  constexpr double operator[](int const idx) const {
-    return comp[idx];
-  }
-  constexpr double& operator[](int const idx) {
-    return comp[idx];
-  }
+  constexpr double operator[](int const idx) const { return comp[idx]; }
+  constexpr double &operator[](int const idx) { return comp[idx]; }
+
 private:
   double comp[D];
 };
 
-}
+} // namespace Ume
 #endif
