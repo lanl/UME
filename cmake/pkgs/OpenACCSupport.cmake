@@ -1,5 +1,5 @@
 
-set(USE_OPENACC False CACHE BOOL "Enable support for OpenACC code")
+option(USE_OPENACC "Enable support for OpenACC code")
 
 if(USE_OPENACC)
   find_package(OpenACC REQUIRED)

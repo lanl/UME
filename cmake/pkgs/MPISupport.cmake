@@ -1,5 +1,5 @@
 
-set(USE_MPI False CACHE BOOL "Enable support for MPI code")
+option(USE_MPI "Enable support for MPI code")
 
 if(USE_MPI)
   find_package(MPI REQUIRED)
