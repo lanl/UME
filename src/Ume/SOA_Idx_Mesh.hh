@@ -4,7 +4,7 @@
 #ifndef SOA_IDX_MESH_HH
 #define SOA_IDX_MESH_HH 1
 
-#include <array>
+#include "Ume/Coord.hh"
 #include <iosfwd>
 #include <vector>
 
@@ -13,7 +13,7 @@ namespace Ume {
 //! A struct-of-arrays implementation using integer indexing
 namespace SOA_Idx {
 
-using PtCoord = std::array<double, 3>;
+using PtCoord = Coord3;
 
 struct Entity {
   //! Mask flag
