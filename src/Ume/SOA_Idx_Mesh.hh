@@ -4,7 +4,7 @@
 #ifndef SOA_IDX_MESH_HH
 #define SOA_IDX_MESH_HH 1
 
-#include "Ume/Coord.hh"
+#include "Ume/VecN.hh"
 #include <iosfwd>
 #include <vector>
 
