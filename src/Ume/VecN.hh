@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <array>
+#include <ostream>
+#include <type_traits>
 
 namespace Ume {
 
@@ -17,6 +19,16 @@ public:
   using const_ref = val const&;
 
 public:
+  constexpr VecN() {
+    static_assert(std::is_arithmetic_v<T>, "VecN is only for arithmetic types");
+  }
+  explicit constexpr VecN(T const &val) {
+    static_assert(std::is_arithmetic_v<T>, "VecN is only for arithmetic types");
+    data_.fill(val);
+  }
+  explicit constexpr VecN(std::array<T, N> &&val) : data_{val} {
+    static_assert(std::is_arithmetic_v<T>, "VecN is only for arithmetic types");
+  }
   const_ref operator=(T const &v) {
     data_.fill(v);
     return *this;
@@ -86,6 +98,15 @@ public:
   friend val operator/(val lhs, T const &rhs) {
     lhs /= rhs;
     return lhs;
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const_ref vec) {
+    char const *delim = "";
+    os << '<';
+    for (T const &v : vec.data_) {
+      os << std::exchange(delim, ", ") << v;
+    }
+    return os << '>';
   }
 
 private:
