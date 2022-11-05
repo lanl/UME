@@ -14,6 +14,7 @@ include(BuildType)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 
+include(pkgs/Catch2Support)
 include(pkgs/DoxygenSupport)
 include(pkgs/KokkosSupport)
 include(pkgs/MPISupport)
