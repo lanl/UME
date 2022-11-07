@@ -5,84 +5,58 @@
 #############################################################################
 
 set(UME_INCLUDE_FILES
-  VecN.hh
   SOA_Idx_Mesh.hh
+  Timer.hh
+  VecN.hh
   )
 
-add_library(ume_lib
+add_library(Ume
   ${UME_INCLUDE_FILES}
   SOA_Idx_Mesh.cc
   )
 
-set_target_properties(ume_lib PROPERTIES
+set_target_properties(Ume PROPERTIES
   COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
   COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS}"
   OUTPUT_NAME "ume"
   )
 
-target_include_directories(ume_lib
+target_include_directories(Ume
   PUBLIC
-  $<BUILD_INTERFACE:${UME_SOURCE_DIR}/src>
-  $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDE_DIR}>
   )
 
-target_link_libraries(ume_lib
+target_link_libraries(Ume
   PUBLIC
   ${COMMON_LINK_LIBRARIES}
   )
 
-
-#############################################################################
-# Ume executables
-#############################################################################
-
-add_executable(ume
-  ume.cc
+install(TARGETS Ume
+  EXPORT UmeTargets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Ume
   )
 
-set_target_properties(ume PROPERTIES
-  COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
-  COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS}"
+install(FILES ${UME_INCLUDE_FILES}
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Ume
   )
 
-target_link_libraries(ume
-  ume_lib
+install(EXPORT UmeTargets
+  FILE UmeTargets.cmake
+  NAMESPACE Ume::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Ume
   )
 
+include(CMakePackageConfigHelpers)
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/UmeConfig.cmake"
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Ume
+)
 
-#############################################################################
-# Things that depend on Kokkos
-#############################################################################
-
-if(USE_KOKKOS)
-  add_executable(kokkos_hello kokkos_hello.cc)
-
-  set_target_properties(kokkos_hello PROPERTIES
-    COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
-    COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS}"
-    )
-
-  target_link_libraries(kokkos_hello
-    ${KOKKOS_LINK_LIBRARIES}
-    ${COMMON_LINK_LIBRARIES}
-    )
-endif()
-
-
-#############################################################################
-# Things that depend on OpenACC
-#############################################################################
-
-if(USE_OPENACC)
-  add_executable(openacc_hello openacc_hello.cc)
-
-  set_target_properties(openacc_hello PROPERTIES
-    COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
-    COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS}"
-    )
-
-  target_link_libraries(openacc_hello
-    ${OPENACC_LINK_LIBRARIES}
-    ${COMMON_LINK_LIBRARIES}
-    )
-endif()
+export(EXPORT UmeTargets
+       FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/UmeTargets.cmake"
+       NAMESPACE Ume::
+)

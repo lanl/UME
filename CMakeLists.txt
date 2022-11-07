@@ -9,6 +9,8 @@ include(DisableIntree)
 
 project(UME LANGUAGES CXX)
 
+include(GNUInstallDirs)
+
 include(BuildType)
 
 set(CMAKE_CXX_STANDARD 17)
