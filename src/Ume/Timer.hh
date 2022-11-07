@@ -1,3 +1,7 @@
+/*!
+  \file Timer.hh
+*/
+
 #ifndef TIMER_HH
 #define TIMER_HH 1
 
