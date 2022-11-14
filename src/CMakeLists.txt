@@ -2,8 +2,8 @@
 
 add_subdirectory(Ume)
 
-add_executable(ume ume.cc)
-target_link_libraries(ume Ume)
+add_executable(ume_driver ume.cc)
+target_link_libraries(ume_driver Ume)
 
 add_executable(txt2bin txt2bin.cc)
 target_link_libraries(txt2bin Ume)
