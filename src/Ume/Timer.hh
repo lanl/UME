@@ -33,7 +33,7 @@ public:
 
 private:
   bool running = false;
-  std::chrono::duration<double> accum = 0.0;
+  std::chrono::duration<double> accum = std::chrono::duration<double>(0.0);
   std::chrono::time_point<CLOCK_T> start_tp;
 };
 

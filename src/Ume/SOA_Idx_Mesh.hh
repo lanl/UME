@@ -62,6 +62,8 @@ struct Entity {
   virtual void write(std::ostream &os) const = 0;
   virtual void read(std::istream &is) = 0;
   int size() const { return static_cast<int>(mask.size()); }
+  virtual bool operator==(Entity const &rhs) const;
+  virtual void resize(int const local, int const total);
 };
 
 //! SoA representation of mesh corners
@@ -79,6 +81,8 @@ struct Corners : public Entity {
   std::vector<int> z;
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
+  bool operator==(Corners const &rhs) const;
+  void resize(int const local, int const total) override;
 };
 
 //! SoA representation of mesh edges (connects two points)
@@ -87,6 +91,8 @@ struct Edges : public Entity {
   std::vector<int> p1, p2;
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
+  bool operator==(Edges const &rhs) const;
+  void resize(int const local, int const total) override;
 };
 
 //! SoA representation of mesh faces (separates zones)
@@ -95,6 +101,8 @@ struct Faces : public Entity {
   std::vector<int> z1, z2;
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
+  bool operator==(Faces const &rhs) const;
+  void resize(int const local, int const total) override;
 };
 
 //! Struct-of-Arrays (SoA) representation of mesh points
@@ -103,6 +111,8 @@ struct Points : public Entity {
   std::vector<PtCoord> coord;
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
+  bool operator==(Points const &rhs) const;
+  void resize(int const local, int const total) override;
 };
 
 //! SoA representation of mesh sides
@@ -127,12 +137,16 @@ struct Sides : public Entity {
   std::vector<int> s2, s3, s4, s5;
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
+  bool operator==(Sides const &rhs) const;
+  void resize(int const local, int const total) override;
 };
 
 //! SoA representation of mesh zones
 struct Zones : public Entity {
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
+  bool operator==(Zones const &rhs) const;
+  void resize(int const local, int const total) override;
 };
 
 struct Mesh {
@@ -149,6 +163,8 @@ struct Mesh {
   void write(std::ostream &os) const;
   void read(std::istream &is);
   constexpr size_t ndims() const { return 3; }
+  bool operator==(Mesh const &rhs) const;
+  void print_stats(std::ostream &os) const;
 };
 
 } // namespace SOA_Idx

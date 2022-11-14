@@ -8,6 +8,7 @@ set(UME_INCLUDE_FILES
   SOA_Idx_Mesh.hh
   Timer.hh
   VecN.hh
+  utils.hh
   )
 
 add_library(Ume
