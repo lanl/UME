@@ -8,6 +8,7 @@
 #include <array>
 #include <ostream>
 #include <type_traits>
+#include <utility>
 
 namespace Ume {
 
