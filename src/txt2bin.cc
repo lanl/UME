@@ -137,37 +137,67 @@ bool skip_to_line(std::istream &is, char const *const expect) {
 }
 
 void read_points(std::istream &is, Points &pts, const int kkpl, const int kkpll,
-    const int ndims) {
-  pts.resize(kkpl, kkpll);
+    const int kkpgl, const int ndims) {
+  pts.resize(kkpl, kkpll, kkpgl);
 
-  int pidx, dummy;
-  for (int i = 0; i < kkpl; ++i) {
-    pidx = -1;
-    is >> pidx;
-    if (pidx != i + 1) {
+  int idx;
+  for (int i = 0; i < kkpll; ++i) {
+    idx = -1;
+    is >> idx;
+    if (idx != i + 1) {
       std::cerr << "Point " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> pts.mask[i] >> dummy >> pts.coord[0][i];
+    is >> pts.mask[i] >> pts.comm_type[i] >> pts.coord[0][i];
     for (int d = 1; d < ndims; ++d) {
       is >> pts.coord[d][i];
     }
     is >> std::ws;
   }
+
+  expect_line(is, "Ghost Points");
+  skip_line(is);
+  for (int i = 0; i < kkpgl; ++i) {
+    idx = -1;
+    is >> idx;
+    if (idx != i + 1) {
+      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      exit(1);
+    }
+    is >> pts.cpy_idx[i] >> pts.ghost_mask[i] >> pts.src_idx[i] >>
+        pts.src_pe[i] >> std::ws;
+    --pts.cpy_idx[i];
+    --pts.src_idx[i];
+  }
 }
 
-void read_zones(
-    std::istream &is, Zones &zones, const int kkzl, const int kkzll) {
-  int idx, kkmpiztyp;
-  zones.resize(kkzl, kkzll);
-  for (int i = 0; i < kkzl; ++i) {
+void read_zones(std::istream &is, Zones &zones, const int kkzl, const int kkzll,
+    const int kkzgl) {
+  int idx;
+  zones.resize(kkzl, kkzll, kkzgl);
+  for (int i = 0; i < kkzll; ++i) {
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
       std::cerr << "Zone " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> zones.mask[i] >> kkmpiztyp >> std::ws;
+    is >> zones.mask[i] >> zones.comm_type[i] >> std::ws;
+  }
+
+  expect_line(is, "Ghost Zones");
+  skip_line(is);
+  for (int i = 0; i < kkzgl; ++i) {
+    idx = -1;
+    is >> idx;
+    if (idx != i + 1) {
+      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      exit(1);
+    }
+    is >> zones.cpy_idx[i] >> zones.ghost_mask[i] >> zones.src_idx[i] >>
+        zones.src_pe[i] >> std::ws;
+    --zones.cpy_idx[i];
+    --zones.src_idx[i];
   }
 }
 
@@ -182,18 +212,18 @@ void read_zones(
  ***********************************************************************
 */
 
-void read_sides(
-    std::istream &is, Sides &sides, const int kksl, const int kksll) {
-  int idx, kkmpistyp;
-  sides.resize(kksl, kksll);
-  for (int i = 0; i < kksl; ++i) {
+void read_sides(std::istream &is, Sides &sides, const int kksl, const int kksll,
+    const int kksgl) {
+  int idx;
+  sides.resize(kksl, kksll, kksgl);
+  for (int i = 0; i < kksll; ++i) {
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
       std::cerr << "Side " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> sides.mask[i] >> kkmpistyp;
+    is >> sides.mask[i] >> sides.comm_type[i];
     is >> sides.z[i] >> sides.p1[i] >> sides.p2[i] >> sides.e[i] >>
         sides.f[i] >> sides.c1[i] >> sides.c2[i] >> sides.s2[i] >>
         sides.s3[i] >> sides.s4[i] >> sides.s5[i] >> std::ws;
@@ -209,57 +239,115 @@ void read_sides(
     --sides.s4[i];
     --sides.s5[i];
   }
+  expect_line(is, "Ghost Sides");
+  skip_line(is);
+  for (int i = 0; i < kksgl; ++i) {
+    idx = -1;
+    is >> idx;
+    if (idx != i + 1) {
+      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      exit(1);
+    }
+    is >> sides.cpy_idx[i] >> sides.ghost_mask[i] >> sides.src_idx[i] >>
+        sides.src_pe[i] >> std::ws;
+    --sides.cpy_idx[i];
+    --sides.src_idx[i];
+  }
 }
 
-void read_edges(
-    std::istream &is, Edges &edges, const int kkel, const int kkell) {
-  int idx, kkmpietyp;
-  edges.resize(kkel, kkell);
-  for (int i = 0; i < kkel; ++i) {
+void read_edges(std::istream &is, Edges &edges, const int kkel, const int kkell,
+    const int kkegl) {
+  int idx;
+  edges.resize(kkel, kkell, kkegl);
+  for (int i = 0; i < kkell; ++i) {
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
       std::cerr << "Edge " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> edges.mask[i] >> kkmpietyp >> edges.p1[i] >> edges.p2[i] >> std::ws;
+    is >> edges.mask[i] >> edges.comm_type[i] >> edges.p1[i] >> edges.p2[i] >>
+        std::ws;
     --edges.p1[i];
     --edges.p2[i];
   }
-}
-
-void read_faces(
-    std::istream &is, Faces &faces, const int kkfl, const int kkfll) {
-  int idx, kkmpiftyp;
-  faces.resize(kkfl, kkfll);
-  for (int i = 0; i < kkfl; ++i) {
+  expect_line(is, "Ghost Edges");
+  skip_line(is);
+  for (int i = 0; i < kkegl; ++i) {
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
-      std::cerr << "Face " << i + 1 << " read error" << std::endl;
+      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> faces.mask[i] >> kkmpiftyp >> faces.z1[i] >> faces.z2[i] >> std::ws;
-    --faces.z1[i];
-    --faces.z2[i];
+    is >> edges.cpy_idx[i] >> edges.ghost_mask[i] >> edges.src_idx[i] >>
+        edges.src_pe[i] >> std::ws;
+    --edges.cpy_idx[i];
+    --edges.src_idx[i];
   }
 }
 
-void read_corners(
-    std::istream &is, Corners &corners, const int kkcl, const int kkcll) {
-  int idx, kkmpictyp;
-  corners.resize(kkcl, kkcll);
-  for (int i = 0; i < kkcl; ++i) {
+void read_faces(std::istream &is, Faces &faces, const int kkfl, const int kkfll,
+    const int kkfgl) {
+  int idx;
+  faces.resize(kkfl, kkfll, kkfgl);
+  for (int i = 0; i < kkfll; ++i) {
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
       std::cerr << "Face " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> corners.mask[i] >> kkmpictyp >> corners.p[i] >> corners.z[i] >>
+    is >> faces.mask[i] >> faces.comm_type[i] >> faces.z1[i] >> faces.z2[i] >>
         std::ws;
+    --faces.z1[i];
+    --faces.z2[i];
+  }
+  expect_line(is, "Ghost Faces");
+  skip_line(is);
+  for (int i = 0; i < kkfgl; ++i) {
+    idx = -1;
+    is >> idx;
+    if (idx != i + 1) {
+      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      exit(1);
+    }
+    is >> faces.cpy_idx[i] >> faces.ghost_mask[i] >> faces.src_idx[i] >>
+        faces.src_pe[i] >> std::ws;
+    --faces.cpy_idx[i];
+    --faces.src_idx[i];
+  }
+}
+
+void read_corners(std::istream &is, Corners &corners, const int kkcl,
+    const int kkcll, const int kkcgl) {
+  int idx;
+  corners.resize(kkcl, kkcll, kkcgl);
+  for (int i = 0; i < kkcll; ++i) {
+    idx = -1;
+    is >> idx;
+    if (idx != i + 1) {
+      std::cerr << "Face " << i + 1 << " read error" << std::endl;
+      exit(1);
+    }
+    is >> corners.mask[i] >> corners.comm_type[i] >> corners.p[i] >>
+        corners.z[i] >> std::ws;
     --corners.p[i];
     --corners.z[i];
+  }
+  expect_line(is, "Ghost Corners");
+  skip_line(is);
+  for (int i = 0; i < kkcgl; ++i) {
+    idx = -1;
+    is >> idx;
+    if (idx != i + 1) {
+      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      exit(1);
+    }
+    is >> corners.cpy_idx[i] >> corners.ghost_mask[i] >> corners.src_idx[i] >>
+        corners.src_pe[i] >> std::ws;
+    --corners.cpy_idx[i];
+    --corners.src_idx[i];
   }
 }
 
@@ -294,45 +382,46 @@ int read(std::istream &is, Mesh &m) {
   */
   const int kkpll = read_tag(is, "Dimension: points");
   const int kkpl = read_tag(is, "Number of points");
+  const int kkpgl = read_tag(is, "Num ghost points");
   const int kkzll = read_tag(is, "Dimension: zones");
   const int kkzl = read_tag(is, "Number of zones");
+  const int kkzgl = read_tag(is, "Num ghost zones");
   const int kksll = read_tag(is, "Dimension: sides");
   const int kksl = read_tag(is, "Number of sides");
+  const int kksgl = read_tag(is, "Num ghost sides");
   const int kkell = read_tag(is, "Dimension: edges");
   const int kkel = read_tag(is, "Number of edges");
+  const int kkegl = read_tag(is, "Num ghost edges");
   const int kkfll = read_tag(is, "Dimension: faces");
   const int kkfl = read_tag(is, "Number of faces");
+  const int kkfgl = read_tag(is, "Num ghost faces");
   const int kkcll = read_tag(is, "Dimension: corners");
   const int kkcl = read_tag(is, "Number of corners");
-  read_tag(is, "Number of regions");
-  read_tag(is, "Number of boundaries");
+  const int kkcgl = read_tag(is, "Num ghost corners");
 
   expect_line(is, "Points");
   skip_line(is);
-  read_points(is, m.points, kkpl, kkpll, ndims);
+  read_points(is, m.points, kkpl, kkpll, kkpgl, ndims);
 
   skip_to_line(is, "Zones");
   skip_line(is);
-  read_zones(is, m.zones, kkzl, kkzll);
+  read_zones(is, m.zones, kkzl, kkzll, kkzgl);
 
   skip_to_line(is, "Sides");
   skip_line(is);
-  read_sides(is, m.sides, kksl, kksll);
+  read_sides(is, m.sides, kksl, kksll, kksgl);
 
   skip_to_line(is, "Edges");
   skip_line(is);
-  read_edges(is, m.edges, kkel, kkell);
+  read_edges(is, m.edges, kkel, kkell, kkegl);
 
   skip_to_line(is, "Faces");
   skip_line(is);
-  read_faces(is, m.faces, kkfl, kkfll);
+  read_faces(is, m.faces, kkfl, kkfll, kkfgl);
 
   skip_to_line(is, "Corners");
   skip_line(is);
-  read_corners(is, m.corners, kkcl, kkcll);
-
-  // We are not extracting the region or boundary information that is also
-  // in the DelfiDump format.
+  read_corners(is, m.corners, kkcl, kkcll, kkcgl);
 
   return 0;
 }
