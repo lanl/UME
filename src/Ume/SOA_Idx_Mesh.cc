@@ -309,15 +309,16 @@ bool Mesh::operator==(Mesh const &rhs) const {
 }
 
 void Mesh::print_stats(std::ostream &os) const {
-  os << "\tDecomposed Rank " << mype + 1 << "/" << numpe << '\n';
+  os << "\tDecomposed Rank " << mype << " (" << mype + 1 << "/" << numpe << ')'
+     << '\n';
   os << "\tPoint dimensions: " << ndims() << '\n';
   os << "\tCoordinate system: " << geo << '\n';
-  os << "\tPoints: " << points.size() << '\n';
-  os << "\tZones: " << zones.size() << '\n';
-  os << "\tSides: " << sides.size() << '\n';
-  os << "\tEdges: " << edges.size() << '\n';
-  os << "\tFaces: " << faces.size() << '\n';
-  os << "\tCorners: " << corners.size() << '\n';
+  os << "\tPoints: " << points.lsize << '\n';
+  os << "\tZones: " << zones.lsize << '\n';
+  os << "\tSides: " << sides.lsize << '\n';
+  os << "\tEdges: " << edges.lsize << '\n';
+  os << "\tFaces: " << faces.lsize << '\n';
+  os << "\tCorners: " << corners.lsize << '\n';
 }
 
 } // namespace SOA_Idx
