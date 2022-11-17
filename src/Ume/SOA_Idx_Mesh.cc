@@ -50,28 +50,39 @@ namespace SOA_Idx {
 void Entity::write(std::ostream &os) const {
   write_bin(os, lsize);
   write_bin(os, mask);
+  write_bin(os, comm_type);
   write_bin(os, cpy_idx);
   write_bin(os, src_pe);
   write_bin(os, src_idx);
+  write_bin(os, ghost_mask);
   os << '\n';
 }
 
 void Entity::read(std::istream &is) {
   read_bin(is, lsize);
   read_bin(is, mask);
+  read_bin(is, comm_type);
   read_bin(is, cpy_idx);
   read_bin(is, src_pe);
   read_bin(is, src_idx);
+  read_bin(is, ghost_mask);
   skip_line(is);
 }
 
 bool Entity::operator==(Entity const &rhs) const {
-  return (cpy_idx == rhs.cpy_idx && src_pe == rhs.src_pe &&
-      src_idx == rhs.src_idx && lsize == rhs.lsize);
+  return (lsize == rhs.lsize && mask == rhs.mask &&
+      comm_type == rhs.comm_type && cpy_idx == rhs.cpy_idx &&
+      src_pe == rhs.src_pe && src_idx == rhs.src_idx &&
+      ghost_mask == rhs.ghost_mask);
 }
 
-void Entity::resize(int const local, int const total) {
+void Entity::resize(int const local, int const total, int const ghost) {
   mask.resize(total);
+  comm_type.resize(total);
+  cpy_idx.resize(ghost);
+  src_pe.resize(ghost);
+  src_idx.resize(ghost);
+  ghost_mask.resize(ghost);
   lsize = local;
 }
 
@@ -95,8 +106,8 @@ bool Corners::operator==(Corners const &rhs) const {
   return (Entity::operator==(rhs) && p == rhs.p && z == rhs.z);
 }
 
-void Corners::resize(int const local, int const total) {
-  Entity::resize(local, total);
+void Corners::resize(int const local, int const total, int const ghost) {
+  Entity::resize(local, total, ghost);
   p.resize(total);
   z.resize(total);
 }
@@ -121,8 +132,8 @@ bool Edges::operator==(Edges const &rhs) const {
   return (Entity::operator==(rhs) && p1 == rhs.p1 && p2 == rhs.p2);
 }
 
-void Edges::resize(int const local, int const total) {
-  Entity::resize(local, total);
+void Edges::resize(int const local, int const total, int const ghost) {
+  Entity::resize(local, total, ghost);
   p1.resize(total);
   p2.resize(total);
 }
@@ -146,8 +157,8 @@ void Faces::read(std::istream &is) {
 bool Faces::operator==(Faces const &rhs) const {
   return (Entity::operator==(rhs) && z1 == rhs.z1 && z2 == rhs.z2);
 }
-void Faces::resize(int const local, int const total) {
-  Entity::resize(local, total);
+void Faces::resize(int const local, int const total, int const ghost) {
+  Entity::resize(local, total, ghost);
   z1.resize(total);
   z2.resize(total);
 }
@@ -169,8 +180,8 @@ void Points::read(std::istream &is) {
 bool Points::operator==(Points const &rhs) const {
   return (Entity::operator==(rhs) && coord == rhs.coord);
 }
-void Points::resize(int const local, int const total) {
-  Entity::resize(local, total);
+void Points::resize(int const local, int const total, int const ghost) {
+  Entity::resize(local, total, ghost);
   coord.resize(total);
 }
 
@@ -215,8 +226,8 @@ bool Sides::operator==(Sides const &rhs) const {
       s5 == rhs.s5);
 }
 
-void Sides::resize(int const local, int const total) {
-  Entity::resize(local, total);
+void Sides::resize(int const local, int const total, int const ghost) {
+  Entity::resize(local, total, ghost);
   z.resize(total);
   p1.resize(total);
   p2.resize(total);
@@ -246,8 +257,8 @@ bool Zones::operator==(Zones const &rhs) const {
   return (Entity::operator==(rhs));
 }
 
-void Zones::resize(int const local, int const total) {
-  Entity::resize(local, total);
+void Zones::resize(int const local, int const total, int const ghost) {
+  Entity::resize(local, total, ghost);
 }
 
 /* --------------------------------- Mesh -----------------------------------*/

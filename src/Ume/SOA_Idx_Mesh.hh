@@ -16,8 +16,19 @@ namespace SOA_Idx {
 using PtCoord = Coord3;
 
 struct Entity {
+  enum CommTypes {
+    INTERNAL = 1, /* Not on a communication boundary */
+    SOURCE, /* The source entity in a group of shared copies */
+    COPY, /* Non-source entity in a group of shared copies */
+    GHOST /* A non-shared ghost copy of a remote entity */
+  };
+
   //! Mask flag
   std::vector<short> mask;
+
+  //! The communication type for this entity
+  std::vector<int> comm_type;
+
   /*! @name Minimal parallel connectivity
 
     These arrays define minimum inter-mesh connectivity.  Each entity listed in
@@ -54,6 +65,8 @@ struct Entity {
   std::vector<int> src_pe;
   //! The index of the source entity on the src_pe
   std::vector<int> src_idx;
+  //! The type of ghost
+  std::vector<int> ghost_mask;
   ///@}
 
   //! The number of local (non-ghost) entities
@@ -63,7 +76,7 @@ struct Entity {
   virtual void read(std::istream &is) = 0;
   int size() const { return static_cast<int>(mask.size()); }
   virtual bool operator==(Entity const &rhs) const;
-  virtual void resize(int const local, int const total);
+  virtual void resize(int const local, int const total, int const ghost);
 };
 
 //! SoA representation of mesh corners
@@ -82,7 +95,7 @@ struct Corners : public Entity {
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   bool operator==(Corners const &rhs) const;
-  void resize(int const local, int const total) override;
+  void resize(int const local, int const total, int const ghost) override;
 };
 
 //! SoA representation of mesh edges (connects two points)
@@ -92,7 +105,7 @@ struct Edges : public Entity {
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   bool operator==(Edges const &rhs) const;
-  void resize(int const local, int const total) override;
+  void resize(int const local, int const total, int const ghost) override;
 };
 
 //! SoA representation of mesh faces (separates zones)
@@ -102,7 +115,7 @@ struct Faces : public Entity {
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   bool operator==(Faces const &rhs) const;
-  void resize(int const local, int const total) override;
+  void resize(int const local, int const total, int const ghost) override;
 };
 
 //! Struct-of-Arrays (SoA) representation of mesh points
@@ -112,7 +125,7 @@ struct Points : public Entity {
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   bool operator==(Points const &rhs) const;
-  void resize(int const local, int const total) override;
+  void resize(int const local, int const total, int const ghost) override;
 };
 
 //! SoA representation of mesh sides
@@ -138,7 +151,7 @@ struct Sides : public Entity {
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   bool operator==(Sides const &rhs) const;
-  void resize(int const local, int const total) override;
+  void resize(int const local, int const total, int const ghost) override;
 };
 
 //! SoA representation of mesh zones
@@ -146,7 +159,7 @@ struct Zones : public Entity {
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   bool operator==(Zones const &rhs) const;
-  void resize(int const local, int const total) override;
+  void resize(int const local, int const total, int const ghost) override;
 };
 
 struct Mesh {
