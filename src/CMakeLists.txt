@@ -8,6 +8,10 @@ target_link_libraries(ume_driver Ume)
 add_executable(txt2bin txt2bin.cc)
 target_link_libraries(txt2bin Ume)
 
+add_executable(parallel parallel.cc)
+target_link_libraries(parallel Ume)
+
+
 #############################################################################
 # Things that depend on Kokkos
 #############################################################################
