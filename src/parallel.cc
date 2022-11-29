@@ -30,7 +30,9 @@ std::ostream &operator<<(std::ostream &os, PEIdx const &pi) {
 }
 
 /* A simplification of the full SOA_Idx_Mesh that only contains the Entities of
-   the source mesh */
+   the source mesh.  This is useful for making generic connectivity analyzers,
+   as the Entities are available as array indices, rather than as class member
+   names. */
 struct ConnMesh {
 public:
   enum EntType { CORNERS, EDGES, FACES, POINTS, SIDES, ZONES, NUM_ENTITIES };
@@ -41,7 +43,9 @@ public:
   explicit ConnMesh(Mesh const &m);
 };
 
+// Type for 1-to-1 mapping between PEIdx
 using MAP1TO1 = std::map<PEIdx, PEIdx>;
+// Type for 1-to-N mapping between PEIdx
 using MAP1TON = std::map<PEIdx, std::set<PEIdx>>;
 using CONNS = std::vector<ConnMesh>;
 
