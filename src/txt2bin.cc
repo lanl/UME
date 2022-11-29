@@ -106,7 +106,6 @@ int read_tag(std::istream &is, char const *const expect) {
               << std::endl;
     exit(1);
   }
-  // std::cout << ts << ": " << val << '\n';
   is >> std::ws;
   return val;
 }
@@ -351,6 +350,59 @@ void read_corners(std::istream &is, Corners &corners, const int kkcl,
   }
 }
 
+void read_mpi(std::istream &is, Entity &e) {
+  expect_line(is, "Recv From");
+  int numpes = read_tag(is, "num PEs");
+  int total_elem = read_tag(is, "total elem");
+  e.recvFrom.resize(numpes);
+  int totalCount = 0;
+  for (int i = 0; i < numpes; ++i) {
+    e.recvFrom[i].pe = read_tag(is, "rmt PE");
+    int const elem_count = read_tag(is, "num elem");
+    e.recvFrom[i].elements.resize(elem_count);
+    for (int j = 0; j < elem_count; ++j) {
+      is >> e.recvFrom[i].elements[j];
+      if (!is) {
+        std::cerr << "read_mpi: input error on RecvFrom " << i << ' ' << j
+                  << std::endl;
+        exit(1);
+      }
+      --e.recvFrom[i].elements[j];
+    }
+    is >> std::ws;
+    totalCount += elem_count;
+  }
+  if (totalCount != total_elem) {
+    std::cerr << "read_mpi error recvFrom" << std::endl;
+    exit(1);
+  }
+  expect_line(is, "Send To");
+  numpes = read_tag(is, "num PEs");
+  total_elem = read_tag(is, "total elem");
+  e.sendTo.resize(numpes);
+  totalCount = 0;
+  for (int i = 0; i < numpes; ++i) {
+    e.sendTo[i].pe = read_tag(is, "rmt PE");
+    int const elem_count = read_tag(is, "num elem");
+    e.sendTo[i].elements.resize(elem_count);
+    for (int j = 0; j < elem_count; ++j) {
+      is >> e.sendTo[i].elements[j];
+      if (!is) {
+        std::cerr << "read_mpi: input error on SendTo " << i << ' ' << j
+                  << std::endl;
+        exit(1);
+      }
+      --e.sendTo[i].elements[j];
+    }
+    is >> std::ws;
+    totalCount += elem_count;
+  }
+  if (totalCount != total_elem) {
+    std::cerr << "read_mpi error sendTo" << std::endl;
+    exit(1);
+  }
+}
+
 int read(std::istream &is, Mesh &m) {
   m.numpe = read_tag(is, "Number of ranks");
   m.mype = read_tag(is, "Rank");
@@ -422,6 +474,24 @@ int read(std::istream &is, Mesh &m) {
   skip_to_line(is, "Corners");
   skip_line(is);
   read_corners(is, m.corners, kkcl, kkcll, kkcgl);
+
+  skip_to_line(is, "C-MPI");
+  read_mpi(is, m.corners);
+
+  skip_to_line(is, "E-MPI");
+  read_mpi(is, m.edges);
+
+  skip_to_line(is, "F-MPI");
+  read_mpi(is, m.faces);
+
+  skip_to_line(is, "P-MPI");
+  read_mpi(is, m.points);
+
+  skip_to_line(is, "S-MPI");
+  read_mpi(is, m.sides);
+
+  skip_to_line(is, "Z-MPI");
+  read_mpi(is, m.zones);
 
   return 0;
 }

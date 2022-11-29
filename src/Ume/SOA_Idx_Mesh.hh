@@ -69,6 +69,17 @@ struct Entity {
   std::vector<int> ghost_mask;
   ///@}
 
+  struct Comm {
+    int pe;
+    std::vector<int> elements;
+    inline bool operator==(Comm const &rhs) const {
+      return (pe == rhs.pe && elements == rhs.elements);
+    }
+  };
+
+  std::vector<Comm> recvFrom;
+  std::vector<Comm> sendTo;
+
   //! The number of local (non-ghost) entities
   int lsize = 0;
 
