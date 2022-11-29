@@ -404,10 +404,10 @@ void read_mpi(std::istream &is, Entity &e) {
 }
 
 int read(std::istream &is, Mesh &m) {
-  m.numpe = read_tag(is, "Number of ranks");
-  m.mype = read_tag(is, "Rank");
-  int ndims = read_tag(is, "Number of dimensions");
-  int igeo = read_tag(is, "Geometry (igeo)");
+  m.numpe = read_tag(is, "Total ranks");
+  m.mype = read_tag(is, "This rank");
+  int ndims = read_tag(is, "Num dims");
+  int igeo = read_tag(is, "Geometry type");
   switch (igeo) {
   case 0:
     m.geo = Mesh::CARTESIAN;
@@ -432,24 +432,24 @@ int read(std::istream &is, Mesh &m) {
     $OPUS/DELFI/Mesh/MeshBase.dic for the meanings of kXtyp, which
     also differentiates between on/off processor information.
   */
-  const int kkpll = read_tag(is, "Dimension: points");
-  const int kkpl = read_tag(is, "Number of points");
-  const int kkpgl = read_tag(is, "Num ghost points");
-  const int kkzll = read_tag(is, "Dimension: zones");
-  const int kkzl = read_tag(is, "Number of zones");
-  const int kkzgl = read_tag(is, "Num ghost zones");
-  const int kksll = read_tag(is, "Dimension: sides");
-  const int kksl = read_tag(is, "Number of sides");
-  const int kksgl = read_tag(is, "Num ghost sides");
-  const int kkell = read_tag(is, "Dimension: edges");
-  const int kkel = read_tag(is, "Number of edges");
-  const int kkegl = read_tag(is, "Num ghost edges");
-  const int kkfll = read_tag(is, "Dimension: faces");
-  const int kkfl = read_tag(is, "Number of faces");
-  const int kkfgl = read_tag(is, "Num ghost faces");
-  const int kkcll = read_tag(is, "Dimension: corners");
-  const int kkcl = read_tag(is, "Number of corners");
-  const int kkcgl = read_tag(is, "Num ghost corners");
+  const int kkpll = read_tag(is, "Point total");
+  const int kkpl = read_tag(is, "Point local");
+  const int kkpgl = read_tag(is, "Point ghost");
+  const int kkzll = read_tag(is, "Zone total");
+  const int kkzl = read_tag(is, "Zone local");
+  const int kkzgl = read_tag(is, "Zone ghost");
+  const int kksll = read_tag(is, "Side total");
+  const int kksl = read_tag(is, "Side local");
+  const int kksgl = read_tag(is, "Side ghost");
+  const int kkell = read_tag(is, "Edge total");
+  const int kkel = read_tag(is, "Edge local");
+  const int kkegl = read_tag(is, "Edge ghost");
+  const int kkfll = read_tag(is, "Face total");
+  const int kkfl = read_tag(is, "Face local");
+  const int kkfgl = read_tag(is, "Face ghost");
+  const int kkcll = read_tag(is, "Corner total");
+  const int kkcl = read_tag(is, "Corner local");
+  const int kkcgl = read_tag(is, "Corner ghost");
 
   expect_line(is, "Points");
   skip_line(is);
