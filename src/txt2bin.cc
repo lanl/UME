@@ -110,6 +110,27 @@ int read_tag(std::istream &is, char const *const expect) {
   return val;
 }
 
+std::string read_tag_str(std::istream &is, char const *const expect) {
+  char tagname[25];
+  is.get(tagname, 23);
+  std::string ts(tagname);
+
+  while (ts.back() == ':' || ts.back() == ' ')
+    ts.pop_back();
+  if (ts != std::string(expect)) {
+    std::cerr << "Expecting tag \"" << expect << "\", got \"" << ts << "\""
+              << std::endl;
+    exit(1);
+  }
+  std::string val;
+  if (!std::getline(is, val)) {
+    std::cerr << "Error reading string after tag \"" << ts << "\"" << std::endl;
+    exit(1);
+  }
+  is >> std::ws;
+  return Ume::trim(val);
+}
+
 bool expect_line(std::istream &is, char const *const expect) {
   const size_t bufsize{256};
   char buf[bufsize];
@@ -475,23 +496,42 @@ int read(std::istream &is, Mesh &m) {
   skip_line(is);
   read_corners(is, m.corners, kkcl, kkcll, kkcgl);
 
-  skip_to_line(is, "C-MPI");
-  read_mpi(is, m.corners);
+  const int has_mpi = read_tag(is, "Has MPI connectivity");
+  if (has_mpi) {
+    skip_to_line(is, "C-MPI");
+    read_mpi(is, m.corners);
 
-  skip_to_line(is, "E-MPI");
-  read_mpi(is, m.edges);
+    skip_to_line(is, "E-MPI");
+    read_mpi(is, m.edges);
 
-  skip_to_line(is, "F-MPI");
-  read_mpi(is, m.faces);
+    skip_to_line(is, "F-MPI");
+    read_mpi(is, m.faces);
 
-  skip_to_line(is, "P-MPI");
-  read_mpi(is, m.points);
+    skip_to_line(is, "P-MPI");
+    read_mpi(is, m.points);
 
-  skip_to_line(is, "S-MPI");
-  read_mpi(is, m.sides);
+    skip_to_line(is, "S-MPI");
+    read_mpi(is, m.sides);
 
-  skip_to_line(is, "Z-MPI");
-  read_mpi(is, m.zones);
+    skip_to_line(is, "Z-MPI");
+    read_mpi(is, m.zones);
+  }
+
+  const size_t num_mats = read_tag(is, "Num materials");
+  m.zones.subsets.resize(num_mats);
+  for (size_t i = 0; i < num_mats; ++i) {
+    m.zones.subsets[i].name = read_tag_str(is, "Mat name");
+    const size_t num_elements = read_tag(is, "Num mat zones");
+    m.zones.subsets[i].elements.resize(num_elements);
+    for (size_t j = 0; j < num_elements; ++j) {
+      is >> m.zones.subsets[i].elements[j];
+    }
+    m.zones.subsets[i].mask.resize(num_elements);
+    for (size_t j = 0; j < num_elements; ++j) {
+      is >> m.zones.subsets[i].mask[j];
+    }
+    is >> std::ws;
+  }
 
   return 0;
 }
