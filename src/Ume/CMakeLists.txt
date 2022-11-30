@@ -5,6 +5,7 @@
 #############################################################################
 
 set(UME_INCLUDE_FILES
+  SOA_Entity.hh
   SOA_Idx_Mesh.hh
   Timer.hh
   VecN.hh
@@ -13,6 +14,7 @@ set(UME_INCLUDE_FILES
 
 add_library(Ume
   ${UME_INCLUDE_FILES}
+  SOA_Entity.cc
   SOA_Idx_Mesh.cc
   )
 
@@ -31,6 +33,10 @@ target_include_directories(Ume
 target_link_libraries(Ume
   PUBLIC
   ${COMMON_LINK_LIBRARIES}
+  )
+
+target_compile_options(Ume
+  PRIVATE ${WARNING_FLAGS}
   )
 
 install(TARGETS Ume
