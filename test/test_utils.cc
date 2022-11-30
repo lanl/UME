@@ -11,35 +11,42 @@ template <class T> void wr(T const &in_val, T &out_val) {
   Ume::read_bin(filebuf, out_val);
 }
 
-TEST_CASE("Scalar R/W size_t", "[utils]") {
+TEST_CASE("size_t binary r/w", "[utils]") {
   const size_t in_size_t{1234567890123};
   size_t out_size_t;
   wr(in_size_t, out_size_t);
   REQUIRE(in_size_t == out_size_t);
 }
 
-TEST_CASE("Scalar R/W int", "[utils]") {
+TEST_CASE("int binary r/w", "[utils]") {
   const int in_int{-1234};
   int out_int;
   wr(in_int, out_int);
   REQUIRE(in_int == out_int);
 }
 
-TEST_CASE("Scalar R/W std::string", "[utils]") {
+TEST_CASE("std::string binary r/w", "[utils]") {
   const std::string in_str{"  This is a test  "};
   std::string out_str;
   wr(in_str, out_str);
   REQUIRE(in_str == out_str);
 }
 
-TEST_CASE("std::vector<int> R/W", "[utils]") {
+TEST_CASE("vector<int> binary r/w", "[utils]") {
   const std::vector<int> in_vec{-1, 1, -2, 2, -4, 4};
   std::vector<int> out_vec;
   wr(in_vec, out_vec);
   REQUIRE(in_vec == out_vec);
 }
 
-TEST_CASE("std::vector<Coord3> R/W", "[utils]") {
+TEST_CASE("vector<short> binary r/w", "[utils]") {
+  const std::vector<short> in_vec{-1, 1, -2, 2, -4, 4};
+  std::vector<short> out_vec;
+  wr(in_vec, out_vec);
+  REQUIRE(in_vec == out_vec);
+}
+
+TEST_CASE("vector<Coord3> binary r/w", "[utils]") {
   using Ume::Coord3;
   std::vector<Coord3> in_vec{2}, out_vec;
   in_vec[0] = Coord3({1.0, 1.0e-12, 10});
