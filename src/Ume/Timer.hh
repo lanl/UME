@@ -10,6 +10,8 @@
 #include <ostream>
 
 namespace Ume {
+
+//! A simple elapsed-time class
 class Timer {
   typedef std::chrono::system_clock CLOCK_T;
 
