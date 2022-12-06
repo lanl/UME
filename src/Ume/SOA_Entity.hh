@@ -78,6 +78,8 @@ struct Entity {
 
   struct Subset {
     std::string name;
+    //! The Number of local (non-ghost) elements
+    int lsize = 0;
     std::vector<int> elements;
     std::vector<short> mask;
     inline bool operator==(Subset const &rhs) const {

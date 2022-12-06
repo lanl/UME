@@ -522,6 +522,7 @@ int read(std::istream &is, Mesh &m) {
   for (size_t i = 0; i < num_mats; ++i) {
     m.zones.subsets[i].name = read_tag_str(is, "Mat name");
     const size_t num_elements = read_tag(is, "Num mat zones");
+    m.zones.subsets[i].lsize = read_tag(is, "Local mat zones");
     m.zones.subsets[i].elements.resize(num_elements);
     for (size_t j = 0; j < num_elements; ++j) {
       is >> m.zones.subsets[i].elements[j];

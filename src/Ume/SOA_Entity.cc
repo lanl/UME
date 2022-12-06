@@ -45,6 +45,7 @@ void write_bin<Ume::SOA_Idx::Entity::Subset>(
   if (!data.empty()) {
     for (auto const &c : data) {
       write_bin(os, c.name);
+      write_bin(os, c.lsize);
       write_bin(os, c.elements);
       write_bin(os, c.mask);
       os << '\n';
@@ -65,6 +66,7 @@ void read_bin<Ume::SOA_Idx::Entity::Subset>(
     data.resize(len);
     for (size_t i = 0; i < len; ++i) {
       read_bin(is, data[i].name);
+      read_bin(is, data[i].lsize);
       read_bin(is, data[i].elements);
       read_bin(is, data[i].mask);
       Ume::skip_line(is);
