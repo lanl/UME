@@ -5,6 +5,7 @@
 #############################################################################
 
 set(UME_INCLUDE_FILES
+  Datastore.hh
   SOA_Entity.hh
   SOA_Idx_Mesh.hh
   Timer.hh
@@ -14,6 +15,7 @@ set(UME_INCLUDE_FILES
 
 add_library(Ume
   ${UME_INCLUDE_FILES}
+  Datastore.cc
   SOA_Entity.cc
   SOA_Idx_Mesh.cc
   )
