@@ -14,7 +14,7 @@ namespace Ume {
 //! A struct-of-arrays implementation using integer indexing
 namespace SOA_Idx {
 
-using PtCoord = Coord3;
+using PtCoord = Vec3;
 
 //! SoA representation of mesh corners
 /*!

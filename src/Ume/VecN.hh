@@ -122,7 +122,7 @@ private:
   std::array<T, N> data_;
 };
 
-using Coord3 = VecN<double, 3>;
+using Vec3 = VecN<double, 3>;
 
 } // namespace Ume
 #endif

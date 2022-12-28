@@ -46,11 +46,11 @@ TEST_CASE("vector<short> binary r/w", "[utils]") {
   REQUIRE(in_vec == out_vec);
 }
 
-TEST_CASE("vector<Coord3> binary r/w", "[utils]") {
-  using Ume::Coord3;
-  std::vector<Coord3> in_vec{2}, out_vec;
-  in_vec[0] = Coord3({1.0, 1.0e-12, 10});
-  in_vec[1] = Coord3({-5.0, -5.0e-12, -50});
+TEST_CASE("vector<Vec3> binary r/w", "[utils]") {
+  using Ume::Vec3;
+  std::vector<Vec3> in_vec{2}, out_vec;
+  in_vec[0] = Vec3({1.0, 1.0e-12, 10});
+  in_vec[1] = Vec3({-5.0, -5.0e-12, -50});
   wr(in_vec, out_vec);
   REQUIRE(in_vec == out_vec);
 }
