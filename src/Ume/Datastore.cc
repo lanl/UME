@@ -6,13 +6,13 @@
 
 namespace Ume {
 
-Datastore::sptr Datastore::add_child_() {
+Datastore::dsptr Datastore::add_child_() {
   children_.emplace_back(new Datastore());
   children_.back()->parent_ = getptr();
   return children_.back();
 }
 
-std::pair<Datastore::Types, Datastore::sptr> Datastore::find(
+std::pair<Datastore::Types, Datastore::dsptr> Datastore::find(
     std::string const &name) {
   if (int_vars_.count(name))
     return std::make_pair(Types::INT, getptr());
@@ -22,9 +22,13 @@ std::pair<Datastore::Types, Datastore::sptr> Datastore::find(
     return std::make_pair(Types::DBL, getptr());
   if (vdbl_vars_.count(name))
     return std::make_pair(Types::DBLV, getptr());
+  if (vec3_vars_.count(name))
+    return std::make_pair(Types::VEC3, getptr());
+  if (vvec3_vars_.count(name))
+    return std::make_pair(Types::VEC3V, getptr());
   if (!parent_.expired())
     return parent_.lock()->find(name);
-  return std::make_pair(Types::NONE, sptr());
+  return std::make_pair(Types::NONE, dsptr());
 }
 
 void Datastore::set(std::string const &name, int const val) {
