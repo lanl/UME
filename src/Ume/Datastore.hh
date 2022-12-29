@@ -9,14 +9,42 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 namespace Ume {
 
-class Datastore : public std::enable_shared_from_this<Datastore> {
+class Datastore;
+
+struct DS_Types {
+  enum class Types { INT, INTV, DBL, DBLV, VEC3, VEC3V, NONE };
+  using INT_T = int;
+  using INTV_T = std::vector<INT_T>;
+  using DBL_T = double;
+  using DBLV_T = std::vector<DBL_T>;
+  using VEC3_T = Vec3;
+  using VEC3V_T = std::vector<VEC3_T>;
+};
+
+class DS_Entry : public DS_Types {
+public:
+  DS_Entry() = default;
+  virtual ~DS_Entry() = default;
+  void set_type(Types t);
+
+protected:
+  friend class Datastore;
+  Types type_;
+  std::weak_ptr<Datastore> ds_;
+  std::variant<INT_T, INTV_T, DBL_T, DBLV_T, VEC3_T, VEC3V_T> data_;
+  bool dirty_ = false;
+};
+
+class Datastore : public std::enable_shared_from_this<Datastore>,
+                  public DS_Types {
 public:
   using dsptr = std::shared_ptr<Datastore>;
-  enum class Types { INT, INTV, DBL, DBLV, VEC3, VEC3V, NONE };
+  using eptr = std::unique_ptr<DS_Entry>;
 
 public:
   dsptr getptr() { return shared_from_this(); }
@@ -25,29 +53,45 @@ public:
     return parent->add_child_();
   }
 
-  std::pair<Types, dsptr> find(std::string const &name);
-  void set(std::string const &name, int const val);
-  // This destoys val!
-  void set(std::string const &name, std::vector<int> &val);
-  void set(std::string const &name, double const val);
-  // This destoys val!
-  void set(std::string const &name, std::vector<double> &val);
+  bool insert(char const *const name, eptr &&ptr) {
+    auto res =
+        entries_.emplace(std::make_pair(std::string{name}, std::move(ptr)));
+    return res.second;
+  }
+#define MAKE_ACCESS(Y, T) \
+  inline T &access_##Y(char const *const name) { \
+    auto ptr = find_or_die(name); \
+    ptr->dirty_ = true; \
+    return std::get<T>(find_or_die(name)->data_); \
+  } \
+  inline T const &caccess_##Y(char const *const name) const { \
+    return std::get<T>(cfind_or_die(name)->data_); \
+  }
+
+  MAKE_ACCESS(int, INT_T);
+  MAKE_ACCESS(intv, INTV_T);
+  MAKE_ACCESS(dbl, DBL_T);
+  MAKE_ACCESS(dblv, DBLV_T);
+  MAKE_ACCESS(vec3, VEC3_T);
+  MAKE_ACCESS(vec3v, VEC3V_T);
+
+#undef MAKE_ACCESS
 
   ~Datastore();
 
 private:
   // Force the use of the factory function by making the ctors private
   Datastore() = default;
-
   dsptr add_child_();
-  std::unordered_map<std::string, int> int_vars_;
-  std::unordered_map<std::string, std::vector<int>> vint_vars_;
-  std::unordered_map<std::string, double> dbl_vars_;
-  std::unordered_map<std::string, std::vector<double>> vdbl_vars_;
-  std::unordered_map<std::string, VecN<double, 3>> vec3_vars_;
-  std::unordered_map<std::string, std::vector<VecN<double, 3>>> vvec3_vars_;
+  [[nodiscard]] DS_Entry *find(std::string const &name);
+  [[nodiscard]] DS_Entry const *cfind(std::string const &name) const;
+  [[nodiscard]] DS_Entry *find_or_die(std::string const &name);
+  [[nodiscard]] DS_Entry const *cfind_or_die(std::string const &name) const;
 
-public:
+private:
+  std::unordered_map<std::string, eptr> entries_;
+
+public: /* These are public for testing purposes */
   std::weak_ptr<Datastore> parent_;
   std::vector<dsptr> children_;
 };
