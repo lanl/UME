@@ -4,6 +4,7 @@
 #ifndef SOA_IDX_MESH_HH
 #define SOA_IDX_MESH_HH 1
 
+#include "Ume/Datastore.hh"
 #include "Ume/SOA_Entity.hh"
 #include "Ume/VecN.hh"
 #include <iosfwd>
@@ -15,6 +16,8 @@ namespace Ume {
 namespace SOA_Idx {
 
 using PtCoord = Vec3;
+using dsptr = Ume::Datastore::dsptr;
+using Types = Ume::DS_Types::Types;
 
 //! SoA representation of mesh corners
 /*!
@@ -24,12 +27,11 @@ using PtCoord = Vec3;
   On a hexahedral mesh, a corner is a hexagon as well.
 */
 struct Corners : public Entity {
-  Corners() = default;
-  //! Index of characteristic mesh point
-  std::vector<int> p;
-  //! Index of parent mesh zone
-  std::vector<int> z;
+public:
+  Corners() = delete;
+  explicit Corners(dsptr ds);
   void write(std::ostream &os) const override;
+  void write(dsptr ds, std::ostream &os) const;
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Corners const &rhs) const;
@@ -37,8 +39,7 @@ struct Corners : public Entity {
 
 //! SoA representation of mesh edges (connects two points)
 struct Edges : public Entity {
-  //! Indices of mesh points forming the endpoints
-  std::vector<int> p1, p2;
+  explicit Edges(dsptr ds);
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
@@ -47,8 +48,7 @@ struct Edges : public Entity {
 
 //! SoA representation of mesh faces (separates zones)
 struct Faces : public Entity {
-  //! Indices of adjacent mesh zones
-  std::vector<int> z1, z2;
+  explicit Faces(dsptr ds);
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
@@ -57,8 +57,7 @@ struct Faces : public Entity {
 
 //! Struct-of-Arrays (SoA) representation of mesh points
 struct Points : public Entity {
-  //! spatial coordinates of p
-  std::vector<PtCoord> coord;
+  explicit Points(dsptr ds);
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
@@ -72,19 +71,7 @@ struct Points : public Entity {
     principal entity for volumetric calculations, so there is a lot of
     additional connectivity information carried here. */
 struct Sides : public Entity {
-  //! The index of the parent mesh zone
-  std::vector<int> z;
-  //! The indices of the points of 'e' (note, redundant, but heavily used)
-  std::vector<int> p1, p2;
-  //! The index of the mesh edge connecting p1, p2
-  std::vector<int> e;
-  //! The index of the mesh face of z that contains e
-  std::vector<int> f;
-  //! The indices of the corners of z that this side intersects
-  std::vector<int> c1, c2;
-  /*! The indices of the sides adjacent to this one.  Note that one of these
-    will belong to another zone. */
-  std::vector<int> s2, s3, s4, s5;
+  explicit Sides(dsptr ds);
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
@@ -93,6 +80,7 @@ struct Sides : public Entity {
 
 //! SoA representation of mesh zones
 struct Zones : public Entity {
+  explicit Zones(dsptr ds);
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
@@ -104,12 +92,14 @@ struct Mesh {
   int mype;
   int numpe;
   Geometry_Type geo;
-  Points points;
+  Datastore::dsptr ds;
+  Corners corners;
   Edges edges;
   Faces faces;
+  Points points;
   Sides sides;
-  Corners corners;
   Zones zones;
+  Mesh();
   void write(std::ostream &os) const;
   void read(std::istream &is);
   constexpr size_t ndims() const { return 3; }
