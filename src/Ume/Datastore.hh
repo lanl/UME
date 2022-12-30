@@ -29,6 +29,7 @@ struct DS_Types {
 class DS_Entry : public DS_Types {
 public:
   DS_Entry() = default;
+  explicit DS_Entry(Types t) { set_type(t); }
   virtual ~DS_Entry() = default;
   void set_type(Types t);
 

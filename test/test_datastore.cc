@@ -98,8 +98,7 @@ TEST_CASE("DS scalar insert", "[Datastore]") {
 
 class Boring : public Ume::DS_Entry {
 public:
-  Boring() {
-    set_type(Types::INTV);
+  Boring() : Ume::DS_Entry(Types::INTV) {
     auto &a = std::get<INTV_T>(data_);
     a.resize(50);
   };
