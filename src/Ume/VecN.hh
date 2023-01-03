@@ -124,5 +124,14 @@ private:
 
 using Vec3 = VecN<double, 3>;
 
+constexpr Vec3 crossprod(Vec3 const &a, Vec3 const &b) {
+  return Vec3{{a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0]}};
+}
+
+constexpr double dotprod(Vec3 const &a, Vec3 const &b) {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
 } // namespace Ume
 #endif

@@ -191,3 +191,28 @@ TEST_CASE("Scalar /", "[vecN]") {
   REQUIRE(b[0] == 2);
   REQUIRE(b[1] == 1);
 }
+
+TEST_CASE("V3 dotprod", "[vecN]") {
+  Ume::Vec3 const a({1.0, 2.0, 4.0});
+  Ume::Vec3 b({-10.0, 10.0, 10.0});
+  REQUIRE(dotprod(a, b) == 50.0);
+  b[0] *= -1;
+  b[1] *= -1;
+  REQUIRE(dotprod(a, b) == 30.0);
+  b[1] *= -1;
+  b[2] *= -1;
+  REQUIRE(dotprod(a, b) == -10.0);
+}
+
+TEST_CASE("V3 crossprod", "[vecN]") {
+  Ume::Vec3 a({1, 2, 3});
+  Ume::Vec3 b({2, 3, 4});
+  Ume::Vec3 cp = crossprod(a, b);
+  REQUIRE(cp[0] == -1);
+  REQUIRE(cp[1] == 2);
+  REQUIRE(cp[2] == -1);
+  cp = crossprod(b, a);
+  REQUIRE(cp[0] == 1);
+  REQUIRE(cp[1] == -2);
+  REQUIRE(cp[2] == 1);
+}
