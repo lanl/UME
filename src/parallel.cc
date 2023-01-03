@@ -38,7 +38,7 @@ std::ostream &operator<<(std::ostream &os, PEIdx const &pi) {
 struct ConnMesh {
 public:
   enum EntType { CORNERS, EDGES, FACES, POINTS, SIDES, ZONES, NUM_ENTITIES };
-  size_t numpe, mype;
+  int numpe, mype;
   Entity const *entities[NUM_ENTITIES];
   std::vector<int> send_elements[NUM_ENTITIES];
   std::vector<int> recv_elements[NUM_ENTITIES];
@@ -67,7 +67,6 @@ int main(int argc, char const *const argv[]) {
   if (ranks.empty())
     return 1;
   std::vector<ConnMesh> conn_ranks(ranks.begin(), ranks.end());
-  size_t const numpe = static_cast<size_t>(ranks[0].numpe);
 
   MAP1TO1 all_c_recvs{build_all_recvs(conn_ranks, ConnMesh::CORNERS)};
   MAP1TO1 all_e_recvs{build_all_recvs(conn_ranks, ConnMesh::EDGES)};
@@ -177,8 +176,7 @@ void graph_1TO1(
   os.close();
 }
 
-ConnMesh::ConnMesh(Mesh const &m)
-    : numpe{static_cast<size_t>(m.numpe)}, mype{static_cast<size_t>(m.mype)} {
+ConnMesh::ConnMesh(Mesh const &m) : numpe{m.numpe}, mype{m.mype} {
   entities[CORNERS] = &(m.corners);
   entities[EDGES] = &(m.edges);
   entities[FACES] = &(m.faces);
