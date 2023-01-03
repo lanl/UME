@@ -37,8 +37,11 @@ protected:
   friend class Datastore;
   Types type_;
   std::weak_ptr<Datastore> ds_;
-  std::variant<INT_T, INTV_T, DBL_T, DBLV_T, VEC3_T, VEC3V_T> data_;
-  bool dirty_ = false;
+  mutable std::variant<INT_T, INTV_T, DBL_T, DBLV_T, VEC3_T, VEC3V_T> data_;
+  mutable bool dirty_ = false;
+
+protected:
+  virtual void init() const {}
 };
 
 class Datastore : public std::enable_shared_from_this<Datastore>,
@@ -62,11 +65,14 @@ public:
 #define MAKE_ACCESS(Y, T) \
   inline T &access_##Y(char const *const name) { \
     auto ptr = find_or_die(name); \
+    ptr->init(); \
     ptr->dirty_ = true; \
-    return std::get<T>(find_or_die(name)->data_); \
+    return std::get<T>(ptr->data_); \
   } \
   inline T const &caccess_##Y(char const *const name) const { \
-    return std::get<T>(cfind_or_die(name)->data_); \
+    auto ptr = cfind_or_die(name); \
+    ptr->init(); \
+    return std::get<T>(ptr->data_); \
   }
 
   MAKE_ACCESS(int, INT_T);
