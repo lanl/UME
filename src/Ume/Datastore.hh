@@ -39,9 +39,11 @@ protected:
   std::weak_ptr<Datastore> ds_;
   mutable std::variant<INT_T, INTV_T, DBL_T, DBLV_T, VEC3_T, VEC3V_T> data_;
   mutable bool dirty_ = false;
+  enum class Init_State { UNINITIALIZED, IN_PROGRESS, INITIALIZED };
+  mutable Init_State init_state_{Init_State::UNINITIALIZED};
 
 protected:
-  virtual void init() const {}
+  virtual void init_() const {}
 };
 
 class Datastore : public std::enable_shared_from_this<Datastore>,
@@ -65,13 +67,13 @@ public:
 #define MAKE_ACCESS(Y, T) \
   inline T &access_##Y(char const *const name) { \
     auto ptr = find_or_die(name); \
-    ptr->init(); \
+    ptr->init_(); \
     ptr->dirty_ = true; \
     return std::get<T>(ptr->data_); \
   } \
   inline T const &caccess_##Y(char const *const name) const { \
     auto ptr = cfind_or_die(name); \
-    ptr->init(); \
+    ptr->init_(); \
     return std::get<T>(ptr->data_); \
   }
 
