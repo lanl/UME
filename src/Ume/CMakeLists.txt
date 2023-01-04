@@ -7,7 +7,11 @@
 set(UME_INCLUDE_FILES
   Datastore.hh
   SOA_Entity.hh
+  SOA_Idx_Faces.hh
   SOA_Idx_Mesh.hh
+  SOA_Idx_Sides.hh
+  SOA_Idx_Zones.hh
+  soa_idx_helpers.hh
   Timer.hh
   VecN.hh
   utils.hh
@@ -17,7 +21,10 @@ add_library(Ume
   ${UME_INCLUDE_FILES}
   Datastore.cc
   SOA_Entity.cc
+  SOA_Idx_Faces.cc
   SOA_Idx_Mesh.cc
+  SOA_Idx_Sides.cc
+  SOA_Idx_Zones.cc
   )
 
 set_target_properties(Ume PROPERTIES

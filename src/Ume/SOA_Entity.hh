@@ -12,11 +12,13 @@
 namespace Ume {
 namespace SOA_Idx {
 
+struct Mesh;
+
 /*! Record information common to all SOA_Idx::Mesh entities */
 struct Entity {
   using dsptr = Ume::Datastore::dsptr;
   Entity() = delete;
-  explicit Entity(Datastore::dsptr ds) : ds_{ds} {}
+  explicit Entity(Mesh *mesh) : mesh_{mesh} {}
   enum CommTypes {
     INTERNAL = 1, /* Not on a communication boundary */
     SOURCE, /* The source entity in a group of shared copies */
@@ -100,11 +102,11 @@ struct Entity {
   virtual void resize(int const local, int const total, int const ghost);
   bool operator==(Entity const &rhs) const;
   int size() const { return static_cast<int>(mask.size()); }
-  dsptr ds() { return ds_; }
-  dsptr const ds() const { return ds_; }
+  Ume::Datastore *ds();
+  Ume::Datastore const *ds() const;
 
 protected:
-  dsptr ds_;
+  Mesh *mesh_;
 };
 } // namespace SOA_Idx
 } // namespace Ume

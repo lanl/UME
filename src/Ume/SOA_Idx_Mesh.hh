@@ -6,6 +6,9 @@
 
 #include "Ume/Datastore.hh"
 #include "Ume/SOA_Entity.hh"
+#include "Ume/SOA_Idx_Faces.hh"
+#include "Ume/SOA_Idx_Sides.hh"
+#include "Ume/SOA_Idx_Zones.hh"
 #include "Ume/VecN.hh"
 #include <iosfwd>
 #include <vector>
@@ -29,7 +32,7 @@ using Types = Ume::DS_Types::Types;
 struct Corners : public Entity {
 public:
   Corners() = delete;
-  explicit Corners(dsptr ds);
+  explicit Corners(Mesh *mesh);
   void write(std::ostream &os) const override;
   void write(dsptr ds, std::ostream &os) const;
   void read(std::istream &is) override;
@@ -39,52 +42,20 @@ public:
 
 //! SoA representation of mesh edges (connects two points)
 struct Edges : public Entity {
-  explicit Edges(dsptr ds);
+  explicit Edges(Mesh *mesh);
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Edges const &rhs) const;
 };
 
-//! SoA representation of mesh faces (separates zones)
-struct Faces : public Entity {
-  explicit Faces(dsptr ds);
-  void write(std::ostream &os) const override;
-  void read(std::istream &is) override;
-  void resize(int const local, int const total, int const ghost) override;
-  bool operator==(Faces const &rhs) const;
-};
-
 //! Struct-of-Arrays (SoA) representation of mesh points
 struct Points : public Entity {
-  explicit Points(dsptr ds);
+  explicit Points(Mesh *mesh);
   void write(std::ostream &os) const override;
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Points const &rhs) const;
-};
-
-//! SoA representation of mesh sides
-/*! A side is another subzonal quantity, formed by a zone centroid,
-    the centroid of a face on that zone, and an edge on that face.  On
-    a hexahedral mesh, a side is a tetrahedron.  The side is the
-    principal entity for volumetric calculations, so there is a lot of
-    additional connectivity information carried here. */
-struct Sides : public Entity {
-  explicit Sides(dsptr ds);
-  void write(std::ostream &os) const override;
-  void read(std::istream &is) override;
-  void resize(int const local, int const total, int const ghost) override;
-  bool operator==(Sides const &rhs) const;
-};
-
-//! SoA representation of mesh zones
-struct Zones : public Entity {
-  explicit Zones(dsptr ds);
-  void write(std::ostream &os) const override;
-  void read(std::istream &is) override;
-  void resize(int const local, int const total, int const ghost) override;
-  bool operator==(Zones const &rhs) const;
 };
 
 struct Mesh {
