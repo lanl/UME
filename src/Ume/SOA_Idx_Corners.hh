@@ -35,9 +35,9 @@ public:
   protected:
     void init_() const override;
   };
-  class DSE_corner_area_norm : public DSE_Base<Corners> {
+  class DSE_corner_csurf : public DSE_Base<Corners> {
   public:
-    explicit DSE_corner_area_norm(Corners &c) : DSE_Base(Types::VEC3V, c) {}
+    explicit DSE_corner_csurf(Corners &c) : DSE_Base(Types::VEC3V, c) {}
 
   protected:
     void init_() const override;
