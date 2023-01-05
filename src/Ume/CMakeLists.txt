@@ -8,6 +8,7 @@ set(UME_INCLUDE_FILES
   Datastore.hh
   SOA_Entity.hh
   SOA_Idx_Corners.hh
+  SOA_Idx_Edges.hh
   SOA_Idx_Faces.hh
   SOA_Idx_Mesh.hh
   SOA_Idx_Sides.hh
@@ -23,6 +24,7 @@ add_library(Ume
   Datastore.cc
   SOA_Entity.cc
   SOA_Idx_Corners.cc
+  SOA_Idx_Edges.cc
   SOA_Idx_Faces.cc
   SOA_Idx_Mesh.cc
   SOA_Idx_Sides.cc
