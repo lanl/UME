@@ -27,6 +27,8 @@ Sides::Sides(Mesh *mesh) : Entity{mesh} {
   mesh_->ds->insert("m:s>s3", std::make_unique<Ume::DS_Entry>(Types::INTV));
   mesh_->ds->insert("m:s>s4", std::make_unique<Ume::DS_Entry>(Types::INTV));
   mesh_->ds->insert("m:s>s5", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  mesh_->ds->insert(
+      "side_area_norm", std::make_unique<DSE_side_area_norm>(*this));
   mesh_->ds->insert("side_vol", std::make_unique<DSE_side_vol>(*this));
 }
 
@@ -84,30 +86,71 @@ void Sides::resize(int const local, int const total, int const ghost) {
   RESIZE("m:s>s5", total);
 }
 
-void Sides::DSE_side_vol::init_() const {
+void Sides::DSE_side_area_norm::init_() const {
   DSE_INIT_PREAMBLE("DSE_side_vol");
-  int const sl{sides_.lsize};
-  int const sll{sides_.size()};
-  auto const &s2z = sides_.ds()->caccess_intv("m:s>z");
-  auto const &s2p1 = sides_.ds()->caccess_intv("m:s>p1");
-  auto const &s2p2 = sides_.ds()->caccess_intv("m:s>p2");
-  auto const &s2f = sides_.ds()->caccess_intv("m:s>f");
-  auto const &px = sides_.ds()->caccess_vec3v("pcoord");
-  auto const &zx = sides_.ds()->caccess_vec3v("zcoord");
-  auto const &fx = sides_.ds()->caccess_vec3v("fcoord");
-  auto const &smask{sides_.mesh_->sides.mask};
-  auto &side_vol = std::get<DBLV_T>(data_);
-  side_vol.resize(sll, 0.0);
+  int const sl = sides().lsize;
+  int const sll = sides().size();
+
+  auto const &s2p1 = caccess_intv("m:s>p1");
+  auto const &s2p2 = caccess_intv("m:s>p2");
+  auto const &s2e = caccess_intv("m:s>e");
+  auto const &s2f = caccess_intv("m:s>f");
+  auto const &s2z = caccess_intv("m:s>z");
+
+  auto const &ex = caccess_vec3v("ecoord");
+  auto const &fx = caccess_vec3v("fcoord");
+  auto const &px = caccess_vec3v("pcoord");
+  auto const &zx = caccess_vec3v("zcoord");
+
+  auto const &smask{sides().mask};
+  auto &side_area_norm = mydata_vec3v();
+  side_area_norm.resize(sll);
 
   for (int s = 0; s < sl; ++s) {
     if (smask[s] > 0) {
-      Vec3 const &p0 = zx[s2z[s]];
+      // A (non-ghost) side in the interior of the mesh
+      Vec3 const &zc = zx[s2z[s]];
+      Vec3 const &ep = ex[s2e[s]];
+      Vec3 const &fp = fx[s2f[s]];
+      side_area_norm[s] = crossprod(ep - zc, fp - zc) / 2.0;
+    } else if (smask[s] < 0) {
+      // A side on a mesh boundary face
+      Vec3 const &fc = fx[s2f[s]];
+      Vec3 const &p1 = px[s2p1[s]];
+      Vec3 const &p2 = px[s2p2[s]];
+      side_area_norm[s] = crossprod(p1 - fc, p2 - fc) / 4.0; // Deliberate
+    } else
+      side_area_norm[s] = 0.0;
+  }
+  init_state_ = Init_State::INITIALIZED;
+}
+
+void Sides::DSE_side_vol::init_() const {
+  DSE_INIT_PREAMBLE("DSE_side_vol");
+  int const sl = sides().lsize;
+  int const sll = sides().size();
+  auto const &s2z = caccess_intv("m:s>z");
+  auto const &s2p1 = caccess_intv("m:s>p1");
+  auto const &s2p2 = caccess_intv("m:s>p2");
+  auto const &s2f = caccess_intv("m:s>f");
+  auto const &px = caccess_vec3v("pcoord");
+  auto const &zx = caccess_vec3v("zcoord");
+  auto const &fx = caccess_vec3v("fcoord");
+  auto const &smask{sides().mask};
+  auto &side_vol = mydata_dblv();
+  side_vol.resize(sll);
+
+  for (int s = 0; s < sl; ++s) {
+    if (smask[s] > 0) {
+      Vec3 const &zc = zx[s2z[s]];
       Vec3 const &p1 = px[s2p2[s]];
       Vec3 const &p2 = px[s2p1[s]];
-      Vec3 const &p3 = fx[s2f[s]];
-      // Note that this is a signed volume
-      side_vol[s] = dotprod(p3 - p0, crossprod(p1 - p0, p2 - p0)) / 6.0;
-    }
+      Vec3 const &fc = fx[s2f[s]];
+      /* Note that this is a signed volume of the tetrahedron formed by the zone
+         center, face center, and edge endpoints. */
+      side_vol[s] = dotprod(fc - zc, crossprod(p1 - zc, p2 - zc)) / 6.0;
+    } else
+      side_vol[s] = 0.0;
   }
   init_state_ = Init_State::INITIALIZED;
 }

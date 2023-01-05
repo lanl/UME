@@ -5,6 +5,7 @@
 #ifndef SOA_IDX_SIDES_HH
 #define SOA_IDX_SIDES_HH 1
 
+#include "Ume/DSE_Base.hh"
 #include "Ume/SOA_Entity.hh"
 
 namespace Ume {
@@ -22,15 +23,20 @@ struct Sides : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Sides const &rhs) const;
 
-  class DSE_side_vol : public DS_Entry {
+  class DSE_side_area_norm : public DSE_Base<Sides> {
   public:
-    explicit DSE_side_vol(Sides &s) : DS_Entry(Types::DBLV), sides_{s} {}
+    explicit DSE_side_area_norm(Sides &s) : DSE_Base(Types::VEC3V, s) {}
 
   protected:
     void init_() const override;
+  };
 
-  private:
-    Sides const &sides_;
+  class DSE_side_vol : public DSE_Base<Sides> {
+  public:
+    explicit DSE_side_vol(Sides &s) : DSE_Base(Types::DBLV, s) {}
+
+  protected:
+    void init_() const override;
   };
 };
 
