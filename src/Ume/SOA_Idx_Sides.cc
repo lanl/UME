@@ -27,8 +27,8 @@ Sides::Sides(Mesh *mesh) : Entity{mesh} {
   mesh_->ds->insert("m:s>s3", std::make_unique<Ume::DS_Entry>(Types::INTV));
   mesh_->ds->insert("m:s>s4", std::make_unique<Ume::DS_Entry>(Types::INTV));
   mesh_->ds->insert("m:s>s5", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  mesh_->ds->insert(
-      "side_area_norm", std::make_unique<DSE_side_area_norm>(*this));
+  mesh_->ds->insert("side_surf", std::make_unique<DSE_side_surf>(*this));
+  mesh_->ds->insert("side_surz", std::make_unique<DSE_side_surz>(*this));
   mesh_->ds->insert("side_vol", std::make_unique<DSE_side_vol>(*this));
 }
 
@@ -86,8 +86,8 @@ void Sides::resize(int const local, int const total, int const ghost) {
   RESIZE("m:s>s5", total);
 }
 
-void Sides::DSE_side_area_norm::init_() const {
-  DSE_INIT_PREAMBLE("DSE_side_area_norm");
+void Sides::DSE_side_surf::init_() const {
+  DSE_INIT_PREAMBLE("DSE_side_surf");
   int const sl = sides().lsize;
   int const sll = sides().size();
 
@@ -103,24 +103,57 @@ void Sides::DSE_side_area_norm::init_() const {
   auto const &zx = caccess_vec3v("zcoord");
 
   auto const &smask{sides().mask};
-  auto &side_area_norm = mydata_vec3v();
-  side_area_norm.resize(sll);
+  auto &side_surf = mydata_vec3v();
+  side_surf.resize(sll);
 
   for (int s = 0; s < sl; ++s) {
     if (smask[s] > 0) {
-      // A (non-ghost) side in the interior of the mesh
+      // A real side in the interior of the mesh
       Vec3 const &zc = zx[s2z[s]];
       Vec3 const &ep = ex[s2e[s]];
       Vec3 const &fp = fx[s2f[s]];
-      side_area_norm[s] = crossprod(ep - zc, fp - zc) / 2.0;
+      /* Area-weighted normal of triangle <ep, fp, zc>.  The corners that
+         intersect this side share a face in the plane of that triangle. */
+      side_surf[s] = crossprod(ep - zc, fp - zc) / 2.0;
     } else if (smask[s] < 0) {
-      // A side on a mesh boundary face
+      /* A ghost side on a mesh boundary face.  There isn't really a zx here, so
+         we compute it differently */
       Vec3 const &fc = fx[s2f[s]];
       Vec3 const &p1 = px[s2p1[s]];
       Vec3 const &p2 = px[s2p2[s]];
-      side_area_norm[s] = crossprod(p1 - fc, p2 - fc) / 4.0; // Deliberate
+      side_surf[s] = crossprod(p1 - fc, p2 - fc) / 4.0; // Deliberate
     } else
-      side_area_norm[s] = 0.0;
+      side_surf[s] = 0.0;
+  }
+  init_state_ = Init_State::INITIALIZED;
+}
+
+void Sides::DSE_side_surz::init_() const {
+  DSE_INIT_PREAMBLE("DSE_side_surz");
+  int const sl = sides().lsize;
+  int const sll = sides().size();
+
+  auto const &s2p1 = caccess_intv("m:s>p1");
+  auto const &s2p2 = caccess_intv("m:s>p2");
+  auto const &s2f = caccess_intv("m:s>f");
+
+  auto const &fx = caccess_vec3v("fcoord");
+  auto const &px = caccess_vec3v("pcoord");
+
+  auto const &smask{sides().mask};
+  auto &side_surz = mydata_vec3v();
+  side_surz.resize(sll);
+
+  for (int s = 0; s < sl; ++s) {
+    if (smask[s]) {
+      // A non-ghost side
+      Vec3 const &fc = fx[s2f[s]]; // 0
+      Vec3 const &p1 = px[s2p1[s]]; // 2
+      Vec3 const &p2 = px[s2p2[s]]; // 1
+      // Area-weighted normal of triangle <p2, p1, fc>
+      side_surz[s] = crossprod(p2 - fc, p1 - fc) / 2.0;
+    } else
+      side_surz[s] = 0.0;
   }
   init_state_ = Init_State::INITIALIZED;
 }
