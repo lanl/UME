@@ -35,6 +35,13 @@ public:
   protected:
     void init_() const override;
   };
+  class DSE_corner_area_norm : public DSE_Base<Corners> {
+  public:
+    explicit DSE_corner_area_norm(Corners &c) : DSE_Base(Types::VEC3V, c) {}
+
+  protected:
+    void init_() const override;
+  };
 };
 
 } // namespace SOA_Idx

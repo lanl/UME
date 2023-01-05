@@ -16,6 +16,8 @@ Corners::Corners(Mesh *mesh) : Entity{mesh} {
   // map: corner->index of parent zone zone
   mesh_->ds->insert("m:c>z", std::make_unique<Ume::DS_Entry>(Types::INTV));
   mesh_->ds->insert("corner_vol", std::make_unique<DSE_corner_vol>(*this));
+  mesh_->ds->insert(
+      "corner_area_norm", std::make_unique<DSE_corner_area_norm>(*this));
 }
 
 void Corners::write(std::ostream &os) const {
@@ -63,5 +65,27 @@ void Corners::DSE_corner_vol::init_() const {
   }
   init_state_ = Init_State::INITIALIZED;
 }
+
+void Corners::DSE_corner_area_norm::init_() const {
+  DSE_INIT_PREAMBLE("DSE_corner_area_norm");
+
+  int const cll = corners().size();
+  int const sl = sides().lsize;
+  auto const &s2c1{caccess_intv("m:s>c1")};
+  auto const &s2c2{caccess_intv("m:s>c2")};
+  auto const &side_area_norm{caccess_vec3v("side_area_norm")};
+  auto const &smask{sides().mask};
+  auto &corner_area_norm = mydata_vec3v();
+  corner_area_norm.resize(cll, Vec3(0.0));
+
+  for (int s = 0; s < sl; ++s) {
+    if (smask[s]) {
+      corner_area_norm[s2c1[s]] += side_area_norm[s];
+      corner_area_norm[s2c2[s]] -= side_area_norm[s];
+    }
+  }
+  init_state_ = Init_State::INITIALIZED;
+}
+
 } // namespace SOA_Idx
 } // namespace Ume

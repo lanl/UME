@@ -16,7 +16,7 @@ int main(int argc, char const *const argv[]) {
   if (ranks.empty())
     return 1;
 
-  auto const &corner_vol = ranks[0].ds->caccess_dblv("corner_vol");
+  auto const &test = ranks[0].ds->caccess_vec3v("corner_area_norm");
 
   return 0;
 }
