@@ -16,7 +16,7 @@ int main(int argc, char const *const argv[]) {
   if (ranks.empty())
     return 1;
 
-  auto side_vol = ranks[0].ds->access_dblv("side_vol");
+  auto const &corner_vol = ranks[0].ds->caccess_dblv("corner_vol");
 
   return 0;
 }

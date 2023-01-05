@@ -10,39 +10,6 @@
 
 namespace Ume {
 namespace SOA_Idx {
-/* -------------------------------- Corners ---------------------------------*/
-
-Corners::Corners(Mesh *mesh) : Entity{mesh} {
-  // map: corner->index of characteristic point
-  mesh_->ds->insert("m:c>p", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  // map: corner->index of parent zone zone
-  mesh_->ds->insert("m:c>z", std::make_unique<Ume::DS_Entry>(Types::INTV));
-}
-
-void Corners::write(std::ostream &os) const {
-  Entity::write(os);
-  IVWRITE("m:c>p");
-  IVWRITE("m:c>z");
-  os << '\n';
-}
-
-void Corners::read(std::istream &is) {
-  Entity::read(is);
-  IVREAD("m:c>p");
-  IVREAD("m:c>z");
-  skip_line(is);
-}
-
-bool Corners::operator==(Corners const &rhs) const {
-  return (Entity::operator==(rhs) && EQOP("m:c>p") && EQOP("m:c>z"));
-}
-
-void Corners::resize(int const local, int const total, int const ghost) {
-  Entity::resize(local, total, ghost);
-  RESIZE("m:c>p", total);
-  RESIZE("m:c>z", total);
-}
-
 /* --------------------------------- Edges ----------------------------------*/
 
 Edges::Edges(Mesh *mesh) : Entity{mesh} {
