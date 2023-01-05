@@ -17,6 +17,17 @@ struct Edges : public Entity {
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Edges const &rhs) const;
+
+  class DSE_ecoord : public DS_Entry {
+  public:
+    explicit DSE_ecoord(Edges &e) : DS_Entry(Types::VEC3V), edges_{e} {}
+
+  protected:
+    void init_() const override;
+
+  private:
+    Edges const &edges_;
+  };
 };
 
 } // namespace SOA_Idx
