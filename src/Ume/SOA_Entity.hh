@@ -105,7 +105,6 @@ struct Entity {
   Ume::Datastore *ds();
   Ume::Datastore const *ds() const;
 
-protected:
   Mesh *mesh_;
 };
 } // namespace SOA_Idx

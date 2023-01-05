@@ -5,6 +5,7 @@
 #ifndef SOA_IDX_CORNERS_HH
 #define SOA_IDX_CORNERS_HH 1
 
+#include "Ume/DSE_Base.hh"
 #include "Ume/SOA_Entity.hh"
 
 namespace Ume {
@@ -27,15 +28,12 @@ public:
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Corners const &rhs) const;
 
-  class DSE_corner_vol : public DS_Entry {
+  class DSE_corner_vol : public DSE_Base<Corners> {
   public:
-    explicit DSE_corner_vol(Corners &c) : DS_Entry(Types::DBLV), corners_{c} {}
+    explicit DSE_corner_vol(Corners &c) : DSE_Base(Types::DBLV, c) {}
 
   protected:
     void init_() const override;
-
-  private:
-    Corners const &corners_;
   };
 };
 

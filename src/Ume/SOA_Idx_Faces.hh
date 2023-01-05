@@ -5,6 +5,7 @@
 #ifndef SOA_IDX_FACES_HH
 #define SOA_IDX_FACES_HH 1
 
+#include "Ume/DSE_Base.hh"
 #include "Ume/SOA_Entity.hh"
 
 namespace Ume {
@@ -18,15 +19,12 @@ struct Faces : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Faces const &rhs) const;
 
-  class DSE_fcoord : public DS_Entry {
+  class DSE_fcoord : public DSE_Base<Faces> {
   public:
-    explicit DSE_fcoord(Faces &f) : DS_Entry(Types::VEC3V), faces_{f} {}
+    explicit DSE_fcoord(Faces &f) : DSE_Base(Types::VEC3V, f) {}
 
   protected:
     void init_() const override;
-
-  private:
-    Faces const &faces_;
   };
 };
 } // namespace SOA_Idx

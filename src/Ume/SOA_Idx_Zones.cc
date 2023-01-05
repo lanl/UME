@@ -35,15 +35,15 @@ void Zones::resize(int const local, int const total, int const ghost) {
 void Zones::DSE_zcoord::init_() const {
   DSE_INIT_PREAMBLE("DSE_zcoord");
 
-  int const zl{zones_.lsize};
-  int const zll{zones_.size()};
-  int const cl{zones_.mesh_->corners.lsize};
-  auto const &c2z{zones_.ds()->caccess_intv("m:c>z")};
-  auto const &c2p{zones_.ds()->caccess_intv("m:c>p")};
-  auto const &pcoord{zones_.ds()->caccess_vec3v("pcoord")};
-  auto const &cmask{zones_.mesh_->corners.mask};
+  int const zl = zones().lsize;
+  int const zll = zones().size();
+  int const cl = corners().lsize;
+  auto const &c2z{caccess_intv("m:c>z")};
+  auto const &c2p{caccess_intv("m:c>p")};
+  auto const &pcoord{caccess_vec3v("pcoord")};
+  auto const &cmask{corners().mask};
 
-  auto &zcoord = std::get<VEC3V_T>(data_);
+  auto &zcoord = mydata_vec3v();
   zcoord.resize(zll, Vec3(0.0));
 
   std::vector<int> num_zone_pts(zl, 0);
@@ -55,7 +55,7 @@ void Zones::DSE_zcoord::init_() const {
     }
   }
 
-  auto const &zmask{zones_.mask};
+  auto const &zmask{zones().mask};
   for (int z = 0; z < zl; ++z) {
     if (zmask[z]) {
       zcoord[z] /= static_cast<double>(num_zone_pts[z]);

@@ -45,14 +45,14 @@ void Faces::resize(int const local, int const total, int const ghost) {
 void Faces::DSE_fcoord::init_() const {
   DSE_INIT_PREAMBLE("DSE_fcoord");
 
-  int const fll{faces_.size()};
-  int const fl{faces_.lsize};
-  int const sl{faces_.mesh_->sides.lsize};
-  auto const &s2f{faces_.ds()->caccess_intv("m:s>f")};
-  auto const &s2p1{faces_.ds()->caccess_intv("m:s>p1")};
-  auto const &pcoord{faces_.ds()->caccess_vec3v("pcoord")};
-  auto const &smask{faces_.mesh_->sides.mask};
-  auto &fcoord = std::get<VEC3V_T>(data_);
+  int const fll{faces().size()};
+  int const fl{faces().lsize};
+  int const sl{faces().mesh_->sides.lsize};
+  auto const &s2f{caccess_intv("m:s>f")};
+  auto const &s2p1{caccess_intv("m:s>p1")};
+  auto const &pcoord{caccess_vec3v("pcoord")};
+  auto const &smask{sides().mask};
+  auto &fcoord = mydata_vec3v();
   fcoord.resize(fll, Vec3(0.0));
 
   std::vector<int> num_face_pts(fl, 0);
@@ -64,7 +64,7 @@ void Faces::DSE_fcoord::init_() const {
     }
   }
 
-  auto const &fmask{faces_.mask};
+  auto const &fmask{faces().mask};
   for (int f = 0; f < fl; ++f) {
     if (fmask[f]) {
       fcoord[f] /= static_cast<double>(num_face_pts[f]);

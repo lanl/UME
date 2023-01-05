@@ -5,6 +5,7 @@
 #ifndef SOA_IDX_EDGES_HH
 #define SOA_IDX_EDGES_HH 1
 
+#include "Ume/DSE_Base.hh"
 #include "Ume/SOA_Entity.hh"
 
 namespace Ume {
@@ -18,15 +19,12 @@ struct Edges : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Edges const &rhs) const;
 
-  class DSE_ecoord : public DS_Entry {
+  class DSE_ecoord : public DSE_Base<Edges> {
   public:
-    explicit DSE_ecoord(Edges &e) : DS_Entry(Types::VEC3V), edges_{e} {}
+    explicit DSE_ecoord(Edges &e) : DSE_Base(Types::VEC3V, e) {}
 
   protected:
     void init_() const override;
-
-  private:
-    Edges const &edges_;
   };
 };
 

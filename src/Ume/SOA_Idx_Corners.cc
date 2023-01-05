@@ -45,13 +45,13 @@ void Corners::resize(int const local, int const total, int const ghost) {
 void Corners::DSE_corner_vol::init_() const {
   DSE_INIT_PREAMBLE("DSE_corner_vol");
 
-  int const cll{corners_.size()};
-  int const sl{corners_.mesh_->sides.lsize};
-  auto const &s2c1{corners_.ds()->caccess_intv("m:s>c1")};
-  auto const &s2c2{corners_.ds()->caccess_intv("m:s>c2")};
-  auto const &side_vol{corners_.ds()->caccess_dblv("side_vol")};
-  auto const &smask{corners_.mesh_->sides.mask};
-  auto &corner_vol = std::get<DBLV_T>(data_);
+  int const cll = corners().size();
+  int const sl = sides().lsize;
+  auto const &s2c1{caccess_intv("m:s>c1")};
+  auto const &s2c2{caccess_intv("m:s>c2")};
+  auto const &side_vol{caccess_dblv("side_vol")};
+  auto const &smask{sides().mask};
+  auto &corner_vol = mydata_dblv();
   corner_vol.resize(cll, 0.0);
 
   for (int s = 0; s < sl; ++s) {

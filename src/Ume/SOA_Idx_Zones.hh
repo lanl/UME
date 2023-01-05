@@ -5,6 +5,7 @@
 #ifndef SOA_IDX_ZONES_HH
 #define SOA_IDX_ZONES_HH 1
 
+#include "Ume/DSE_Base.hh"
 #include "Ume/SOA_Entity.hh"
 
 namespace Ume {
@@ -17,15 +18,12 @@ struct Zones : public Entity {
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Zones const &rhs) const;
-  class DSE_zcoord : public DS_Entry {
+  class DSE_zcoord : public DSE_Base<Zones> {
   public:
-    explicit DSE_zcoord(Zones &z) : DS_Entry(Types::VEC3V), zones_{z} {}
+    explicit DSE_zcoord(Zones &z) : DSE_Base(Types::VEC3V, z) {}
 
   protected:
     void init_() const override;
-
-  private:
-    Zones const &zones_;
   };
 };
 

@@ -45,18 +45,20 @@ void Edges::resize(int const local, int const total, int const ghost) {
 void Edges::DSE_ecoord::init_() const {
   DSE_INIT_PREAMBLE("DSE_ecoord");
 
-  int const el{edges_.lsize};
-  int const ell{edges_.size()};
-  auto const &e2p1{edges_.ds()->caccess_intv("m:e>p1")};
-  auto const &e2p2{edges_.ds()->caccess_intv("m:e>p2")};
-  auto const &pcoord{edges_.ds()->caccess_vec3v("pcoord")};
-  auto const &emask{edges_.mesh_->edges.mask};
-  auto &ecoord = std::get<VEC3V_T>(data_);
-  ecoord.resize(ell, Vec3(0.0));
+  int const el = edges().lsize;
+  int const ell = edges().size();
+  auto const &e2p1{caccess_intv("m:e>p1")};
+  auto const &e2p2{caccess_intv("m:e>p2")};
+  auto const &pcoord{caccess_vec3v("pcoord")};
+  auto const &emask{edges().mask};
+  auto &ecoord = mydata_vec3v();
+  ecoord.resize(ell);
 
   for (int e = 0; e < el; ++e) {
     if (emask[e]) {
       ecoord[e] = (pcoord[e2p1[e]] + pcoord[e2p2[e]]) * 0.5;
+    } else {
+      ecoord[e] = 0.0;
     }
   }
 
