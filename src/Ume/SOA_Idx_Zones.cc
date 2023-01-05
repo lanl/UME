@@ -36,6 +36,7 @@ void Zones::DSE_zcoord::init_() const {
   DSE_INIT_PREAMBLE("DSE_zcoord");
 
   int const zl{zones_.lsize};
+  int const zll{zones_.size()};
   int const cl{zones_.mesh_->corners.lsize};
   auto const &c2z{zones_.ds()->caccess_intv("m:c>z")};
   auto const &c2p{zones_.ds()->caccess_intv("m:c>p")};
@@ -43,7 +44,7 @@ void Zones::DSE_zcoord::init_() const {
   auto const &cmask{zones_.mesh_->corners.mask};
 
   auto &zcoord = std::get<VEC3V_T>(data_);
-  zcoord.resize(zl, Vec3(0.0));
+  zcoord.resize(zll, Vec3(0.0));
 
   std::vector<int> num_zone_pts(zl, 0);
   for (int c = 0; c < cl; ++c) {
