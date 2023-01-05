@@ -87,7 +87,7 @@ void Sides::resize(int const local, int const total, int const ghost) {
 }
 
 void Sides::DSE_side_area_norm::init_() const {
-  DSE_INIT_PREAMBLE("DSE_side_vol");
+  DSE_INIT_PREAMBLE("DSE_side_area_norm");
   int const sl = sides().lsize;
   int const sll = sides().size();
 
