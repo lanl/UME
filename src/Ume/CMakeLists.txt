@@ -3,6 +3,10 @@
 #############################################################################
 # The basic Ume library
 #############################################################################
+#set(CMAKE_CXX_CLANG_TIDY
+#  clang-tidy;
+#  -header-filter=.;
+#  -checks=-*,bugprone-*;)
 
 set(UME_INCLUDE_FILES
   Datastore.hh

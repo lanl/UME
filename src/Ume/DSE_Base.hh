@@ -10,12 +10,12 @@
 namespace Ume {
 namespace SOA_Idx {
 
-class Corners;
-class Edges;
-class Faces;
-class Points;
-class Sides;
-class Zones;
+struct Corners;
+struct Edges;
+struct Faces;
+struct Points;
+struct Sides;
+struct Zones;
 
 //! A base class for Datastore entries
 template <typename B> class DSE_Base : public DS_Entry {

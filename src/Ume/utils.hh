@@ -19,19 +19,21 @@ inline void skip_line(std::istream &S) {
 
 //! Scalar binary write
 template <class T> inline void write_bin(std::ostream &os, T const &data) {
-  os.write(reinterpret_cast<char const *>(&data), sizeof(T));
+  os.write(reinterpret_cast<char const *>(&data),
+      static_cast<std::streamsize>(sizeof(T)));
 }
 
 //! Scalar binary read
 template <class T> inline void read_bin(std::istream &is, T &data) {
-  is.read(reinterpret_cast<char *>(&data), sizeof(T));
+  is.read(
+      reinterpret_cast<char *>(&data), static_cast<std::streamsize>(sizeof(T)));
 }
 
 //! String binary write
 template <>
 inline void write_bin<std::string>(std::ostream &os, std::string const &data) {
   write_bin(os, data.size());
-  os.write(data.c_str(), data.size());
+  os.write(data.c_str(), static_cast<std::streamsize>(data.size()));
 }
 
 //! String binary read
@@ -53,7 +55,8 @@ template <class T>
 void write_bin(std::ostream &os, std::vector<T> const &data) {
   write_bin(os, data.size());
   if (!data.empty()) {
-    os.write(reinterpret_cast<const char *>(&data[0]), sizeof(T) * data.size());
+    os.write(reinterpret_cast<const char *>(&data[0]),
+        static_cast<std::streamsize>(sizeof(T) * data.size()));
   }
   os << '\n';
 }
@@ -66,7 +69,8 @@ template <class T> void read_bin(std::istream &is, std::vector<T> &data) {
     data.clear();
   } else {
     data.resize(len);
-    is.read(reinterpret_cast<char *>(&data[0]), sizeof(T) * len);
+    is.read(reinterpret_cast<char *>(&data[0]),
+        static_cast<std::streamsize>(sizeof(T) * len));
   }
   Ume::skip_line(is);
 }
