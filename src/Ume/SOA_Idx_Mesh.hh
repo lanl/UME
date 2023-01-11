@@ -9,6 +9,7 @@
 #include "Ume/SOA_Idx_Corners.hh"
 #include "Ume/SOA_Idx_Edges.hh"
 #include "Ume/SOA_Idx_Faces.hh"
+#include "Ume/SOA_Idx_Points.hh"
 #include "Ume/SOA_Idx_Sides.hh"
 #include "Ume/SOA_Idx_Zones.hh"
 #include "Ume/VecN.hh"
@@ -20,18 +21,8 @@ namespace Ume {
 //! A struct-of-arrays implementation using integer indexing
 namespace SOA_Idx {
 
-using PtCoord = Vec3;
 using dsptr = Ume::Datastore::dsptr;
 using Types = Ume::DS_Types::Types;
-
-//! Struct-of-Arrays (SoA) representation of mesh points
-struct Points : public Entity {
-  explicit Points(Mesh *mesh);
-  void write(std::ostream &os) const override;
-  void read(std::istream &is) override;
-  void resize(int const local, int const total, int const ghost) override;
-  bool operator==(Points const &rhs) const;
-};
 
 struct Mesh {
   enum Geometry_Type { CARTESIAN, CYLINDRICAL, SPHERICAL };

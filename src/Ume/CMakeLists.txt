@@ -15,6 +15,7 @@ set(UME_INCLUDE_FILES
   SOA_Idx_Edges.hh
   SOA_Idx_Faces.hh
   SOA_Idx_Mesh.hh
+  SOA_Idx_Points.hh
   SOA_Idx_Sides.hh
   SOA_Idx_Zones.hh
   soa_idx_helpers.hh
@@ -31,6 +32,7 @@ add_library(Ume
   SOA_Idx_Edges.cc
   SOA_Idx_Faces.cc
   SOA_Idx_Mesh.cc
+  SOA_Idx_Points.cc
   SOA_Idx_Sides.cc
   SOA_Idx_Zones.cc
   )
