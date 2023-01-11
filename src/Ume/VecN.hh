@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -131,6 +132,11 @@ constexpr Vec3 crossprod(Vec3 const &a, Vec3 const &b) {
 
 constexpr double dotprod(Vec3 const &a, Vec3 const &b) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+inline void normalize(Vec3 &a) {
+  double const mag = a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
+  a /= std::sqrt(mag);
 }
 
 } // namespace Ume

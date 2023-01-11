@@ -1,5 +1,6 @@
 #include "Ume/VecN.hh"
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 TEST_CASE("Scalar Ctor", "[vecN]") {
   Ume::VecN<int, 2> v(2);
@@ -215,4 +216,11 @@ TEST_CASE("V3 crossprod", "[vecN]") {
   REQUIRE(cp[0] == 1);
   REQUIRE(cp[1] == -2);
   REQUIRE(cp[2] == 1);
+}
+
+TEST_CASE("V3 normalize", "[vecN]") {
+  Ume::Vec3 a({1, 1, 1});
+  Ume::normalize(a);
+  double mag = Ume::dotprod(a, a);
+  REQUIRE_THAT(mag, Catch::Matchers::WithinULP(1.0, 1));
 }
