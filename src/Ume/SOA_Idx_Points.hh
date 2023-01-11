@@ -20,6 +20,14 @@ struct Points : public Entity {
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Points const &rhs) const;
+
+  class DSE_point_norm : public DSE_Base<Points> {
+  public:
+    explicit DSE_point_norm(Points &p) : DSE_Base(Types::VEC3V, p) {}
+
+  protected:
+    void init_() const override;
+  };
 };
 
 } // namespace SOA_Idx
