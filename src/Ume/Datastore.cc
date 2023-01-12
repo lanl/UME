@@ -35,10 +35,10 @@ void DS_Entry::set_type(DS_Entry::Types type) {
   }
 }
 
-Datastore::dsptr Datastore::add_child_(char const *const name) {
+Datastore *Datastore::add_child_(char const *const name) {
   children_.emplace_back(new Datastore(name));
-  children_.back()->parent_ = getptr();
-  return children_.back();
+  children_.back()->parent_ = this;
+  return children_.back().get();
 }
 
 DS_Entry *Datastore::find(std::string const &name) {
@@ -46,8 +46,8 @@ DS_Entry *Datastore::find(std::string const &name) {
   if (it != entries_.end()) {
     return it->second.get();
   }
-  if (!parent_.expired())
-    return parent_.lock()->find(name);
+  if (parent_)
+    return parent_->find(name);
   return nullptr;
 }
 
@@ -56,8 +56,8 @@ DS_Entry const *Datastore::cfind(std::string const &name) const {
   if (it != entries_.cend()) {
     return it->second.get();
   }
-  if (!parent_.expired())
-    return parent_.lock()->cfind(name);
+  if (!parent_)
+    return parent_->cfind(name);
   return nullptr;
 }
 

@@ -5,13 +5,13 @@
 #include <vector>
 
 using dsptr = Ume::Datastore::dsptr;
-using wptr = std::weak_ptr<Ume::Datastore>;
+using wptr = Ume::Datastore *;
 using wlist = std::vector<wptr>;
 
-void flatten(dsptr curr, wlist &nodes) {
+void flatten(wptr curr, wlist &nodes) {
   nodes.push_back(curr);
   for (auto &c : curr->children_) {
-    flatten(c, nodes);
+    flatten(c.get(), nodes);
   }
 }
 
@@ -20,81 +20,52 @@ TEST_CASE("DS ROOT", "[Datastore]") {
   CHECK(root->name() == "root");
   CHECK(root->path() == "/root");
   wlist nodes;
-  flatten(root, nodes);
+  flatten(root.get(), nodes);
   REQUIRE(nodes.size() == 1);
-  REQUIRE(nodes[0].use_count() == 1);
-  dsptr cpy = root->getptr();
-  REQUIRE(nodes[0].use_count() == 2);
-  cpy.reset();
-  REQUIRE(nodes[0].use_count() == 1);
-  root.reset();
-  REQUIRE(nodes[0].expired());
 }
 
 TEST_CASE("DS ROOT+1", "[Datastore]") {
   dsptr root = Ume::Datastore::create_root();
   {
-    dsptr child1 = Ume::Datastore::create_child(root, "child1");
+    wptr child1 = Ume::Datastore::create_child(root.get(), "child1");
     CHECK(child1->name() == "child1");
     CHECK(child1->path() == "/root/child1");
   }
   wlist nodes;
-  flatten(root, nodes);
-
+  flatten(root.get(), nodes);
   REQUIRE(nodes.size() == 2);
-  for (auto &n : nodes) {
-    REQUIRE(n.use_count() == 1);
-  }
-  root.reset();
-  for (auto &n : nodes) {
-    REQUIRE(n.expired());
-  }
 }
 
 TEST_CASE("DS ROOT+2", "[Datastore]") {
   dsptr root = Ume::Datastore::create_root();
   {
-    dsptr child1 = Ume::Datastore::create_child(root, "child1");
+    wptr child1 = Ume::Datastore::create_child(root.get(), "child1");
     CHECK(child1->name() == "child1");
     CHECK(child1->path() == "/root/child1");
-    dsptr child2 = Ume::Datastore::create_child(root, "child2");
+    wptr child2 = Ume::Datastore::create_child(root.get(), "child2");
     CHECK(child2->name() == "child2");
     CHECK(child2->path() == "/root/child2");
   }
   wlist nodes;
-  flatten(root, nodes);
+  flatten(root.get(), nodes);
 
   REQUIRE(nodes.size() == 3);
-  for (auto &n : nodes) {
-    REQUIRE(n.use_count() == 1);
-  }
-  root.reset();
-  for (auto &n : nodes) {
-    REQUIRE(n.expired());
-  }
 }
 
 TEST_CASE("DS ROOT+1+1", "[Datastore]") {
   dsptr root = Ume::Datastore::create_root();
   {
-    dsptr child1 = Ume::Datastore::create_child(root, "child1");
+    wptr child1 = Ume::Datastore::create_child(root.get(), "child1");
     CHECK(child1->name() == "child1");
     CHECK(child1->path() == "/root/child1");
-    dsptr child2 = Ume::Datastore::create_child(child1, "child2");
+    wptr child2 = Ume::Datastore::create_child(child1, "child2");
     CHECK(child2->name() == "child2");
     CHECK(child2->path() == "/root/child1/child2");
   }
   wlist nodes;
-  flatten(root, nodes);
+  flatten(root.get(), nodes);
 
   REQUIRE(nodes.size() == 3);
-  for (auto &n : nodes) {
-    REQUIRE(n.use_count() == 1);
-  }
-  root.reset();
-  for (auto &n : nodes) {
-    REQUIRE(n.expired());
-  }
 }
 
 TEST_CASE("DS scalar insert", "[Datastore]") {

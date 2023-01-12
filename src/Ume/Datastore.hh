@@ -36,7 +36,7 @@ public:
 protected:
   friend class Datastore;
   Types type_;
-  std::weak_ptr<Datastore> ds_;
+  //  std::weak_ptr<Datastore> ds_;
   mutable std::variant<INT_T, INTV_T, DBL_T, DBLV_T, VEC3_T, VEC3V_T> data_;
   mutable bool dirty_ = false;
   enum class Init_State { UNINITIALIZED, IN_PROGRESS, INITIALIZED };
@@ -46,26 +46,24 @@ protected:
   virtual void init_() const {}
 };
 
-class Datastore : public std::enable_shared_from_this<Datastore>,
-                  public DS_Types {
+class Datastore : public DS_Types {
 public:
-  using dsptr = std::shared_ptr<Datastore>;
+  using dsptr = std::unique_ptr<Datastore>;
   using eptr = std::unique_ptr<DS_Entry>;
 
 public:
-  dsptr getptr() { return shared_from_this(); }
   [[nodiscard]] static dsptr create_root() {
     return dsptr(new Datastore("root"));
   }
-  [[nodiscard]] static dsptr create_child(
-      dsptr parent, char const *const name) {
+  [[nodiscard]] static Datastore *create_child(
+      Datastore *parent, char const *const name) {
     return parent->add_child_(name);
   }
 
   constexpr std::string const &name() const { return name_; }
   std::string path() const {
-    if (!parent_.expired())
-      return parent_.lock()->path() + "/" + name();
+    if (parent_)
+      return parent_->path() + "/" + name();
     return "/" + name();
   }
 
@@ -101,8 +99,8 @@ public:
 private:
   // Force the use of the factory function by making the ctors private
   Datastore() = delete;
-  explicit Datastore(char const *const name) : name_{name} {}
-  dsptr add_child_(char const *const name);
+  explicit Datastore(char const *const name) : name_{name}, parent_{nullptr} {}
+  Datastore *add_child_(char const *const name);
   [[nodiscard]] DS_Entry *find(std::string const &name);
   [[nodiscard]] DS_Entry const *cfind(std::string const &name) const;
   [[nodiscard]] DS_Entry *find_or_die(std::string const &name);
@@ -113,7 +111,7 @@ private:
   std::string name_;
 
 public: /* These are public for testing purposes */
-  std::weak_ptr<Datastore> parent_;
+  Datastore *parent_;
   std::vector<dsptr> children_;
 };
 
