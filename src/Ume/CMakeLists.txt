@@ -9,6 +9,7 @@
 #  -checks=-*,bugprone-*;)
 
 set(UME_INCLUDE_FILES
+  Comm_Neighbors.hh
   Datastore.hh
   SOA_Entity.hh
   SOA_Idx_Corners.hh
