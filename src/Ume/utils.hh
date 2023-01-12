@@ -55,7 +55,7 @@ template <class T>
 void write_bin(std::ostream &os, std::vector<T> const &data) {
   write_bin(os, data.size());
   if (!data.empty()) {
-    os.write(reinterpret_cast<const char *>(&data[0]),
+    os.write(reinterpret_cast<const char *>(data.data()),
         static_cast<std::streamsize>(sizeof(T) * data.size()));
   }
   os << '\n';
@@ -69,7 +69,7 @@ template <class T> void read_bin(std::istream &is, std::vector<T> &data) {
     data.clear();
   } else {
     data.resize(len);
-    is.read(reinterpret_cast<char *>(&data[0]),
+    is.read(reinterpret_cast<char *>(data.data()),
         static_cast<std::streamsize>(sizeof(T) * len));
   }
   Ume::skip_line(is);
