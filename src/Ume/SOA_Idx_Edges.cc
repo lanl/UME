@@ -42,7 +42,7 @@ void Edges::resize(int const local, int const total, int const ghost) {
   RESIZE("m:e>p2", total);
 }
 
-void Edges::DSE_ecoord::init_() const {
+bool Edges::DSE_ecoord::init_() const {
   DSE_INIT_PREAMBLE("DSE_ecoord");
 
   int const el = edges().lsize;
@@ -62,7 +62,7 @@ void Edges::DSE_ecoord::init_() const {
     }
   }
 
-  init_state_ = Init_State::INITIALIZED;
+  DSE_INIT_EPILOGUE;
 }
 
 } // namespace SOA_Idx

@@ -86,7 +86,7 @@ void Sides::resize(int const local, int const total, int const ghost) {
   RESIZE("m:s>s5", total);
 }
 
-void Sides::DSE_side_surf::init_() const {
+bool Sides::DSE_side_surf::init_() const {
   DSE_INIT_PREAMBLE("DSE_side_surf");
   int const sl = sides().lsize;
   int const sll = sides().size();
@@ -125,10 +125,10 @@ void Sides::DSE_side_surf::init_() const {
     } else
       side_surf[s] = 0.0;
   }
-  init_state_ = Init_State::INITIALIZED;
+  DSE_INIT_EPILOGUE;
 }
 
-void Sides::DSE_side_surz::init_() const {
+bool Sides::DSE_side_surz::init_() const {
   DSE_INIT_PREAMBLE("DSE_side_surz");
   int const sl = sides().lsize;
   int const sll = sides().size();
@@ -155,10 +155,10 @@ void Sides::DSE_side_surz::init_() const {
     } else
       side_surz[s] = 0.0;
   }
-  init_state_ = Init_State::INITIALIZED;
+  DSE_INIT_EPILOGUE;
 }
 
-void Sides::DSE_side_vol::init_() const {
+bool Sides::DSE_side_vol::init_() const {
   DSE_INIT_PREAMBLE("DSE_side_vol");
   int const sl = sides().lsize;
   int const sll = sides().size();
@@ -185,7 +185,7 @@ void Sides::DSE_side_vol::init_() const {
     } else
       side_vol[s] = 0.0;
   }
-  init_state_ = Init_State::INITIALIZED;
+  DSE_INIT_EPILOGUE;
 }
 
 } // namespace SOA_Idx

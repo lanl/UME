@@ -43,7 +43,7 @@ void Corners::resize(int const local, int const total, int const ghost) {
   RESIZE("m:c>z", total);
 }
 
-void Corners::DSE_corner_vol::init_() const {
+bool Corners::DSE_corner_vol::init_() const {
   DSE_INIT_PREAMBLE("DSE_corner_vol");
 
   int const cll = corners().size();
@@ -62,10 +62,10 @@ void Corners::DSE_corner_vol::init_() const {
       corner_vol[s2c2[s]] += hsv;
     }
   }
-  init_state_ = Init_State::INITIALIZED;
+  DSE_INIT_EPILOGUE;
 }
 
-void Corners::DSE_corner_csurf::init_() const {
+bool Corners::DSE_corner_csurf::init_() const {
   DSE_INIT_PREAMBLE("DSE_corner_csurf");
 
   int const cll = corners().size();
@@ -83,7 +83,7 @@ void Corners::DSE_corner_csurf::init_() const {
       corner_csurf[s2c2[s]] -= side_surf[s];
     }
   }
-  init_state_ = Init_State::INITIALIZED;
+  DSE_INIT_EPILOGUE;
 }
 
 } // namespace SOA_Idx

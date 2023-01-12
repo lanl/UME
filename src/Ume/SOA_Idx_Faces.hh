@@ -24,7 +24,7 @@ struct Faces : public Entity {
     explicit DSE_fcoord(Faces &f) : DSE_Base(Types::VEC3V, f) {}
 
   protected:
-    void init_() const override;
+    bool init_() const override;
   };
 };
 } // namespace SOA_Idx

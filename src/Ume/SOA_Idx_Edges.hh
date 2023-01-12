@@ -24,7 +24,7 @@ struct Edges : public Entity {
     explicit DSE_ecoord(Edges &e) : DSE_Base(Types::VEC3V, e) {}
 
   protected:
-    void init_() const override;
+    bool init_() const override;
   };
 };
 

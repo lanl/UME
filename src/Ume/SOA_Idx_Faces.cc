@@ -42,7 +42,7 @@ void Faces::resize(int const local, int const total, int const ghost) {
   RESIZE("m:f>z2", total);
 }
 
-void Faces::DSE_fcoord::init_() const {
+bool Faces::DSE_fcoord::init_() const {
   DSE_INIT_PREAMBLE("DSE_fcoord");
 
   int const fll{faces().size()};
@@ -71,7 +71,7 @@ void Faces::DSE_fcoord::init_() const {
     }
   }
 
-  init_state_ = Init_State::INITIALIZED;
+  DSE_INIT_EPILOGUE;
 }
 } // namespace SOA_Idx
 } // namespace Ume

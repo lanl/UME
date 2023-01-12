@@ -26,7 +26,7 @@ struct Points : public Entity {
     explicit DSE_point_norm(Points &p) : DSE_Base(Types::VEC3V, p) {}
 
   protected:
-    void init_() const override;
+    bool init_() const override;
   };
 };
 

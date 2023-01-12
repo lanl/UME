@@ -23,7 +23,7 @@ struct Zones : public Entity {
     explicit DSE_zcoord(Zones &z) : DSE_Base(Types::VEC3V, z) {}
 
   protected:
-    void init_() const override;
+    bool init_() const override;
   };
 };
 

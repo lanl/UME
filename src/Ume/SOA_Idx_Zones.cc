@@ -32,7 +32,7 @@ void Zones::resize(int const local, int const total, int const ghost) {
   Entity::resize(local, total, ghost);
 }
 
-void Zones::DSE_zcoord::init_() const {
+bool Zones::DSE_zcoord::init_() const {
   DSE_INIT_PREAMBLE("DSE_zcoord");
 
   int const zl = zones().lsize;
@@ -61,8 +61,7 @@ void Zones::DSE_zcoord::init_() const {
       zcoord[z] /= static_cast<double>(num_zone_pts[z]);
     }
   }
-
-  init_state_ = Init_State::INITIALIZED;
+  DSE_INIT_EPILOGUE;
 }
 } // namespace SOA_Idx
 } // namespace Ume

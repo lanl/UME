@@ -39,7 +39,8 @@ void Points::resize(int const local, int const total, int const ghost) {
   (mesh_->ds->access_vec3v("pcoord")).resize(total);
 }
 
-void Points::DSE_point_norm::init_() const {
+bool Points::DSE_point_norm::init_() const {
+  DSE_INIT_PREAMBLE("DSE_point_norm");
   int const pll = points().size();
   int const pl = points().lsize;
   int const sl = sides().lsize;
@@ -71,6 +72,7 @@ void Points::DSE_point_norm::init_() const {
       normalize(point_norm[p]);
     }
   }
+  DSE_INIT_EPILOGUE;
 }
 
 } // namespace SOA_Idx

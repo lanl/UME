@@ -43,7 +43,10 @@ protected:
   mutable Init_State init_state_{Init_State::UNINITIALIZED};
 
 protected:
-  virtual void init_() const {}
+  virtual bool init_() const {
+    init_state_ = Init_State::INITIALIZED;
+    return false;
+  }
 };
 
 class Datastore : public DS_Types {
@@ -81,7 +84,7 @@ public:
   } \
   inline T const &caccess_##Y(char const *const name) const { \
     auto ptr = cfind_or_die(name); \
-    ptr->init_(); \
+    ptr->dirty_ = ptr->init_(); \
     return std::get<T>(ptr->data_); \
   }
 

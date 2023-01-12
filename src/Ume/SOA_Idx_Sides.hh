@@ -28,7 +28,7 @@ struct Sides : public Entity {
     explicit DSE_side_surf(Sides &s) : DSE_Base(Types::VEC3V, s) {}
 
   protected:
-    void init_() const override;
+    bool init_() const override;
   };
 
   class DSE_side_surz : public DSE_Base<Sides> {
@@ -36,7 +36,7 @@ struct Sides : public Entity {
     explicit DSE_side_surz(Sides &s) : DSE_Base(Types::VEC3V, s) {}
 
   protected:
-    void init_() const override;
+    bool init_() const override;
   };
 
   class DSE_side_vol : public DSE_Base<Sides> {
@@ -44,7 +44,7 @@ struct Sides : public Entity {
     explicit DSE_side_vol(Sides &s) : DSE_Base(Types::DBLV, s) {}
 
   protected:
-    void init_() const override;
+    bool init_() const override;
   };
 };
 

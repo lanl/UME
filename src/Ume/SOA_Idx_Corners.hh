@@ -32,14 +32,14 @@ public:
     explicit DSE_corner_vol(Corners &c) : DSE_Base(Types::DBLV, c) {}
 
   protected:
-    void init_() const override;
+    bool init_() const override;
   };
   class DSE_corner_csurf : public DSE_Base<Corners> {
   public:
     explicit DSE_corner_csurf(Corners &c) : DSE_Base(Types::VEC3V, c) {}
 
   protected:
-    void init_() const override;
+    bool init_() const override;
   };
 };
 
