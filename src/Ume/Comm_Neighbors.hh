@@ -5,6 +5,7 @@
 #ifndef COMM_NEIGHBORS_HH
 #define COMM_NEIGHBORS_HH 1
 
+#include "utils.hh"
 #include <vector>
 
 namespace Ume {
@@ -17,7 +18,7 @@ namespace Comm {
 struct Neighbor {
   int pe;
   std::vector<int> elements;
-  bool operator==(Neighbor const &rhs) const {
+  constexpr bool operator==(Neighbor const &rhs) const {
     return (pe == rhs.pe && elements == rhs.elements);
   }
 };
@@ -25,6 +26,16 @@ struct Neighbor {
 using Neighbors = std::vector<Neighbor>;
 
 } // namespace Comm
+
+//! Binary write specialization for Ume::Comm::Neighbors
+template <>
+void write_bin<Comm::Neighbors>(
+    std::ostream &os, Ume::Comm::Neighbors const &nvec);
+
+//! Binary read specialization for Ume::Comm::Neighbors
+template <>
+void read_bin<Comm::Neighbors>(std::istream &is, Ume::Comm::Neighbors &nvec);
+
 } // namespace Ume
 
 #endif

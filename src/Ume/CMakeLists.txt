@@ -27,6 +27,7 @@ set(UME_INCLUDE_FILES
 
 add_library(Ume
   ${UME_INCLUDE_FILES}
+  Comm_Neighbors.cc
   Datastore.cc
   SOA_Entity.cc
   SOA_Idx_Corners.cc
