@@ -56,7 +56,7 @@ DS_Entry const *Datastore::cfind(std::string const &name) const {
   if (it != entries_.cend()) {
     return it->second.get();
   }
-  if (!parent_)
+  if (parent_)
     return parent_->cfind(name);
   return nullptr;
 }
