@@ -66,7 +66,8 @@ template <class T> void read_bin(std::istream &is, std::vector<T> &data) {
   size_t len;
   read_bin(is, len);
   if (len == 0) {
-    data.clear();
+    std::vector<T> foo;
+    data.swap(foo);
   } else {
     data.resize(len);
     is.read(reinterpret_cast<char *>(data.data()),
