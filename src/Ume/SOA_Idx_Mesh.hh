@@ -21,7 +21,6 @@ namespace Ume {
 //! A struct-of-arrays implementation using integer indexing
 namespace SOA_Idx {
 
-using dsptr = Ume::Datastore::dsptr;
 using Types = Ume::DS_Types::Types;
 
 struct Mesh {

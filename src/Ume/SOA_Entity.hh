@@ -16,7 +16,6 @@ struct Mesh;
 
 /*! Record information common to all SOA_Idx::Mesh entities */
 struct Entity {
-  using dsptr = Ume::Datastore::dsptr;
   Entity() = delete;
   explicit Entity(Mesh *mesh) : mesh_{mesh} {}
   enum CommTypes {

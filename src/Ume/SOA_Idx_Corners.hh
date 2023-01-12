@@ -23,7 +23,6 @@ public:
   Corners() = delete;
   explicit Corners(Mesh *mesh);
   void write(std::ostream &os) const override;
-  void write(dsptr ds, std::ostream &os) const;
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Corners const &rhs) const;
