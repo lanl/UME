@@ -35,8 +35,8 @@ void DS_Entry::set_type(DS_Entry::Types type) {
   }
 }
 
-Datastore::dsptr Datastore::add_child_() {
-  children_.emplace_back(new Datastore());
+Datastore::dsptr Datastore::add_child_(char const *const name) {
+  children_.emplace_back(new Datastore(name));
   children_.back()->parent_ = getptr();
   return children_.back();
 }

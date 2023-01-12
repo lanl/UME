@@ -17,6 +17,8 @@ void flatten(dsptr curr, wlist &nodes) {
 
 TEST_CASE("DS ROOT", "[Datastore]") {
   dsptr root = Ume::Datastore::create_root();
+  CHECK(root->name() == "root");
+  CHECK(root->path() == "/root");
   wlist nodes;
   flatten(root, nodes);
   REQUIRE(nodes.size() == 1);
@@ -31,7 +33,11 @@ TEST_CASE("DS ROOT", "[Datastore]") {
 
 TEST_CASE("DS ROOT+1", "[Datastore]") {
   dsptr root = Ume::Datastore::create_root();
-  { dsptr child1 = Ume::Datastore::create_child(root); }
+  {
+    dsptr child1 = Ume::Datastore::create_child(root, "child1");
+    CHECK(child1->name() == "child1");
+    CHECK(child1->path() == "/root/child1");
+  }
   wlist nodes;
   flatten(root, nodes);
 
@@ -48,8 +54,12 @@ TEST_CASE("DS ROOT+1", "[Datastore]") {
 TEST_CASE("DS ROOT+2", "[Datastore]") {
   dsptr root = Ume::Datastore::create_root();
   {
-    dsptr child1 = Ume::Datastore::create_child(root);
-    dsptr child2 = Ume::Datastore::create_child(root);
+    dsptr child1 = Ume::Datastore::create_child(root, "child1");
+    CHECK(child1->name() == "child1");
+    CHECK(child1->path() == "/root/child1");
+    dsptr child2 = Ume::Datastore::create_child(root, "child2");
+    CHECK(child2->name() == "child2");
+    CHECK(child2->path() == "/root/child2");
   }
   wlist nodes;
   flatten(root, nodes);
@@ -67,8 +77,12 @@ TEST_CASE("DS ROOT+2", "[Datastore]") {
 TEST_CASE("DS ROOT+1+1", "[Datastore]") {
   dsptr root = Ume::Datastore::create_root();
   {
-    dsptr child1 = Ume::Datastore::create_child(root);
-    dsptr child2 = Ume::Datastore::create_child(child1);
+    dsptr child1 = Ume::Datastore::create_child(root, "child1");
+    CHECK(child1->name() == "child1");
+    CHECK(child1->path() == "/root/child1");
+    dsptr child2 = Ume::Datastore::create_child(child1, "child2");
+    CHECK(child2->name() == "child2");
+    CHECK(child2->path() == "/root/child1/child2");
   }
   wlist nodes;
   flatten(root, nodes);

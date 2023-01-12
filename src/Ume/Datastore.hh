@@ -54,9 +54,19 @@ public:
 
 public:
   dsptr getptr() { return shared_from_this(); }
-  [[nodiscard]] static dsptr create_root() { return dsptr(new Datastore()); }
-  [[nodiscard]] static dsptr create_child(dsptr parent) {
-    return parent->add_child_();
+  [[nodiscard]] static dsptr create_root() {
+    return dsptr(new Datastore("root"));
+  }
+  [[nodiscard]] static dsptr create_child(
+      dsptr parent, char const *const name) {
+    return parent->add_child_(name);
+  }
+
+  constexpr std::string const &name() const { return name_; }
+  std::string path() const {
+    if (!parent_.expired())
+      return parent_.lock()->path() + "/" + name();
+    return "/" + name();
   }
 
   bool insert(char const *const name, eptr &&ptr) {
@@ -90,8 +100,9 @@ public:
 
 private:
   // Force the use of the factory function by making the ctors private
-  Datastore() = default;
-  dsptr add_child_();
+  Datastore() = delete;
+  explicit Datastore(char const *const name) : name_{name} {}
+  dsptr add_child_(char const *const name);
   [[nodiscard]] DS_Entry *find(std::string const &name);
   [[nodiscard]] DS_Entry const *cfind(std::string const &name) const;
   [[nodiscard]] DS_Entry *find_or_die(std::string const &name);
@@ -99,6 +110,7 @@ private:
 
 private:
   std::unordered_map<std::string, eptr> entries_;
+  std::string name_;
 
 public: /* These are public for testing purposes */
   std::weak_ptr<Datastore> parent_;
