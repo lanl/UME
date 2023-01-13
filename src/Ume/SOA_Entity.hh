@@ -4,6 +4,8 @@
 #ifndef SOA_ENTITY_HH
 #define SOA_ENTITY_HH 1
 
+#include "Ume/Comm_Neighbors.hh"
+#include "Ume/Datastore.hh"
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -11,8 +13,12 @@
 namespace Ume {
 namespace SOA_Idx {
 
+struct Mesh;
+
 /*! Record information common to all SOA_Idx::Mesh entities */
 struct Entity {
+  Entity() = delete;
+  explicit Entity(Mesh *mesh) : mesh_{mesh} {}
   enum CommTypes {
     INTERNAL = 1, /* Not on a communication boundary */
     SOURCE, /* The source entity in a group of shared copies */
@@ -66,15 +72,8 @@ struct Entity {
   std::vector<int> ghost_mask;
   ///@}
 
-  struct Comm {
-    int pe;
-    std::vector<int> elements;
-    inline bool operator==(Comm const &rhs) const {
-      return (pe == rhs.pe && elements == rhs.elements);
-    }
-  };
-  std::vector<Comm> recvFrom;
-  std::vector<Comm> sendTo;
+  Ume::Comm::Neighbors recvFrom; // scatter pattern
+  Ume::Comm::Neighbors sendTo; // gather pattern
 
   struct Subset {
     std::string name;
@@ -96,6 +95,10 @@ struct Entity {
   virtual void resize(int const local, int const total, int const ghost);
   bool operator==(Entity const &rhs) const;
   int size() const { return static_cast<int>(mask.size()); }
+  Ume::Datastore *ds();
+  Ume::Datastore const *ds() const;
+
+  Mesh *mesh_;
 };
 } // namespace SOA_Idx
 } // namespace Ume

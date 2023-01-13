@@ -158,7 +158,9 @@ bool skip_to_line(std::istream &is, char const *const expect) {
 
 void read_points(std::istream &is, Points &pts, const int kkpl, const int kkpll,
     const int kkpgl, const int ndims) {
+
   pts.resize(kkpl, kkpll, kkpgl);
+  auto &coords = pts.ds()->access_vec3v("pcoord");
 
   int idx;
   for (int i = 0; i < kkpll; ++i) {
@@ -168,9 +170,9 @@ void read_points(std::istream &is, Points &pts, const int kkpl, const int kkpll,
       std::cerr << "Point " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> pts.mask[i] >> pts.comm_type[i] >> pts.coord[0][i];
+    is >> pts.mask[i] >> pts.comm_type[i] >> coords[0][i];
     for (int d = 1; d < ndims; ++d) {
-      is >> pts.coord[d][i];
+      is >> coords[d][i];
     }
     is >> std::ws;
   }
@@ -236,6 +238,18 @@ void read_sides(std::istream &is, Sides &sides, const int kksl, const int kksll,
     const int kksgl) {
   int idx;
   sides.resize(kksl, kksll, kksgl);
+  auto &z = sides.ds()->access_intv("m:s>z");
+  auto &p1 = sides.ds()->access_intv("m:s>p1");
+  auto &p2 = sides.ds()->access_intv("m:s>p2");
+  auto &e = sides.ds()->access_intv("m:s>e");
+  auto &f = sides.ds()->access_intv("m:s>f");
+  auto &c1 = sides.ds()->access_intv("m:s>c1");
+  auto &c2 = sides.ds()->access_intv("m:s>c2");
+  auto &s2 = sides.ds()->access_intv("m:s>s2");
+  auto &s3 = sides.ds()->access_intv("m:s>s3");
+  auto &s4 = sides.ds()->access_intv("m:s>s4");
+  auto &s5 = sides.ds()->access_intv("m:s>s5");
+
   for (int i = 0; i < kksll; ++i) {
     idx = -1;
     is >> idx;
@@ -244,20 +258,19 @@ void read_sides(std::istream &is, Sides &sides, const int kksl, const int kksll,
       exit(1);
     }
     is >> sides.mask[i] >> sides.comm_type[i];
-    is >> sides.z[i] >> sides.p1[i] >> sides.p2[i] >> sides.e[i] >>
-        sides.f[i] >> sides.c1[i] >> sides.c2[i] >> sides.s2[i] >>
-        sides.s3[i] >> sides.s4[i] >> sides.s5[i] >> std::ws;
-    --sides.z[i];
-    --sides.p1[i];
-    --sides.p2[i];
-    --sides.e[i];
-    --sides.f[i];
-    --sides.c1[i];
-    --sides.c2[i];
-    --sides.s2[i];
-    --sides.s3[i];
-    --sides.s4[i];
-    --sides.s5[i];
+    is >> z[i] >> p1[i] >> p2[i] >> e[i] >> f[i] >> c1[i] >> c2[i] >> s2[i] >>
+        s3[i] >> s4[i] >> s5[i] >> std::ws;
+    --z[i];
+    --p1[i];
+    --p2[i];
+    --e[i];
+    --f[i];
+    --c1[i];
+    --c2[i];
+    --s2[i];
+    --s3[i];
+    --s4[i];
+    --s5[i];
   }
   expect_line(is, "Ghost Sides");
   skip_line(is);
@@ -279,6 +292,8 @@ void read_edges(std::istream &is, Edges &edges, const int kkel, const int kkell,
     const int kkegl) {
   int idx;
   edges.resize(kkel, kkell, kkegl);
+  auto &p1 = edges.ds()->access_intv("m:e>p1");
+  auto &p2 = edges.ds()->access_intv("m:e>p2");
   for (int i = 0; i < kkell; ++i) {
     idx = -1;
     is >> idx;
@@ -286,10 +301,9 @@ void read_edges(std::istream &is, Edges &edges, const int kkel, const int kkell,
       std::cerr << "Edge " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> edges.mask[i] >> edges.comm_type[i] >> edges.p1[i] >> edges.p2[i] >>
-        std::ws;
-    --edges.p1[i];
-    --edges.p2[i];
+    is >> edges.mask[i] >> edges.comm_type[i] >> p1[i] >> p2[i] >> std::ws;
+    --p1[i];
+    --p2[i];
   }
   expect_line(is, "Ghost Edges");
   skip_line(is);
@@ -311,6 +325,8 @@ void read_faces(std::istream &is, Faces &faces, const int kkfl, const int kkfll,
     const int kkfgl) {
   int idx;
   faces.resize(kkfl, kkfll, kkfgl);
+  auto &z1 = faces.ds()->access_intv("m:f>z1");
+  auto &z2 = faces.ds()->access_intv("m:f>z2");
   for (int i = 0; i < kkfll; ++i) {
     idx = -1;
     is >> idx;
@@ -318,10 +334,9 @@ void read_faces(std::istream &is, Faces &faces, const int kkfl, const int kkfll,
       std::cerr << "Face " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> faces.mask[i] >> faces.comm_type[i] >> faces.z1[i] >> faces.z2[i] >>
-        std::ws;
-    --faces.z1[i];
-    --faces.z2[i];
+    is >> faces.mask[i] >> faces.comm_type[i] >> z1[i] >> z2[i] >> std::ws;
+    --z1[i];
+    --z2[i];
   }
   expect_line(is, "Ghost Faces");
   skip_line(is);
@@ -343,6 +358,8 @@ void read_corners(std::istream &is, Corners &corners, const int kkcl,
     const int kkcll, const int kkcgl) {
   int idx;
   corners.resize(kkcl, kkcll, kkcgl);
+  auto &p = corners.ds()->access_intv("m:c>p");
+  auto &z = corners.ds()->access_intv("m:c>z");
   for (int i = 0; i < kkcll; ++i) {
     idx = -1;
     is >> idx;
@@ -350,10 +367,9 @@ void read_corners(std::istream &is, Corners &corners, const int kkcl,
       std::cerr << "Face " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> corners.mask[i] >> corners.comm_type[i] >> corners.p[i] >>
-        corners.z[i] >> std::ws;
-    --corners.p[i];
-    --corners.z[i];
+    is >> corners.mask[i] >> corners.comm_type[i] >> p[i] >> z[i] >> std::ws;
+    --p[i];
+    --z[i];
   }
   expect_line(is, "Ghost Corners");
   skip_line(is);

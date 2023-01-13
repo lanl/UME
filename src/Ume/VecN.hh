@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -122,7 +123,21 @@ private:
   std::array<T, N> data_;
 };
 
-using Coord3 = VecN<double, 3>;
+using Vec3 = VecN<double, 3>;
+
+constexpr Vec3 crossprod(Vec3 const &a, Vec3 const &b) {
+  return Vec3{{a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0]}};
+}
+
+constexpr double dotprod(Vec3 const &a, Vec3 const &b) {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+inline void normalize(Vec3 &a) {
+  double const mag = a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
+  a /= std::sqrt(mag);
+}
 
 } // namespace Ume
 #endif

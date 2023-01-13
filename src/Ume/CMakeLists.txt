@@ -3,10 +3,23 @@
 #############################################################################
 # The basic Ume library
 #############################################################################
+#set(CMAKE_CXX_CLANG_TIDY
+#  clang-tidy;
+#  -header-filter=.;
+#  -checks=-*,bugprone-*;)
 
 set(UME_INCLUDE_FILES
+  Comm_Neighbors.hh
+  Datastore.hh
   SOA_Entity.hh
+  SOA_Idx_Corners.hh
+  SOA_Idx_Edges.hh
+  SOA_Idx_Faces.hh
   SOA_Idx_Mesh.hh
+  SOA_Idx_Points.hh
+  SOA_Idx_Sides.hh
+  SOA_Idx_Zones.hh
+  soa_idx_helpers.hh
   Timer.hh
   VecN.hh
   utils.hh
@@ -14,8 +27,16 @@ set(UME_INCLUDE_FILES
 
 add_library(Ume
   ${UME_INCLUDE_FILES}
+  Comm_Neighbors.cc
+  Datastore.cc
   SOA_Entity.cc
+  SOA_Idx_Corners.cc
+  SOA_Idx_Edges.cc
+  SOA_Idx_Faces.cc
   SOA_Idx_Mesh.cc
+  SOA_Idx_Points.cc
+  SOA_Idx_Sides.cc
+  SOA_Idx_Zones.cc
   )
 
 set_target_properties(Ume PROPERTIES

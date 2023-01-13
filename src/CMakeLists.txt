@@ -2,17 +2,17 @@
 
 add_subdirectory(Ume)
 
-add_executable(ume_driver ume.cc)
+add_executable(ume_driver ume_driver.cc)
 target_link_libraries(ume_driver Ume)
 target_compile_options(ume_driver PRIVATE ${WARNING_FLAGS})
 
 add_executable(txt2bin txt2bin.cc)
 target_link_libraries(txt2bin Ume)
-target_compile_options(ume_driver PRIVATE ${WARNING_FLAGS})
+target_compile_options(txt2bin PRIVATE ${WARNING_FLAGS})
 
 add_executable(parallel parallel.cc)
 target_link_libraries(parallel Ume)
-target_compile_options(ume_driver PRIVATE ${WARNING_FLAGS})
+target_compile_options(parallel PRIVATE ${WARNING_FLAGS})
 
 
 #############################################################################
