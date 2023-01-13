@@ -4,6 +4,7 @@
 #ifndef SOA_ENTITY_HH
 #define SOA_ENTITY_HH 1
 
+#include "Ume/Comm_Neighbors.hh"
 #include "Ume/Datastore.hh"
 #include <iosfwd>
 #include <string>
@@ -71,15 +72,8 @@ struct Entity {
   std::vector<int> ghost_mask;
   ///@}
 
-  struct Comm {
-    int pe;
-    std::vector<int> elements;
-    inline bool operator==(Comm const &rhs) const {
-      return (pe == rhs.pe && elements == rhs.elements);
-    }
-  };
-  std::vector<Comm> recvFrom;
-  std::vector<Comm> sendTo;
+  Ume::Comm::Neighbors recvFrom; // scatter pattern
+  Ume::Comm::Neighbors sendTo; // gather pattern
 
   struct Subset {
     std::string name;

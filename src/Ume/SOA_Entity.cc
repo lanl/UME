@@ -3,40 +3,6 @@
 
 namespace Ume {
 
-//! Binary write for std::vector<Entity::Comm>
-template <>
-void write_bin<Ume::SOA_Idx::Entity::Comm>(
-    std::ostream &os, std::vector<Ume::SOA_Idx::Entity::Comm> const &data) {
-  write_bin(os, data.size());
-  if (!data.empty()) {
-    for (auto const &c : data) {
-      write_bin(os, c.pe);
-      write_bin(os, c.elements);
-      os << '\n';
-    }
-  }
-  os << '\n';
-}
-
-//! Binary read for std::vector<Entity::Comm>
-template <>
-void read_bin<Ume::SOA_Idx::Entity::Comm>(
-    std::istream &is, std::vector<Ume::SOA_Idx::Entity::Comm> &data) {
-  size_t len;
-  read_bin(is, len);
-  if (len == 0) {
-    data.clear();
-  } else {
-    data.resize(len);
-    for (size_t i = 0; i < len; ++i) {
-      read_bin(is, data[i].pe);
-      read_bin(is, data[i].elements);
-      Ume::skip_line(is);
-    }
-  }
-  Ume::skip_line(is);
-}
-
 //! Binary write for std::vector<Entity::Subset>
 template <>
 void write_bin<Ume::SOA_Idx::Entity::Subset>(
@@ -54,7 +20,7 @@ void write_bin<Ume::SOA_Idx::Entity::Subset>(
   os << '\n';
 }
 
-//! Binary read for std::vector<Entity::Comm>
+//! Binary read for std::vector<Entity::Subset>
 template <>
 void read_bin<Ume::SOA_Idx::Entity::Subset>(
     std::istream &is, std::vector<Ume::SOA_Idx::Entity::Subset> &data) {
@@ -90,8 +56,8 @@ void Entity::write(std::ostream &os) const {
   write_bin(os, src_pe);
   write_bin(os, src_idx);
   write_bin(os, ghost_mask);
-  write_bin(os, recvFrom);
-  write_bin(os, sendTo);
+  write_bin<Comm::Neighbors>(os, recvFrom);
+  write_bin<Comm::Neighbors>(os, sendTo);
   write_bin(os, subsets);
   os << '\n';
 }
@@ -104,8 +70,8 @@ void Entity::read(std::istream &is) {
   read_bin(is, src_pe);
   read_bin(is, src_idx);
   read_bin(is, ghost_mask);
-  read_bin(is, recvFrom);
-  read_bin(is, sendTo);
+  read_bin<Comm::Neighbors>(is, recvFrom);
+  read_bin<Comm::Neighbors>(is, sendTo);
   read_bin(is, subsets);
   skip_line(is);
 }
