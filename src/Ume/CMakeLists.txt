@@ -14,6 +14,7 @@ set(UME_INCLUDE_FILES
   Comm_Transport.hh
   Datastore.hh
   SOA_Entity.hh
+  SOA_Entity_Comm.hh
   SOA_Idx_Corners.hh
   SOA_Idx_Edges.hh
   SOA_Idx_Faces.hh

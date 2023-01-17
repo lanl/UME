@@ -66,7 +66,7 @@ bool Points::DSE_point_norm::init_() const {
 
   /* Since points are shared among adjacent parallel ranks, we need to do a
      parallel sum. */
-  // P_GathScat_Sum(point_norm)
+  points().gathscat(Comm::Op::SUM, point_norm);
   for (int p = 0; p < pl; ++p) {
     if (pmask[p] < 0) {
       normalize(point_norm[p]);

@@ -5,6 +5,7 @@
 #define SOA_ENTITY_HH 1
 
 #include "Ume/Comm_Neighbors.hh"
+#include "Ume/Comm_Transport.hh"
 #include "Ume/Datastore.hh"
 #include <iosfwd>
 #include <string>
@@ -75,6 +76,8 @@ struct Entity {
   Ume::Comm::Neighbors recvFrom; // scatter pattern
   Ume::Comm::Neighbors sendTo; // gather pattern
 
+  template <typename FT> void gathscat(Comm::Op const op, FT &field);
+
   struct Subset {
     std::string name;
     //! The Number of local (non-ghost) elements
@@ -100,6 +103,7 @@ struct Entity {
 
   Mesh *mesh_;
 };
+
 } // namespace SOA_Idx
 } // namespace Ume
 

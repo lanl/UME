@@ -8,11 +8,11 @@
 namespace Ume {
 namespace Comm {
 
+enum class Op { SUM };
+
 class Transport {
 public:
-  enum class CommOp { SUM };
-
-public:
+  virtual void move(Op /*op */) {}
   virtual int stop() { return -1; };
   virtual ~Transport() = default;
 };

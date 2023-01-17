@@ -46,7 +46,9 @@ struct Mesh {
 };
 
 } // namespace SOA_Idx
-
 } // namespace Ume
+
+// Template definitions that depend on a complete definition of Mesh
+#include "Ume/SOA_Entity_Comm.hh"
 
 #endif
