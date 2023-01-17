@@ -2,6 +2,8 @@
   \file ume.cc
 */
 
+#include "Ume/Comm_MPI.hh"
+#include "Ume/Comm_Transport.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
 #include <fstream>
 #include <iostream>
@@ -9,12 +11,18 @@
 
 using namespace Ume::SOA_Idx;
 
-std::vector<Mesh> read_meshes(int const argc, char const *const argv[]);
+std::vector<Mesh> read_meshes(int argc, char *argv[]);
 
-int main(int argc, char const *const argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<Mesh> ranks{read_meshes(argc, argv)};
   if (ranks.empty())
     return 1;
+
+#ifdef HAVE_MPI
+  ranks[0].comm = std::make_unique<Ume::Comm::MPI>(&argc, &argv, ranks[0].mype);
+#else
+  ranks[0].comm = std::make_unique<Ume::Comm::Transport>();
+#endif
 
   auto const &test = ranks[0].ds->caccess_vec3v("corner_csurf");
   auto const &test2 = ranks[0].ds->caccess_vec3v("side_surz");
@@ -22,10 +30,14 @@ int main(int argc, char const *const argv[]) {
   return 0;
 }
 
-std::vector<Mesh> read_meshes(int const argc, char const *const argv[]) {
+std::vector<Mesh> read_meshes(int const argc, char *argv[]) {
   std::vector<Mesh> ranks;
   ranks.resize(argc - 1);
   bool need_sort{false};
+  if (argc == 1) {
+    std::cerr << "Usage: ume_driver <ume file>+" << std::endl;
+    std::exit(1);
+  }
   for (int i = 1; i < argc; ++i) {
     std::cout << "Reading: " << argv[i] << '\n';
     std::ifstream is(argv[i]);

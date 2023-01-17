@@ -9,7 +9,9 @@
 #  -checks=-*,bugprone-*;)
 
 set(UME_INCLUDE_FILES
+  Comm_MPI.hh
   Comm_Neighbors.hh
+  Comm_Transport.hh
   Datastore.hh
   SOA_Entity.hh
   SOA_Idx_Corners.hh
@@ -27,6 +29,7 @@ set(UME_INCLUDE_FILES
 
 add_library(Ume
   ${UME_INCLUDE_FILES}
+  Comm_MPI.cc
   Comm_Neighbors.cc
   Datastore.cc
   SOA_Entity.cc
