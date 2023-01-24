@@ -25,6 +25,13 @@ MPI::MPI(int *argc, char ***argv, int const virtual_rank)
   }
 }
 
+void MPI::exchange(Buffers<DS_Types::INTV_T> const & /*sends*/,
+    Buffers<DS_Types::INTV_T> & /*recvs*/) {}
+void MPI::exchange(Buffers<DS_Types::DBLV_T> const & /*sends*/,
+    Buffers<DS_Types::INTV_T> & /*recvs*/) {}
+void MPI::exchange(Buffers<DS_Types::VEC3V_T> const & /*sends*/,
+    Buffers<DS_Types::VEC3V_T> & /*recvs*/) {}
+
 int MPI::stop() {
   MPI_Finalize();
   return 0;

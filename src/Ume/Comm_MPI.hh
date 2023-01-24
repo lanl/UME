@@ -14,6 +14,12 @@ namespace Comm {
 class MPI : public Transport {
 public:
   MPI(int *argc, char ***argv, int virtual_rank);
+  void exchange(Buffers<DS_Types::INTV_T> const &sends,
+      Buffers<DS_Types::INTV_T> &recvs) override;
+  void exchange(Buffers<DS_Types::DBLV_T> const &sends,
+      Buffers<DS_Types::INTV_T> &recvs) override;
+  void exchange(Buffers<DS_Types::VEC3V_T> const &sends,
+      Buffers<DS_Types::VEC3V_T> &recvs) override;
   int stop() override;
 
 private:
