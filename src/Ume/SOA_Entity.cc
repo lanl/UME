@@ -56,8 +56,8 @@ void Entity::write(std::ostream &os) const {
   write_bin(os, src_pe);
   write_bin(os, src_idx);
   write_bin(os, ghost_mask);
-  write_bin<Comm::Neighbors>(os, recvFrom);
-  write_bin<Comm::Neighbors>(os, sendTo);
+  write_bin<Comm::Neighbors>(os, myCpys);
+  write_bin<Comm::Neighbors>(os, mySrcs);
   write_bin(os, subsets);
   os << '\n';
 }
@@ -70,8 +70,8 @@ void Entity::read(std::istream &is) {
   read_bin(is, src_pe);
   read_bin(is, src_idx);
   read_bin(is, ghost_mask);
-  read_bin<Comm::Neighbors>(is, recvFrom);
-  read_bin<Comm::Neighbors>(is, sendTo);
+  read_bin<Comm::Neighbors>(is, myCpys);
+  read_bin<Comm::Neighbors>(is, mySrcs);
   read_bin(is, subsets);
   skip_line(is);
 }
@@ -80,8 +80,8 @@ bool Entity::operator==(Entity const &rhs) const {
   return (lsize == rhs.lsize && mask == rhs.mask &&
       comm_type == rhs.comm_type && cpy_idx == rhs.cpy_idx &&
       src_pe == rhs.src_pe && src_idx == rhs.src_idx &&
-      ghost_mask == rhs.ghost_mask && recvFrom == rhs.recvFrom &&
-      sendTo == rhs.sendTo && subsets == rhs.subsets);
+      ghost_mask == rhs.ghost_mask && myCpys == rhs.myCpys &&
+      mySrcs == rhs.mySrcs && subsets == rhs.subsets);
 }
 
 void Entity::resize(int const local, int const total, int const ghost) {

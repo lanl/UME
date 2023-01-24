@@ -391,51 +391,51 @@ void read_mpi(std::istream &is, Entity &e) {
   expect_line(is, "Recv From");
   int numpes = read_tag(is, "num PEs");
   int total_elem = read_tag(is, "total elem");
-  e.recvFrom.resize(numpes);
+  e.myCpys.resize(numpes);
   int totalCount = 0;
   for (int i = 0; i < numpes; ++i) {
-    e.recvFrom[i].pe = read_tag(is, "rmt PE");
+    e.myCpys[i].pe = read_tag(is, "rmt PE");
     int const elem_count = read_tag(is, "num elem");
-    e.recvFrom[i].elements.resize(elem_count);
+    e.myCpys[i].elements.resize(elem_count);
     for (int j = 0; j < elem_count; ++j) {
-      is >> e.recvFrom[i].elements[j];
+      is >> e.myCpys[i].elements[j];
       if (!is) {
         std::cerr << "read_mpi: input error on RecvFrom " << i << ' ' << j
                   << std::endl;
         exit(1);
       }
-      --e.recvFrom[i].elements[j];
+      --e.myCpys[i].elements[j];
     }
     is >> std::ws;
     totalCount += elem_count;
   }
   if (totalCount != total_elem) {
-    std::cerr << "read_mpi error recvFrom" << std::endl;
+    std::cerr << "read_mpi error myCpys" << std::endl;
     exit(1);
   }
   expect_line(is, "Send To");
   numpes = read_tag(is, "num PEs");
   total_elem = read_tag(is, "total elem");
-  e.sendTo.resize(numpes);
+  e.mySrcs.resize(numpes);
   totalCount = 0;
   for (int i = 0; i < numpes; ++i) {
-    e.sendTo[i].pe = read_tag(is, "rmt PE");
+    e.mySrcs[i].pe = read_tag(is, "rmt PE");
     int const elem_count = read_tag(is, "num elem");
-    e.sendTo[i].elements.resize(elem_count);
+    e.mySrcs[i].elements.resize(elem_count);
     for (int j = 0; j < elem_count; ++j) {
-      is >> e.sendTo[i].elements[j];
+      is >> e.mySrcs[i].elements[j];
       if (!is) {
         std::cerr << "read_mpi: input error on SendTo " << i << ' ' << j
                   << std::endl;
         exit(1);
       }
-      --e.sendTo[i].elements[j];
+      --e.mySrcs[i].elements[j];
     }
     is >> std::ws;
     totalCount += elem_count;
   }
   if (totalCount != total_elem) {
-    std::cerr << "read_mpi error sendTo" << std::endl;
+    std::cerr << "read_mpi error mySrcs" << std::endl;
     exit(1);
   }
 }
