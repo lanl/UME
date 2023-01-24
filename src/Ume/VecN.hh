@@ -118,6 +118,12 @@ public:
     }
     return os << '>';
   }
+  constexpr auto begin() { return data_.begin(); }
+  constexpr auto end() { return data_.end(); }
+  constexpr auto begin() const { return data_.begin(); }
+  constexpr auto end() const { return data_.end(); }
+  constexpr auto cbegin() { return data_.cbegin(); }
+  constexpr auto cend() { return data_.cend(); }
 
 private:
   std::array<T, N> data_;
