@@ -24,39 +24,39 @@ struct DS_Types {
 template <typename T> struct DS_Type_Info {};
 
 template <> struct DS_Type_Info<DS_Types::INT_T> {
+  using base_type = int;
   static const DS_Types::Types type{DS_Types::Types::INT};
-  static bool const is_scalar{true};
-  static int const elem_len{1};
+  static unsigned const elem_len{1};
 };
 
 template <> struct DS_Type_Info<DS_Types::INTV_T> {
+  using base_type = int;
   static const DS_Types::Types type{DS_Types::Types::INTV};
-  static bool const is_scalar{false};
-  static int const elem_len{1};
+  static unsigned const elem_len{1};
 };
 
 template <> struct DS_Type_Info<DS_Types::DBL_T> {
+  using base_type = double;
   static const DS_Types::Types type{DS_Types::Types::DBL};
-  static bool const is_scalar{true};
-  static const int elem_len{1};
+  static unsigned const elem_len{1};
 };
 
 template <> struct DS_Type_Info<DS_Types::DBLV_T> {
+  using base_type = double;
   static const DS_Types::Types type{DS_Types::Types::DBLV};
-  static bool const is_scalar{false};
-  static int const elem_len{1};
+  static unsigned const elem_len{1};
 };
 
 template <> struct DS_Type_Info<DS_Types::VEC3_T> {
+  using base_type = double;
   static const DS_Types::Types type{DS_Types::Types::VEC3};
-  static bool const is_scalar{true};
   static int const elem_len{3};
 };
 
 template <> struct DS_Type_Info<DS_Types::VEC3V_T> {
+  using base_type = double;
   static const DS_Types::Types type{DS_Types::Types::VEC3V};
-  static bool const is_scalar{false};
-  static int const elem_len{3};
+  static unsigned const elem_len{3};
 };
 
 } // namespace Ume

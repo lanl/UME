@@ -12,6 +12,7 @@ set(UME_INCLUDE_FILES
   Comm_MPI.hh
   Comm_Neighbors.hh
   Comm_Transport.hh
+  DS_Types.hh
   Datastore.hh
   SOA_Entity.hh
   SOA_Entity_Comm.hh
@@ -22,9 +23,9 @@ set(UME_INCLUDE_FILES
   SOA_Idx_Points.hh
   SOA_Idx_Sides.hh
   SOA_Idx_Zones.hh
-  soa_idx_helpers.hh
   Timer.hh
   VecN.hh
+  soa_idx_helpers.hh
   utils.hh
   )
 
