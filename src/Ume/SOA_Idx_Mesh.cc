@@ -14,8 +14,8 @@ namespace SOA_Idx {
 /* --------------------------------- Mesh -----------------------------------*/
 
 Mesh::Mesh()
-    : ds{Datastore::create_root()}, corners{this}, edges{this}, faces{this},
-      points{this}, sides{this}, zones{this} {}
+    : Mesh_Base(), corners{this}, edges{this}, faces{this}, points{this},
+      sides{this}, zones{this} {}
 
 std::ostream &operator<<(std::ostream &os, Mesh::Geometry_Type const &geo) {
   switch (geo) {
@@ -74,10 +74,6 @@ void Mesh::print_stats(std::ostream &os) const {
   os << "\tFaces: " << faces.lsize << '\n';
   os << "\tCorners: " << corners.lsize << ' ' << corners.size() << '\n';
 }
-
-// Define this here, where we have a complete definition of Mesh
-Ume::Datastore *Entity::ds() { return mesh_->ds.get(); }
-Ume::Datastore const *Entity::ds() const { return mesh_->ds.get(); }
 
 } // namespace SOA_Idx
 } // namespace Ume

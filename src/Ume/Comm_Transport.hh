@@ -54,7 +54,7 @@ public:
       // Set the offset of this PE's data into the aggregated buffer
       remotes_[ni].buf_offset = count * entries_per_elem;
       // Set the length of this PE's data in the aggregated buffer
-      remotes_[ni].buf_len = neights[ni].elements.size() * entries_per_elem;
+      remotes_[ni].buf_len = neighs[ni].elements.size() * entries_per_elem;
       // Add these elements to the bufIdx_to_EntIdx map
       b2e_m_.insert(
           b2e_m_.end(), neighs[ni].elements.begin(), neighs[ni].elements.end());

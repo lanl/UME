@@ -12,11 +12,11 @@ namespace SOA_Idx {
 
 Corners::Corners(Mesh *mesh) : Entity{mesh} {
   // map: corner->index of characteristic point
-  mesh_->ds->insert("m:c>p", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:c>p", std::make_unique<Ume::DS_Entry>(Types::INTV));
   // map: corner->index of parent zone zone
-  mesh_->ds->insert("m:c>z", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  mesh_->ds->insert("corner_vol", std::make_unique<DSE_corner_vol>(*this));
-  mesh_->ds->insert("corner_csurf", std::make_unique<DSE_corner_csurf>(*this));
+  ds().insert("m:c>z", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("corner_vol", std::make_unique<DSE_corner_vol>(*this));
+  ds().insert("corner_csurf", std::make_unique<DSE_corner_csurf>(*this));
 }
 
 void Corners::write(std::ostream &os) const {

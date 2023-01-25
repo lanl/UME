@@ -23,10 +23,10 @@ public:
   DSE_Base(Types t, B &b) : DS_Entry(t), baseEnt_{b} {}
 #define MAKE_DS_ACCESS(Y, R) \
   R &access_##Y(char const *const name) { \
-    return baseEnt_.ds()->access_##Y(name); \
+    return baseEnt_.ds().access_##Y(name); \
   } \
   R const &caccess_##Y(char const *const name) const { \
-    return baseEnt_.ds()->caccess_##Y(name); \
+    return baseEnt_.ds().caccess_##Y(name); \
   } \
   R &mydata_##Y() const { return std::get<R>(data_); }
 
@@ -39,8 +39,8 @@ public:
 #undef MAKE_DS_ACCESS
 
 #define ENT_ACCESS(U, L) \
-  U &L() { return baseEnt_.mesh_->L; } \
-  U &L() const { return baseEnt_.mesh_->L; }
+  U &L() { return baseEnt_.mesh().L; } \
+  U &L() const { return baseEnt_.mesh().L; }
 
   ENT_ACCESS(Corners, corners)
   ENT_ACCESS(Edges, edges)

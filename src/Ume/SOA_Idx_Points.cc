@@ -12,31 +12,30 @@ namespace SOA_Idx {
 
 Points::Points(Mesh *mesh) : Entity{mesh} {
   // point coordinates
-  mesh_->ds->insert("pcoord", std::make_unique<Ume::DS_Entry>(Types::VEC3V));
-  mesh_->ds->insert("point_norm", std::make_unique<DSE_point_norm>(*this));
+  ds().insert("pcoord", std::make_unique<Ume::DS_Entry>(Types::VEC3V));
+  ds().insert("point_norm", std::make_unique<DSE_point_norm>(*this));
 }
 
 void Points::write(std::ostream &os) const {
   Entity::write(os);
-  write_bin(os, mesh_->ds->caccess_vec3v("pcoord"));
+  write_bin(os, ds().caccess_vec3v("pcoord"));
   os << '\n';
 }
 
 void Points::read(std::istream &is) {
   Entity::read(is);
-  read_bin(is, mesh_->ds->access_vec3v("pcoord"));
+  read_bin(is, ds().access_vec3v("pcoord"));
   skip_line(is);
 }
 
 bool Points::operator==(Points const &rhs) const {
   return (Entity::operator==(rhs) &&
-      mesh_->ds->caccess_vec3v("pcoord") ==
-          rhs.mesh_->ds->caccess_vec3v("pcoord"));
+      ds().caccess_vec3v("pcoord") == rhs.ds().caccess_vec3v("pcoord"));
 }
 
 void Points::resize(int const local, int const total, int const ghost) {
   Entity::resize(local, total, ghost);
-  (mesh_->ds->access_vec3v("pcoord")).resize(total);
+  (ds().access_vec3v("pcoord")).resize(total);
 }
 
 bool Points::DSE_point_norm::init_() const {
@@ -66,7 +65,7 @@ bool Points::DSE_point_norm::init_() const {
 
   /* Since points are shared among adjacent parallel ranks, we need to do a
      parallel sum. */
-  points().gathscat(Comm::Op::SUM, point_norm);
+  // points().gathscat(Comm::Op::SUM, point_norm);
   for (int p = 0; p < pl; ++p) {
     if (pmask[p] < 0) {
       normalize(point_norm[p]);

@@ -12,10 +12,10 @@ namespace SOA_Idx {
 
 Faces::Faces(Mesh *mesh) : Entity{mesh} {
   // map: face to adjacent zone 1 index
-  mesh_->ds->insert("m:f>z1", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:f>z1", std::make_unique<Ume::DS_Entry>(Types::INTV));
   // map: face to adjacent zone 2 index
-  mesh_->ds->insert("m:f>z2", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  mesh_->ds->insert("fcoord", std::make_unique<DSE_fcoord>(*this));
+  ds().insert("m:f>z2", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("fcoord", std::make_unique<DSE_fcoord>(*this));
 }
 
 void Faces::write(std::ostream &os) const {
@@ -47,7 +47,7 @@ bool Faces::DSE_fcoord::init_() const {
 
   int const fll{faces().size()};
   int const fl{faces().lsize};
-  int const sl{faces().mesh_->sides.lsize};
+  int const sl{sides().lsize};
   auto const &s2f{caccess_intv("m:s>f")};
   auto const &s2p1{caccess_intv("m:s>p1")};
   auto const &pcoord{caccess_vec3v("pcoord")};

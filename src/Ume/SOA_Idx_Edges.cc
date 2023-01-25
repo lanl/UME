@@ -12,10 +12,10 @@ namespace SOA_Idx {
 
 Edges::Edges(Mesh *mesh) : Entity{mesh} {
   // map: edge to end point 1 index
-  mesh_->ds->insert("m:e>p1", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:e>p1", std::make_unique<Ume::DS_Entry>(Types::INTV));
   // map: edge to end point 2 index
-  mesh_->ds->insert("m:e>p2", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  mesh_->ds->insert("ecoord", std::make_unique<DSE_ecoord>(*this));
+  ds().insert("m:e>p2", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("ecoord", std::make_unique<DSE_ecoord>(*this));
 }
 
 void Edges::write(std::ostream &os) const {

@@ -10,26 +10,26 @@ namespace SOA_Idx {
 
 Sides::Sides(Mesh *mesh) : Entity{mesh} {
   // Index of parent mesh zone
-  mesh_->ds->insert("m:s>z", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:s>z", std::make_unique<Ume::DS_Entry>(Types::INTV));
   // Index of characteristic edge
-  mesh_->ds->insert("m:s>e", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:s>e", std::make_unique<Ume::DS_Entry>(Types::INTV));
   // Indices of the points of 'e' (redundant, but heavily used)
-  mesh_->ds->insert("m:s>p1", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  mesh_->ds->insert("m:s>p2", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:s>p1", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:s>p2", std::make_unique<Ume::DS_Entry>(Types::INTV));
   // Index of the mesh face of z that contains e
-  mesh_->ds->insert("m:s>f", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:s>f", std::make_unique<Ume::DS_Entry>(Types::INTV));
   // Indices of the corners of z that this side intersects
-  mesh_->ds->insert("m:s>c1", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  mesh_->ds->insert("m:s>c2", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:s>c1", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:s>c2", std::make_unique<Ume::DS_Entry>(Types::INTV));
   /* The indices of the sides adjacent to this one.  Note that one of these
      will belong to another zone. */
-  mesh_->ds->insert("m:s>s2", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  mesh_->ds->insert("m:s>s3", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  mesh_->ds->insert("m:s>s4", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  mesh_->ds->insert("m:s>s5", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  mesh_->ds->insert("side_surf", std::make_unique<DSE_side_surf>(*this));
-  mesh_->ds->insert("side_surz", std::make_unique<DSE_side_surz>(*this));
-  mesh_->ds->insert("side_vol", std::make_unique<DSE_side_vol>(*this));
+  ds().insert("m:s>s2", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:s>s3", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:s>s4", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("m:s>s5", std::make_unique<Ume::DS_Entry>(Types::INTV));
+  ds().insert("side_surf", std::make_unique<DSE_side_surf>(*this));
+  ds().insert("side_surz", std::make_unique<DSE_side_surz>(*this));
+  ds().insert("side_vol", std::make_unique<DSE_side_vol>(*this));
 }
 
 void Sides::write(std::ostream &os) const {

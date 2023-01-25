@@ -7,6 +7,7 @@
 #include "Ume/Comm_Neighbors.hh"
 #include "Ume/Comm_Transport.hh"
 #include "Ume/Datastore.hh"
+#include "Ume/Mesh_Base.hh"
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -111,10 +112,20 @@ struct Entity {
   virtual void resize(int const local, int const total, int const ghost);
   bool operator==(Entity const &rhs) const;
   int size() const { return static_cast<int>(mask.size()); }
-  Ume::Datastore *ds();
-  Ume::Datastore const *ds() const;
 
+  Datastore &ds() { return *(((Mesh_Base *)mesh_)->ds); }
+  Datastore const &ds() const { return *(((Mesh_Base *)mesh_)->ds); }
+  constexpr Mesh &mesh() { return *mesh_; }
+  constexpr Mesh const &mesh() const { return *mesh_; }
+  Ume::Comm::Transport &comm() { return *(((Mesh_Base *)mesh_)->comm); }
+  Ume::Comm::Transport const &comm() const {
+    return *(((Mesh_Base *)mesh_)->comm);
+  }
+
+private:
   Mesh *mesh_;
+  template <typename FT>
+  void combine_(Comm::Op const op, FT &field, Comm::Buffers<FT> &buf);
 };
 
 } // namespace SOA_Idx

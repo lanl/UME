@@ -11,7 +11,7 @@ namespace SOA_Idx {
 /* --------------------------------- Zones ----------------------------------*/
 
 Zones::Zones(Mesh *mesh) : Entity{mesh} {
-  mesh_->ds->insert("zcoord", std::make_unique<DSE_zcoord>(*this));
+  ds().insert("zcoord", std::make_unique<DSE_zcoord>(*this));
 }
 
 void Zones::write(std::ostream &os) const {
