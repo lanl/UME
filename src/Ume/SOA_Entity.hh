@@ -124,8 +124,6 @@ struct Entity {
 
 private:
   Mesh *mesh_;
-  template <typename FT>
-  void combine_(Comm::Op const op, FT &field, Comm::Buffers<FT> &buf);
 };
 
 } // namespace SOA_Idx

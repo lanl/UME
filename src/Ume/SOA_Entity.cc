@@ -1,5 +1,6 @@
 #include "SOA_Entity.hh"
 #include "utils.hh"
+#include <cassert>
 
 namespace Ume {
 
@@ -93,6 +94,56 @@ void Entity::resize(int const local, int const total, int const ghost) {
   ghost_mask.resize(ghost);
   lsize = local;
 }
+
+template <typename FT> void Entity::gather(Comm::Op const op, FT &field) {
+  assert(static_cast<int>(field.size()) == size());
+  Comm::Buffers<FT> cpyBufs(myCpys);
+  Comm::Buffers<FT> srcBufs(mySrcs);
+  cpyBufs.pack(field);
+  comm().exchange(cpyBufs, srcBufs); // send local copies to remote sources
+  srcBufs.unpack(field, op);
+}
+
+template <typename FT> void Entity::scatter(FT &field) {
+  assert(static_cast<int>(field.size()) == size());
+  Comm::Buffers<FT> cpyBufs(myCpys);
+  Comm::Buffers<FT> srcBufs(mySrcs);
+  srcBufs.pack(field);
+  comm().exchange(srcBufs, cpyBufs); // send local sources to remote copies
+  cpyBufs.unpack(field, Comm::Op::OVERWRITE);
+}
+
+template <typename FT> void Entity::gathscat(Comm::Op const op, FT &field) {
+  assert(static_cast<int>(field.size()) == size());
+  Comm::Buffers<FT> cpyBufs(myCpys);
+  Comm::Buffers<FT> srcBufs(mySrcs);
+  cpyBufs.pack(field);
+  comm().exchange(cpyBufs, srcBufs);
+  /* srcBufs now contains the remote copy values */
+  srcBufs.unpack(field, op);
+  srcBufs.pack(field); // refill from merged field
+  /* srcBufs now contains the the merged source values */
+  comm().exchange(srcBufs, cpyBufs);
+  cpyBufs.unpack(field, Comm::Op::OVERWRITE);
+}
+
+template void Entity::gather<DS_Types::INTV_T>(
+    Comm::Op const op, DS_Types::INTV_T &field);
+template void Entity::scatter<DS_Types::INTV_T>(DS_Types::INTV_T &field);
+template void Entity::gathscat<DS_Types::INTV_T>(
+    Comm::Op const op, DS_Types::INTV_T &field);
+
+template void Entity::gather<DS_Types::DBLV_T>(
+    Comm::Op const op, DS_Types::DBLV_T &field);
+template void Entity::scatter<DS_Types::DBLV_T>(DS_Types::DBLV_T &field);
+template void Entity::gathscat<DS_Types::DBLV_T>(
+    Comm::Op const op, DS_Types::DBLV_T &field);
+
+template void Entity::gather<DS_Types::VEC3V_T>(
+    Comm::Op const op, DS_Types::VEC3V_T &field);
+template void Entity::scatter<DS_Types::VEC3V_T>(DS_Types::VEC3V_T &field);
+template void Entity::gathscat<DS_Types::VEC3V_T>(
+    Comm::Op const op, DS_Types::VEC3V_T &field);
 
 } // namespace SOA_Idx
 } // namespace Ume

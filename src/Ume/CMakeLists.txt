@@ -9,6 +9,7 @@
 #  -checks=-*,bugprone-*;)
 
 set(UME_INCLUDE_FILES
+  Comm_Buffers.hh
   Comm_MPI.hh
   Comm_Neighbors.hh
   Comm_Transport.hh
@@ -31,6 +32,7 @@ set(UME_INCLUDE_FILES
 
 add_library(Ume
   ${UME_INCLUDE_FILES}
+  Comm_Buffers.cc
   Comm_MPI.cc
   Comm_Neighbors.cc
   Datastore.cc
