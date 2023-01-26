@@ -35,6 +35,7 @@ add_library(Ume
   Comm_Buffers.cc
   Comm_MPI.cc
   Comm_Neighbors.cc
+  Comm_Transport.cc
   Datastore.cc
   SOA_Entity.cc
   SOA_Idx_Corners.cc

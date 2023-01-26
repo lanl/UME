@@ -19,8 +19,14 @@ public:
   virtual void exchange(Buffers<DS_Types::VEC3V_T> const & /*sends*/,
       Buffers<DS_Types::VEC3V_T> & /*recvs*/) {}
   virtual int id() const { return -1; }
-  virtual int stop() { return -1; }
+  virtual int stop() = 0;
   virtual ~Transport() = default;
+};
+
+class Dummy_Transport : public Transport {
+public:
+  Dummy_Transport();
+  int stop() override { return -1; }
 };
 
 } // namespace Comm

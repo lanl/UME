@@ -16,11 +16,12 @@ int main(int argc, char *argv[]) {
   if (ranks.empty())
     return 1;
 
-  Ume::Comm::Transport comm;
+  Ume::Comm::Dummy_Transport comm;
   ranks[0].comm = &comm;
 
   auto const &test = ranks[0].ds->caccess_vec3v("corner_csurf");
   auto const &test2 = ranks[0].ds->caccess_vec3v("side_surz");
+  auto const &test3 = ranks[0].ds->caccess_vec3v("point_norm");
 
   return 0;
 }
