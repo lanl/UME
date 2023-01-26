@@ -18,7 +18,8 @@ public:
       Buffers<DS_Types::DBLV_T> & /*recvs*/) {}
   virtual void exchange(Buffers<DS_Types::VEC3V_T> const & /*sends*/,
       Buffers<DS_Types::VEC3V_T> & /*recvs*/) {}
-  virtual int stop() { return -1; };
+  virtual int id() const { return -1; }
+  virtual int stop() { return -1; }
   virtual ~Transport() = default;
 };
 
