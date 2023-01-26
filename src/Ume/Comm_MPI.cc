@@ -12,26 +12,36 @@
 namespace Ume {
 namespace Comm {
 
-MPI::MPI(int *argc, char ***argv, int const virtual_rank)
-    : virtual_rank_{virtual_rank} {
+MPI::MPI(int *argc, char ***argv) : use_virtual_ranks_{false}, v2r_rank_{} {
   MPI_Init(argc, argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
   MPI_Comm_size(MPI_COMM_WORLD, &numpe_);
+  /*
+      This is what we should probably be doing, but it wasn't returning the same
+      result on all PEs.
+
+      int flag;
+      MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &max_tag_, &flag);
+  */
+  max_tag_ = 32000;
+}
+
+void MPI::set_virtual_rank(int const virtual_rank) {
+  use_virtual_ranks_ = true;
   std::vector<int> r2v(numpe_, -1);
-  r2v[rank_] = virtual_rank_;
+  r2v[rank_] = virtual_rank;
   MPI_Allgather(MPI_IN_PLACE, numpe_, MPI_INT, r2v.data(), numpe_, MPI_INT,
       MPI_COMM_WORLD);
   for (int i = 0; i < numpe_; ++i) {
     v2r_rank_.insert(std::make_pair(r2v[i], i));
   }
-  int flag;
-  MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &max_tag_, &flag);
 }
 
 int MPI::get_tag() {
   static int curr_tag = 1;
-  if (curr_tag >= max_tag_)
+  if (curr_tag >= max_tag_) {
     curr_tag = 1;
+  }
   return curr_tag++;
 }
 
