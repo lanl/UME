@@ -1,9 +1,7 @@
 /*!
-  \file ume.cc
+  \file ume_serial.cc
 */
 
-#include "Ume/Comm_MPI.hh"
-#include "Ume/Comm_Transport.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
 #include <fstream>
 #include <iostream>
@@ -18,11 +16,8 @@ int main(int argc, char *argv[]) {
   if (ranks.empty())
     return 1;
 
-#ifdef HAVE_MPI
-  ranks[0].comm = std::make_unique<Ume::Comm::MPI>(&argc, &argv, ranks[0].mype);
-#else
-  ranks[0].comm = std::make_unique<Ume::Comm::Transport>();
-#endif
+  Ume::Comm::Transport comm;
+  ranks[0].comm = &comm;
 
   auto const &test = ranks[0].ds->caccess_vec3v("corner_csurf");
   auto const &test2 = ranks[0].ds->caccess_vec3v("side_surz");
