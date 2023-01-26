@@ -13,7 +13,7 @@ namespace Ume {
 struct Mesh_Base {
   Mesh_Base() : ds{Datastore::create_root()} {}
   Datastore::dsptr ds;
-  Ume::Comm::Transport *comm;
+  Ume::Comm::Transport *comm = nullptr;
 };
 
 } // namespace Ume
