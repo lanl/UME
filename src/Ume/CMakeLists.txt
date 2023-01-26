@@ -44,6 +44,7 @@ add_library(Ume
   SOA_Idx_Points.cc
   SOA_Idx_Sides.cc
   SOA_Idx_Zones.cc
+  utils.cc
   )
 
 set_target_properties(Ume PROPERTIES

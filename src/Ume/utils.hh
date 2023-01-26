@@ -90,5 +90,7 @@ inline std::string rtrim(const std::string &s) {
 
 inline std::string trim(const std::string &s) { return rtrim(ltrim(s)); }
 
+void debug_attach_point(int const mype);
+
 } // namespace Ume
 #endif
