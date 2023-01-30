@@ -3,9 +3,9 @@
 */
 
 #ifndef DATASTORE_HH
-#define DATASTORE_HH
+#define DATASTORE_HH 1
 
-#include "Ume/VecN.hh"
+#include "Ume/DS_Types.hh"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -15,16 +15,6 @@
 namespace Ume {
 
 class Datastore;
-
-struct DS_Types {
-  enum class Types { INT, INTV, DBL, DBLV, VEC3, VEC3V, NONE };
-  using INT_T = int;
-  using INTV_T = std::vector<INT_T>;
-  using DBL_T = double;
-  using DBLV_T = std::vector<DBL_T>;
-  using VEC3_T = Vec3;
-  using VEC3V_T = std::vector<VEC3_T>;
-};
 
 class DS_Entry : public DS_Types {
 public:

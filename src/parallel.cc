@@ -277,7 +277,7 @@ bool compare_all(MAP1TO1 const &all_recvs, CONNS const &conns, int const ent) {
   /* Build a similar list, but from the Entity sendTo list */
   std::vector<std::set<int>> orig_sends_by_pe{numpe};
   for (auto const &c : conns) {
-    for (auto const &s : c.entities[ent]->sendTo) {
+    for (auto const &s : c.entities[ent]->mySrcs) {
       orig_sends_by_pe[c.mype].insert(s.elements.begin(), s.elements.end());
     }
   }

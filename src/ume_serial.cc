@@ -1,5 +1,5 @@
 /*!
-  \file ume.cc
+  \file ume_serial.cc
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
@@ -9,23 +9,31 @@
 
 using namespace Ume::SOA_Idx;
 
-std::vector<Mesh> read_meshes(int const argc, char const *const argv[]);
+std::vector<Mesh> read_meshes(int argc, char *argv[]);
 
-int main(int argc, char const *const argv[]) {
+int main(int argc, char *argv[]) {
   std::vector<Mesh> ranks{read_meshes(argc, argv)};
   if (ranks.empty())
     return 1;
 
+  Ume::Comm::Dummy_Transport comm;
+  ranks[0].comm = &comm;
+
   auto const &test = ranks[0].ds->caccess_vec3v("corner_csurf");
   auto const &test2 = ranks[0].ds->caccess_vec3v("side_surz");
+  auto const &test3 = ranks[0].ds->caccess_vec3v("point_norm");
 
   return 0;
 }
 
-std::vector<Mesh> read_meshes(int const argc, char const *const argv[]) {
+std::vector<Mesh> read_meshes(int const argc, char *argv[]) {
   std::vector<Mesh> ranks;
   ranks.resize(argc - 1);
   bool need_sort{false};
+  if (argc == 1) {
+    std::cerr << "Usage: ume_driver <ume file>+" << std::endl;
+    std::exit(1);
+  }
   for (int i = 1; i < argc; ++i) {
     std::cout << "Reading: " << argv[i] << '\n';
     std::ifstream is(argv[i]);

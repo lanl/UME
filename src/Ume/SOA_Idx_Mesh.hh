@@ -4,7 +4,7 @@
 #ifndef SOA_IDX_MESH_HH
 #define SOA_IDX_MESH_HH 1
 
-#include "Ume/Datastore.hh"
+#include "Ume/Mesh_Base.hh"
 #include "Ume/SOA_Entity.hh"
 #include "Ume/SOA_Idx_Corners.hh"
 #include "Ume/SOA_Idx_Edges.hh"
@@ -12,9 +12,7 @@
 #include "Ume/SOA_Idx_Points.hh"
 #include "Ume/SOA_Idx_Sides.hh"
 #include "Ume/SOA_Idx_Zones.hh"
-#include "Ume/VecN.hh"
 #include <iosfwd>
-#include <vector>
 
 namespace Ume {
 
@@ -23,12 +21,11 @@ namespace SOA_Idx {
 
 using Types = Ume::DS_Types::Types;
 
-struct Mesh {
+struct Mesh : public Mesh_Base {
   enum Geometry_Type { CARTESIAN, CYLINDRICAL, SPHERICAL };
   int mype;
   int numpe;
   Geometry_Type geo;
-  Datastore::dsptr ds;
   Corners corners;
   Edges edges;
   Faces faces;
@@ -44,7 +41,6 @@ struct Mesh {
 };
 
 } // namespace SOA_Idx
-
 } // namespace Ume
 
 #endif

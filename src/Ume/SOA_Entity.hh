@@ -5,7 +5,9 @@
 #define SOA_ENTITY_HH 1
 
 #include "Ume/Comm_Neighbors.hh"
+#include "Ume/Comm_Transport.hh"
 #include "Ume/Datastore.hh"
+#include "Ume/Mesh_Base.hh"
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -72,8 +74,23 @@ struct Entity {
   std::vector<int> ghost_mask;
   ///@}
 
-  Ume::Comm::Neighbors recvFrom; // scatter pattern
-  Ume::Comm::Neighbors sendTo; // gather pattern
+  //! Local entity indices that are copies of source entities on a source PE
+  /*! myCpys[i].elements[j] is the (local) entity index corresponding to the
+      j'th entry in the buffer sent to/from the source PE myCpys[i].pe.  These
+      are sent to the source PE during a gather, and received during a scatter.
+   */
+  Ume::Comm::Neighbors myCpys;
+  //! Local entity indices that are sources for copy entities on copy PEs.
+  /*! mySrcs[i].elements[j] is the (local) entity index corresponding to the
+      j'th entry in the buffer sent to/from the source PE mySrcs[i].pe.  These
+      are received from the copy PE during a gather, and sent to the copy PEs
+      during a scatter.
+   */
+  Ume::Comm::Neighbors mySrcs;
+
+  template <typename FT> void gather(Comm::Op const op, FT &field);
+  template <typename FT> void scatter(FT &field);
+  template <typename FT> void gathscat(Comm::Op const op, FT &field);
 
   struct Subset {
     std::string name;
@@ -95,11 +112,20 @@ struct Entity {
   virtual void resize(int const local, int const total, int const ghost);
   bool operator==(Entity const &rhs) const;
   int size() const { return static_cast<int>(mask.size()); }
-  Ume::Datastore *ds();
-  Ume::Datastore const *ds() const;
 
+  Datastore &ds() { return *(((Mesh_Base *)mesh_)->ds); }
+  Datastore const &ds() const { return *(((Mesh_Base *)mesh_)->ds); }
+  constexpr Mesh &mesh() { return *mesh_; }
+  constexpr Mesh const &mesh() const { return *mesh_; }
+  Ume::Comm::Transport &comm() { return *(((Mesh_Base *)mesh_)->comm); }
+  Ume::Comm::Transport const &comm() const {
+    return *(((Mesh_Base *)mesh_)->comm);
+  }
+
+private:
   Mesh *mesh_;
 };
+
 } // namespace SOA_Idx
 } // namespace Ume
 

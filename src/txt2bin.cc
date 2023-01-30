@@ -160,7 +160,7 @@ void read_points(std::istream &is, Points &pts, const int kkpl, const int kkpll,
     const int kkpgl, const int ndims) {
 
   pts.resize(kkpl, kkpll, kkpgl);
-  auto &coords = pts.ds()->access_vec3v("pcoord");
+  auto &coords = pts.ds().access_vec3v("pcoord");
 
   int idx;
   for (int i = 0; i < kkpll; ++i) {
@@ -238,17 +238,17 @@ void read_sides(std::istream &is, Sides &sides, const int kksl, const int kksll,
     const int kksgl) {
   int idx;
   sides.resize(kksl, kksll, kksgl);
-  auto &z = sides.ds()->access_intv("m:s>z");
-  auto &p1 = sides.ds()->access_intv("m:s>p1");
-  auto &p2 = sides.ds()->access_intv("m:s>p2");
-  auto &e = sides.ds()->access_intv("m:s>e");
-  auto &f = sides.ds()->access_intv("m:s>f");
-  auto &c1 = sides.ds()->access_intv("m:s>c1");
-  auto &c2 = sides.ds()->access_intv("m:s>c2");
-  auto &s2 = sides.ds()->access_intv("m:s>s2");
-  auto &s3 = sides.ds()->access_intv("m:s>s3");
-  auto &s4 = sides.ds()->access_intv("m:s>s4");
-  auto &s5 = sides.ds()->access_intv("m:s>s5");
+  auto &z = sides.ds().access_intv("m:s>z");
+  auto &p1 = sides.ds().access_intv("m:s>p1");
+  auto &p2 = sides.ds().access_intv("m:s>p2");
+  auto &e = sides.ds().access_intv("m:s>e");
+  auto &f = sides.ds().access_intv("m:s>f");
+  auto &c1 = sides.ds().access_intv("m:s>c1");
+  auto &c2 = sides.ds().access_intv("m:s>c2");
+  auto &s2 = sides.ds().access_intv("m:s>s2");
+  auto &s3 = sides.ds().access_intv("m:s>s3");
+  auto &s4 = sides.ds().access_intv("m:s>s4");
+  auto &s5 = sides.ds().access_intv("m:s>s5");
 
   for (int i = 0; i < kksll; ++i) {
     idx = -1;
@@ -292,8 +292,8 @@ void read_edges(std::istream &is, Edges &edges, const int kkel, const int kkell,
     const int kkegl) {
   int idx;
   edges.resize(kkel, kkell, kkegl);
-  auto &p1 = edges.ds()->access_intv("m:e>p1");
-  auto &p2 = edges.ds()->access_intv("m:e>p2");
+  auto &p1 = edges.ds().access_intv("m:e>p1");
+  auto &p2 = edges.ds().access_intv("m:e>p2");
   for (int i = 0; i < kkell; ++i) {
     idx = -1;
     is >> idx;
@@ -325,8 +325,8 @@ void read_faces(std::istream &is, Faces &faces, const int kkfl, const int kkfll,
     const int kkfgl) {
   int idx;
   faces.resize(kkfl, kkfll, kkfgl);
-  auto &z1 = faces.ds()->access_intv("m:f>z1");
-  auto &z2 = faces.ds()->access_intv("m:f>z2");
+  auto &z1 = faces.ds().access_intv("m:f>z1");
+  auto &z2 = faces.ds().access_intv("m:f>z2");
   for (int i = 0; i < kkfll; ++i) {
     idx = -1;
     is >> idx;
@@ -358,8 +358,8 @@ void read_corners(std::istream &is, Corners &corners, const int kkcl,
     const int kkcll, const int kkcgl) {
   int idx;
   corners.resize(kkcl, kkcll, kkcgl);
-  auto &p = corners.ds()->access_intv("m:c>p");
-  auto &z = corners.ds()->access_intv("m:c>z");
+  auto &p = corners.ds().access_intv("m:c>p");
+  auto &z = corners.ds().access_intv("m:c>z");
   for (int i = 0; i < kkcll; ++i) {
     idx = -1;
     is >> idx;
@@ -391,51 +391,51 @@ void read_mpi(std::istream &is, Entity &e) {
   expect_line(is, "Recv From");
   int numpes = read_tag(is, "num PEs");
   int total_elem = read_tag(is, "total elem");
-  e.recvFrom.resize(numpes);
+  e.myCpys.resize(numpes);
   int totalCount = 0;
   for (int i = 0; i < numpes; ++i) {
-    e.recvFrom[i].pe = read_tag(is, "rmt PE");
+    e.myCpys[i].pe = read_tag(is, "rmt PE");
     int const elem_count = read_tag(is, "num elem");
-    e.recvFrom[i].elements.resize(elem_count);
+    e.myCpys[i].elements.resize(elem_count);
     for (int j = 0; j < elem_count; ++j) {
-      is >> e.recvFrom[i].elements[j];
+      is >> e.myCpys[i].elements[j];
       if (!is) {
         std::cerr << "read_mpi: input error on RecvFrom " << i << ' ' << j
                   << std::endl;
         exit(1);
       }
-      --e.recvFrom[i].elements[j];
+      --e.myCpys[i].elements[j];
     }
     is >> std::ws;
     totalCount += elem_count;
   }
   if (totalCount != total_elem) {
-    std::cerr << "read_mpi error recvFrom" << std::endl;
+    std::cerr << "read_mpi error myCpys" << std::endl;
     exit(1);
   }
   expect_line(is, "Send To");
   numpes = read_tag(is, "num PEs");
   total_elem = read_tag(is, "total elem");
-  e.sendTo.resize(numpes);
+  e.mySrcs.resize(numpes);
   totalCount = 0;
   for (int i = 0; i < numpes; ++i) {
-    e.sendTo[i].pe = read_tag(is, "rmt PE");
+    e.mySrcs[i].pe = read_tag(is, "rmt PE");
     int const elem_count = read_tag(is, "num elem");
-    e.sendTo[i].elements.resize(elem_count);
+    e.mySrcs[i].elements.resize(elem_count);
     for (int j = 0; j < elem_count; ++j) {
-      is >> e.sendTo[i].elements[j];
+      is >> e.mySrcs[i].elements[j];
       if (!is) {
         std::cerr << "read_mpi: input error on SendTo " << i << ' ' << j
                   << std::endl;
         exit(1);
       }
-      --e.sendTo[i].elements[j];
+      --e.mySrcs[i].elements[j];
     }
     is >> std::ws;
     totalCount += elem_count;
   }
   if (totalCount != total_elem) {
-    std::cerr << "read_mpi error sendTo" << std::endl;
+    std::cerr << "read_mpi error mySrcs" << std::endl;
     exit(1);
   }
 }

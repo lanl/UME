@@ -9,8 +9,13 @@
 #  -checks=-*,bugprone-*;)
 
 set(UME_INCLUDE_FILES
+  Comm_Buffers.hh
+  Comm_MPI.hh
   Comm_Neighbors.hh
+  Comm_Transport.hh
+  DS_Types.hh
   Datastore.hh
+  Mesh_Base.hh
   SOA_Entity.hh
   SOA_Idx_Corners.hh
   SOA_Idx_Edges.hh
@@ -19,15 +24,18 @@ set(UME_INCLUDE_FILES
   SOA_Idx_Points.hh
   SOA_Idx_Sides.hh
   SOA_Idx_Zones.hh
-  soa_idx_helpers.hh
   Timer.hh
   VecN.hh
+  soa_idx_helpers.hh
   utils.hh
   )
 
 add_library(Ume
   ${UME_INCLUDE_FILES}
+  Comm_Buffers.cc
+  Comm_MPI.cc
   Comm_Neighbors.cc
+  Comm_Transport.cc
   Datastore.cc
   SOA_Entity.cc
   SOA_Idx_Corners.cc
@@ -37,6 +45,7 @@ add_library(Ume
   SOA_Idx_Points.cc
   SOA_Idx_Sides.cc
   SOA_Idx_Zones.cc
+  utils.cc
   )
 
 set_target_properties(Ume PROPERTIES

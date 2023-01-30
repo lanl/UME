@@ -1,5 +1,6 @@
 #include "SOA_Entity.hh"
 #include "utils.hh"
+#include <cassert>
 
 namespace Ume {
 
@@ -56,8 +57,8 @@ void Entity::write(std::ostream &os) const {
   write_bin(os, src_pe);
   write_bin(os, src_idx);
   write_bin(os, ghost_mask);
-  write_bin<Comm::Neighbors>(os, recvFrom);
-  write_bin<Comm::Neighbors>(os, sendTo);
+  write_bin<Comm::Neighbors>(os, myCpys);
+  write_bin<Comm::Neighbors>(os, mySrcs);
   write_bin(os, subsets);
   os << '\n';
 }
@@ -70,8 +71,8 @@ void Entity::read(std::istream &is) {
   read_bin(is, src_pe);
   read_bin(is, src_idx);
   read_bin(is, ghost_mask);
-  read_bin<Comm::Neighbors>(is, recvFrom);
-  read_bin<Comm::Neighbors>(is, sendTo);
+  read_bin<Comm::Neighbors>(is, myCpys);
+  read_bin<Comm::Neighbors>(is, mySrcs);
   read_bin(is, subsets);
   skip_line(is);
 }
@@ -80,8 +81,8 @@ bool Entity::operator==(Entity const &rhs) const {
   return (lsize == rhs.lsize && mask == rhs.mask &&
       comm_type == rhs.comm_type && cpy_idx == rhs.cpy_idx &&
       src_pe == rhs.src_pe && src_idx == rhs.src_idx &&
-      ghost_mask == rhs.ghost_mask && recvFrom == rhs.recvFrom &&
-      sendTo == rhs.sendTo && subsets == rhs.subsets);
+      ghost_mask == rhs.ghost_mask && myCpys == rhs.myCpys &&
+      mySrcs == rhs.mySrcs && subsets == rhs.subsets);
 }
 
 void Entity::resize(int const local, int const total, int const ghost) {
@@ -93,6 +94,56 @@ void Entity::resize(int const local, int const total, int const ghost) {
   ghost_mask.resize(ghost);
   lsize = local;
 }
+
+template <typename FT> void Entity::gather(Comm::Op const op, FT &field) {
+  assert(static_cast<int>(field.size()) == size());
+  Comm::Buffers<FT> cpyBufs(myCpys);
+  Comm::Buffers<FT> srcBufs(mySrcs);
+  cpyBufs.pack(field);
+  comm().exchange(cpyBufs, srcBufs); // send local copies to remote sources
+  srcBufs.unpack(field, op);
+}
+
+template <typename FT> void Entity::scatter(FT &field) {
+  assert(static_cast<int>(field.size()) == size());
+  Comm::Buffers<FT> cpyBufs(myCpys);
+  Comm::Buffers<FT> srcBufs(mySrcs);
+  srcBufs.pack(field);
+  comm().exchange(srcBufs, cpyBufs); // send local sources to remote copies
+  cpyBufs.unpack(field, Comm::Op::OVERWRITE);
+}
+
+template <typename FT> void Entity::gathscat(Comm::Op const op, FT &field) {
+  assert(static_cast<int>(field.size()) == size());
+  Comm::Buffers<FT> cpyBufs(myCpys);
+  Comm::Buffers<FT> srcBufs(mySrcs);
+  cpyBufs.pack(field);
+  comm().exchange(cpyBufs, srcBufs);
+  /* srcBufs now contains the remote copy values */
+  srcBufs.unpack(field, op);
+  srcBufs.pack(field); // refill from merged field
+  /* srcBufs now contains the the merged source values */
+  comm().exchange(srcBufs, cpyBufs);
+  cpyBufs.unpack(field, Comm::Op::OVERWRITE);
+}
+
+template void Entity::gather<DS_Types::INTV_T>(
+    Comm::Op const op, DS_Types::INTV_T &field);
+template void Entity::scatter<DS_Types::INTV_T>(DS_Types::INTV_T &field);
+template void Entity::gathscat<DS_Types::INTV_T>(
+    Comm::Op const op, DS_Types::INTV_T &field);
+
+template void Entity::gather<DS_Types::DBLV_T>(
+    Comm::Op const op, DS_Types::DBLV_T &field);
+template void Entity::scatter<DS_Types::DBLV_T>(DS_Types::DBLV_T &field);
+template void Entity::gathscat<DS_Types::DBLV_T>(
+    Comm::Op const op, DS_Types::DBLV_T &field);
+
+template void Entity::gather<DS_Types::VEC3V_T>(
+    Comm::Op const op, DS_Types::VEC3V_T &field);
+template void Entity::scatter<DS_Types::VEC3V_T>(DS_Types::VEC3V_T &field);
+template void Entity::gathscat<DS_Types::VEC3V_T>(
+    Comm::Op const op, DS_Types::VEC3V_T &field);
 
 } // namespace SOA_Idx
 } // namespace Ume

@@ -12,10 +12,10 @@
 #include <cassert>
 #include <iostream>
 
-#define EQOP(N) (mesh_->ds->caccess_intv(N) == rhs.mesh_->ds->caccess_intv(N))
-#define IVWRITE(N) write_bin(os, mesh_->ds->caccess_intv(N))
-#define IVREAD(N) read_bin(is, mesh_->ds->access_intv(N))
-#define RESIZE(N, S) (mesh_->ds->access_intv(N)).resize(S)
+#define EQOP(N) (ds().caccess_intv(N) == rhs.ds().caccess_intv(N))
+#define IVWRITE(N) write_bin(os, ds().caccess_intv(N))
+#define IVREAD(N) read_bin(is, ds().access_intv(N))
+#define RESIZE(N, S) (ds().access_intv(N)).resize(S)
 
 #define DSE_INIT_PREAMBLE(N) \
   if (init_state_ == Init_State::INITIALIZED) \

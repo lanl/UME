@@ -101,7 +101,6 @@ public:
       data_[i] /= rhs;
     return *this;
   }
-  bool operator==(const_ref rhs) const { return data_ == rhs.data_; }
   friend val operator/(val lhs, const_ref rhs) {
     lhs /= rhs;
     return lhs;
@@ -110,6 +109,9 @@ public:
     lhs /= rhs;
     return lhs;
   }
+  bool operator==(const_ref rhs) const { return data_ == rhs.data_; }
+  bool operator<(const_ref rhs) const { return data_ < rhs.data_; }
+  bool operator<=(const_ref rhs) const { return data_ <= rhs.data_; }
   friend std::ostream &operator<<(std::ostream &os, const_ref vec) {
     char const *delim = "";
     os << '<';
@@ -118,6 +120,12 @@ public:
     }
     return os << '>';
   }
+  constexpr auto begin() { return data_.begin(); }
+  constexpr auto end() { return data_.end(); }
+  constexpr auto begin() const { return data_.begin(); }
+  constexpr auto end() const { return data_.end(); }
+  constexpr auto cbegin() { return data_.cbegin(); }
+  constexpr auto cend() { return data_.cend(); }
 
 private:
   std::array<T, N> data_;
