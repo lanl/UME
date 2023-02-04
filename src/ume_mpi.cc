@@ -4,6 +4,7 @@
 
 #include "Ume/Comm_MPI.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/gradient.hh"
 #include "Ume/utils.hh"
 #include <cassert>
 #include <cstdio>
@@ -15,6 +16,10 @@
 bool read_mesh(
     char const *const basename, int const mype, Ume::SOA_Idx::Mesh &mesh);
 bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh);
+
+using DBLV_T = typename Ume::DS_Types::DBLV_T;
+using VEC3V_T = typename Ume::DS_Types::VEC3V_T;
+using VEC3_T = typename Ume::DS_Types::VEC3_T;
 
 int main(int argc, char *argv[]) {
 
@@ -35,14 +40,20 @@ int main(int argc, char *argv[]) {
      UME_DEBUG_RANK environment variable. */
   Ume::debug_attach_point(comm.pe());
 
-  auto const &test = mesh.ds->caccess_vec3v("corner_csurf");
-  auto const &test2 = mesh.ds->caccess_vec3v("side_surz");
-  auto const &test3 = mesh.ds->caccess_vec3v("point_norm");
   if (test_point_gathscat(mesh)) {
     std::cout << comm.id() << ": test_point_gathscat PASS" << std::endl;
   } else {
     std::cout << comm.id() << ": test_point_gathscat FAIL" << std::endl;
   }
+
+  DBLV_T zfield(mesh.zones.size(), 0.0);
+  zfield[zfield.size() / 2] = 100000.0;
+
+  DBLV_T pvol;
+  VEC3V_T pgrad;
+
+  Ume::gradzatp(mesh, zfield, pgrad, pvol);
+
   comm.stop();
   return 0;
 }
