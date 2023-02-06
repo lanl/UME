@@ -50,6 +50,9 @@ public:
   ENT_ACCESS(Zones, zones)
 #undef ENT_ACCESS
 
+  constexpr Mesh &mesh() { return baseEnt_.mesh(); }
+  constexpr Mesh const &mesh() const { return baseEnt_.mesh(); }
+
   B &baseEnt_;
 };
 
