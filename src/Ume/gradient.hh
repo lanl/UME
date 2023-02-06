@@ -18,6 +18,10 @@ namespace Ume {
 
 void gradzatp(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zfield,
     DS_Types::VEC3V_T &pgrad, DS_Types::DBLV_T &pvol);
+
+void gradzatz(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zfield,
+    DS_Types::VEC3V_T &pgrad, DS_Types::VEC3V_T &zgrad);
+
 } // namespace Ume
 
 #endif

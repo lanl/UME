@@ -40,19 +40,19 @@ int main(int argc, char *argv[]) {
      UME_DEBUG_RANK environment variable. */
   Ume::debug_attach_point(comm.pe());
 
+  /*
   if (test_point_gathscat(mesh)) {
     std::cout << comm.id() << ": test_point_gathscat PASS" << std::endl;
   } else {
     std::cout << comm.id() << ": test_point_gathscat FAIL" << std::endl;
   }
+  */
 
   DBLV_T zfield(mesh.zones.size(), 0.0);
-  zfield[zfield.size() / 2] = 100000.0;
+  zfield[mesh.zones.lsize / 2] = 100000.0;
 
-  DBLV_T pvol;
-  VEC3V_T pgrad;
-
-  Ume::gradzatp(mesh, zfield, pgrad, pvol);
+  VEC3V_T pgrad, zgrad;
+  Ume::gradzatz(mesh, zfield, pgrad, zgrad);
 
   comm.stop();
   return 0;

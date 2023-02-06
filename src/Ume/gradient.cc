@@ -24,7 +24,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zfield, VEC3V_T &pgrad,
   int const pl = mesh.points.lsize;
   int const cl = mesh.corners.lsize;
 
-  pvol.assign(pll, 1.0e-90);
+  pvol.assign(pll, 0.0);
   pgrad.assign(pll, VEC3_T(0.0));
 
   for (int c = 0; c < cl; ++c) {
@@ -55,4 +55,39 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zfield, VEC3V_T &pgrad,
     }
   }
 }
+
+void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
+    VEC3V_T &point_gradient, VEC3V_T &zone_gradient) {
+  auto const &c_to_z_map = mesh.ds->caccess_intv("m:c>z");
+  auto const &c_to_p_map = mesh.ds->caccess_intv("m:c>p");
+  int const num_local_corners = mesh.corners.lsize;
+  auto const &corner_type = mesh.corners.mask;
+  auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
+
+  // Get the control volume and the field gradient at each mesh point.
+  DBLV_T point_volume;
+  gradzatp(mesh, zone_field, point_gradient, point_volume);
+
+  // Accumulate the zone volume
+  DBLV_T zone_volume(mesh.zones.size(), 0.0);
+  for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
+    if (corner_type[corner_idx] < 1)
+      continue; // Only operate on interior corners
+    int const zone_idx = c_to_z_map[corner_idx];
+    zone_volume[zone_idx] += corner_volume[corner_idx];
+  }
+
+  // Accumulate the zone-centered gradient
+  zone_gradient.assign(mesh.zones.size(), VEC3_T(0.0));
+  for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
+    if (corner_type[corner_idx] < 1)
+      continue; // Only operate on interior corners
+    int const zone_idx = c_to_z_map[corner_idx];
+    int const point_idx = c_to_p_map[corner_idx];
+    double const c_z_vol_ratio =
+        corner_volume[corner_idx] / zone_volume[zone_idx];
+    zone_gradient[zone_idx] += point_gradient[point_idx] * c_z_vol_ratio;
+  }
+}
+
 } // namespace Ume
