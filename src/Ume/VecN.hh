@@ -110,6 +110,7 @@ public:
     return lhs;
   }
   bool operator==(const_ref rhs) const { return data_ == rhs.data_; }
+  bool operator!=(const_ref rhs) const { return !(data_ == rhs.data_); }
   bool operator<(const_ref rhs) const { return data_ < rhs.data_; }
   bool operator<=(const_ref rhs) const { return data_ <= rhs.data_; }
   friend std::ostream &operator<<(std::ostream &os, const_ref vec) {
