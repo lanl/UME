@@ -21,6 +21,7 @@ public:
   virtual int id() const { return -1; }
   virtual int stop() = 0;
   virtual ~Transport() = default;
+  virtual void abort(char const *const message);
 };
 
 class Dummy_Transport : public Transport {

@@ -22,6 +22,8 @@ public:
   void exchange(Buffers<DS_Types::VEC3V_T> const &sends,
       Buffers<DS_Types::VEC3V_T> &recvs) override;
   int stop() override;
+  void abort(char const *const message) override;
+
   int get_tag();
   //! Translate from virtual PE to real PE
   /*! The "virtual PE" is the PE identifier that is loaded from the Ume data
