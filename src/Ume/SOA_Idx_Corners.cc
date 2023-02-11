@@ -20,17 +20,19 @@ Corners::Corners(Mesh *mesh) : Entity{mesh} {
 }
 
 void Corners::write(std::ostream &os) const {
+  write_bin(os, std::string{"corners"});
   Entity::write(os);
   IVWRITE("m:c>p");
   IVWRITE("m:c>z");
-  os << '\n';
 }
 
 void Corners::read(std::istream &is) {
+  std::string dummy;
+  read_bin(is, dummy);
+  assert(dummy == "corners");
   Entity::read(is);
   IVREAD("m:c>p");
   IVREAD("m:c>z");
-  skip_line(is);
 }
 
 bool Corners::operator==(Corners const &rhs) const {
@@ -53,7 +55,7 @@ bool Corners::DSE_corner_vol::init_() const {
   auto const &side_vol{caccess_dblv("side_vol")};
   auto const &smask{sides().mask};
   auto &corner_vol = mydata_dblv();
-  corner_vol.resize(cll, 0.0);
+  corner_vol.assign(cll, 0.0);
 
   for (int s = 0; s < sl; ++s) {
     if (smask[s] > 0) {
@@ -75,7 +77,7 @@ bool Corners::DSE_corner_csurf::init_() const {
   auto const &side_surf{caccess_vec3v("side_surf")};
   auto const &smask{sides().mask};
   auto &corner_csurf = mydata_vec3v();
-  corner_csurf.resize(cll, Vec3(0.0));
+  corner_csurf.assign(cll, Vec3(0.0));
 
   for (int s = 0; s < sl; ++s) {
     if (smask[s]) {

@@ -15,13 +15,15 @@ Zones::Zones(Mesh *mesh) : Entity{mesh} {
 }
 
 void Zones::write(std::ostream &os) const {
+  write_bin(os, std::string{"zones"});
   Entity::write(os);
-  os << '\n';
 }
 
 void Zones::read(std::istream &is) {
+  std::string dummy;
+  read_bin(is, dummy);
+  assert(dummy == "zones");
   Entity::read(is);
-  skip_line(is);
 }
 
 bool Zones::operator==(Zones const &rhs) const {

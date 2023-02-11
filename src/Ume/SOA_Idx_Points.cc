@@ -4,6 +4,7 @@
 
 #include "SOA_Idx_Mesh.hh"
 #include "soa_idx_helpers.hh"
+#include <cassert>
 
 namespace Ume {
 namespace SOA_Idx {
@@ -17,15 +18,17 @@ Points::Points(Mesh *mesh) : Entity{mesh} {
 }
 
 void Points::write(std::ostream &os) const {
+  write_bin(os, std::string("points"));
   Entity::write(os);
   write_bin(os, ds().caccess_vec3v("pcoord"));
-  os << '\n';
 }
 
 void Points::read(std::istream &is) {
+  std::string dummy;
+  read_bin(is, dummy);
+  assert(dummy == "points");
   Entity::read(is);
   read_bin(is, ds().access_vec3v("pcoord"));
-  skip_line(is);
 }
 
 bool Points::operator==(Points const &rhs) const {
