@@ -18,11 +18,17 @@ void DS_Entry::set_type(DS_Entry::Types type) {
   case Types::INTV:
     data_ = INTV_T();
     break;
+  case Types::INTRR:
+    data_ = INTRR_T();
+    break;
   case Types::DBL:
     data_ = DBL_T();
     break;
   case Types::DBLV:
     data_ = DBLV_T();
+    break;
+  case Types::DBLRR:
+    data_ = DBLRR_T();
     break;
   case Types::VEC3:
     data_ = VEC3_T();
@@ -30,6 +36,8 @@ void DS_Entry::set_type(DS_Entry::Types type) {
   case Types::VEC3V:
     data_ = VEC3V_T();
     break;
+  case Types::VEC3RR:
+    data_ = VEC3RR_T();
   case Types::NONE:
     break;
   }

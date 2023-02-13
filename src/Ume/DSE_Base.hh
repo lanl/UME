@@ -32,10 +32,13 @@ public:
 
   MAKE_DS_ACCESS(int, INT_T);
   MAKE_DS_ACCESS(intv, INTV_T);
+  MAKE_DS_ACCESS(intrr, INTRR_T);
   MAKE_DS_ACCESS(dbl, DBL_T);
   MAKE_DS_ACCESS(dblv, DBLV_T);
+  MAKE_DS_ACCESS(dblrr, DBLRR_T);
   MAKE_DS_ACCESS(vec3, VEC3_T);
   MAKE_DS_ACCESS(vec3v, VEC3V_T);
+  MAKE_DS_ACCESS(vec3rr, VEC3RR_T);
 #undef MAKE_DS_ACCESS
 
 #define ENT_ACCESS(U, L) \
