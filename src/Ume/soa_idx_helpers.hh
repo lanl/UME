@@ -8,15 +8,18 @@
 #ifndef SOA_IDX_HELPERS_HH
 #define SOA_IDX_HELPERS_HH 1
 
+#define TRACE_INIT 0
+
 #include "Ume/utils.hh"
 #include <cassert>
-#include <iostream>
 
 #define EQOP(N) (ds().caccess_intv(N) == rhs.ds().caccess_intv(N))
 #define IVWRITE(N) write_bin(os, ds().caccess_intv(N))
 #define IVREAD(N) read_bin(is, ds().access_intv(N))
 #define RESIZE(N, S) (ds().access_intv(N)).resize(S)
 
+#if TRACE_INIT
+#include <iostream>
 #define DSE_INIT_PREAMBLE(N) \
   if (init_state_ == Init_State::INITIALIZED) \
     return false; \
@@ -31,5 +34,15 @@
   init_state_ = Init_State::INITIALIZED; \
   init_depth(-1); \
   return true;
+#else
+#define DSE_INIT_PREAMBLE(N) \
+  if (init_state_ == Init_State::INITIALIZED) \
+    return false; \
+  assert(init_state_ != Init_State::IN_PROGRESS); \
+  init_state_ = Init_State::IN_PROGRESS
 
+#define DSE_INIT_EPILOGUE \
+  init_state_ = Init_State::INITIALIZED; \
+  return true;
+#endif
 #endif
