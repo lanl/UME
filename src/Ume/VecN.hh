@@ -128,6 +128,20 @@ public:
   constexpr auto cbegin() { return data_.cbegin(); }
   constexpr auto cend() { return data_.cend(); }
 
+  constexpr bool operator==(T const val) const {
+    for (auto const &d : data_)
+      if (d != val)
+        return false;
+    return true;
+  }
+
+  constexpr bool operator!=(T const val) const {
+    for (auto const &d : data_)
+      if (d != val)
+        return true;
+    return false;
+  }
+
 private:
   std::array<T, N> data_;
 };
