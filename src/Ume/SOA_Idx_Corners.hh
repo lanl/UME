@@ -34,9 +34,18 @@ public:
   protected:
     bool init_() const override;
   };
+
   class DSE_corner_csurf : public DSE_Base<Corners> {
   public:
     explicit DSE_corner_csurf(Corners &c) : DSE_Base(Types::VEC3V, c) {}
+
+  protected:
+    bool init_() const override;
+  };
+
+  class DSE_corner_to_sides : public DSE_Base<Corners> {
+  public:
+    explicit DSE_corner_to_sides(Corners &c) : DSE_Base(Types::INTRR, c) {}
 
   protected:
     bool init_() const override;

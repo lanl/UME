@@ -21,6 +21,14 @@ struct Points : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Points const &rhs) const;
 
+  class DSE_point_to_zones : public DSE_Base<Points> {
+  public:
+    explicit DSE_point_to_zones(Points &p) : DSE_Base(Types::INTRR, p) {}
+
+  protected:
+    bool init_() const override;
+  };
+
   class DSE_point_norm : public DSE_Base<Points> {
   public:
     explicit DSE_point_norm(Points &p) : DSE_Base(Types::VEC3V, p) {}

@@ -128,6 +128,7 @@ bool Sides::DSE_side_surf::init_() const {
     } else
       side_surf[s] = 0.0;
   }
+  sides().scatter(side_surf);
   DSE_INIT_EPILOGUE;
 }
 
@@ -158,6 +159,7 @@ bool Sides::DSE_side_surz::init_() const {
     } else
       side_surz[s] = 0.0;
   }
+  sides().scatter(side_surz);
   DSE_INIT_EPILOGUE;
 }
 
@@ -190,13 +192,10 @@ bool Sides::DSE_side_vol::init_() const {
       auto const cp = crossprod(p2z, p1z);
 
       side_vol[s] = dotprod(fz, cp) / 6.0;
-      if (mesh().mype == -1 && std::abs(side_vol[s]) < 1e-15) {
-        std::cerr << "Small side vol: " << zc << ' ' << p1 << ' ' << p2 << ' '
-                  << fc << " -> " << side_vol[s] << '\n';
-      }
     } else
       side_vol[s] = 0.0;
   }
+  sides().scatter(side_vol);
   DSE_INIT_EPILOGUE;
 }
 

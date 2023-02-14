@@ -17,6 +17,7 @@ Corners::Corners(Mesh *mesh) : Entity{mesh} {
   ds().insert("m:c>z", std::make_unique<Ume::DS_Entry>(Types::INTV));
   ds().insert("corner_vol", std::make_unique<DSE_corner_vol>(*this));
   ds().insert("corner_csurf", std::make_unique<DSE_corner_csurf>(*this));
+  ds().insert("m:c>ss", std::make_unique<DSE_corner_to_sides>(*this));
 }
 
 void Corners::write(std::ostream &os) const {
@@ -64,6 +65,7 @@ bool Corners::DSE_corner_vol::init_() const {
       corner_vol[s2c2[s]] += hsv;
     }
   }
+  corners().scatter(corner_vol);
   DSE_INIT_EPILOGUE;
 }
 
@@ -84,6 +86,28 @@ bool Corners::DSE_corner_csurf::init_() const {
       corner_csurf[s2c1[s]] += side_surf[s];
       corner_csurf[s2c2[s]] -= side_surf[s];
     }
+  }
+  DSE_INIT_EPILOGUE;
+}
+
+bool Corners::DSE_corner_to_sides::init_() const {
+  DSE_INIT_PREAMBLE("DSE_corner_to_sides");
+
+  int const cll = corners().size();
+  int const sll = sides().size();
+  auto const &s2c1{caccess_intv("m:s>c1")};
+  auto const &s2c2{caccess_intv("m:s>c2")};
+  auto &corner_to_sides = mydata_intrr();
+  corner_to_sides.init(cll);
+
+  std::vector<std::vector<int>> accum(cll);
+  for (int s = 0; s < sll; ++s) {
+    accum.at(s2c1[s]).push_back(s);
+    accum.at(s2c2[s]).push_back(s);
+  }
+
+  for (int c = 0; c < cll; ++c) {
+    corner_to_sides.append(c, accum[c].begin(), accum[c].end());
   }
   DSE_INIT_EPILOGUE;
 }
