@@ -35,4 +35,9 @@ void debug_attach_point(int const mype) {
 #endif
 }
 
+int init_depth(int const delta) {
+  static int depth = 0;
+  return depth += delta;
+}
+
 } // namespace Ume

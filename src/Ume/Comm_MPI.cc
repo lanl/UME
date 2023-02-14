@@ -6,6 +6,7 @@
 
 #include "Ume/Comm_MPI.hh"
 #include <cassert>
+#include <iostream>
 #include <mpi.h>
 #include <vector>
 
@@ -105,6 +106,11 @@ void MPI::exchange(Buffers<DS_Types::VEC3V_T> const &sends,
 int MPI::stop() {
   MPI_Finalize();
   return 0;
+}
+
+void MPI::abort(char const *const message) {
+  std::cerr << "Transport::abort: " << message << std::endl;
+  MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
 } // namespace Comm

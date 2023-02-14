@@ -3,12 +3,14 @@
 */
 
 #include "Ume/Comm_Neighbors.hh"
+#include <cassert>
 
 namespace Ume {
 
 template <>
 void write_bin<Comm::Neighbors>(
     std::ostream &os, Ume::Comm::Neighbors const &nvec) {
+  write_bin(os, std::string{"neighbors"});
   write_bin(os, nvec.size());
   if (!nvec.empty()) {
     for (auto const &n : nvec) {
@@ -23,6 +25,9 @@ void write_bin<Comm::Neighbors>(
 template <>
 void read_bin<Comm::Neighbors>(std::istream &is, Ume::Comm::Neighbors &nvec) {
   size_t len;
+  std::string dummy;
+  read_bin(is, dummy);
+  assert(dummy == "neighbors");
   read_bin(is, len);
   if (len == 0) {
     Ume::Comm::Neighbors foo;

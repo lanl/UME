@@ -4,6 +4,8 @@
 
 #include "SOA_Idx_Mesh.hh"
 #include "soa_idx_helpers.hh"
+#include <cassert>
+#include <iostream>
 
 namespace Ume {
 namespace SOA_Idx {
@@ -14,18 +16,21 @@ Points::Points(Mesh *mesh) : Entity{mesh} {
   // point coordinates
   ds().insert("pcoord", std::make_unique<Ume::DS_Entry>(Types::VEC3V));
   ds().insert("point_norm", std::make_unique<DSE_point_norm>(*this));
+  ds().insert("m:p>zs", std::make_unique<DSE_point_to_zones>(*this));
 }
 
 void Points::write(std::ostream &os) const {
+  write_bin(os, std::string("points"));
   Entity::write(os);
   write_bin(os, ds().caccess_vec3v("pcoord"));
-  os << '\n';
 }
 
 void Points::read(std::istream &is) {
+  std::string dummy;
+  read_bin(is, dummy);
+  assert(dummy == "points");
   Entity::read(is);
   read_bin(is, ds().access_vec3v("pcoord"));
-  skip_line(is);
 }
 
 bool Points::operator==(Points const &rhs) const {
@@ -36,6 +41,31 @@ bool Points::operator==(Points const &rhs) const {
 void Points::resize(int const local, int const total, int const ghost) {
   Entity::resize(local, total, ghost);
   (ds().access_vec3v("pcoord")).resize(total);
+}
+
+bool Points::DSE_point_to_zones::init_() const {
+  DSE_INIT_PREAMBLE("DSE_point_to_zones");
+  int const pll = points().size();
+  int const cll = corners().size();
+  int const zll = zones().size();
+  auto const &c2z{caccess_intv("m:c>z")};
+  auto const &c2p{caccess_intv("m:c>p")};
+  auto &p2zs = mydata_intrr();
+
+  p2zs.init(pll);
+  std::vector<std::vector<int>> accum(pll);
+  for (int c = 0; c < cll; ++c) {
+    int const z = c2z[c];
+    int const p = c2p[c];
+    if (p < pll && z < zll) // Some c2z values are bad at ghost corners
+      accum.at(p).push_back(z);
+  }
+  for (int p = 0; p < pll; ++p) {
+    std::sort(accum[p].begin(), accum[p].end());
+    p2zs.append(p, accum[p].begin(), accum[p].end());
+  }
+
+  DSE_INIT_EPILOGUE;
 }
 
 bool Points::DSE_point_norm::init_() const {

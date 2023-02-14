@@ -4,6 +4,7 @@
 
 #include "SOA_Idx_Mesh.hh"
 #include "soa_idx_helpers.hh"
+#include <cassert>
 
 namespace Ume {
 namespace SOA_Idx {
@@ -19,17 +20,19 @@ Edges::Edges(Mesh *mesh) : Entity{mesh} {
 }
 
 void Edges::write(std::ostream &os) const {
+  write_bin(os, std::string("edges"));
   Entity::write(os);
   IVWRITE("m:e>p1");
   IVWRITE("m:e>p2");
-  os << '\n';
 }
 
 void Edges::read(std::istream &is) {
+  std::string dummy;
+  read_bin(is, dummy);
+  assert(dummy == "edges");
   Entity::read(is);
   IVREAD("m:e>p1");
   IVREAD("m:e>p2");
-  skip_line(is);
 }
 
 bool Edges::operator==(Edges const &rhs) const {

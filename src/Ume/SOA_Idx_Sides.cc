@@ -4,6 +4,7 @@
 
 #include "SOA_Idx_Mesh.hh"
 #include "soa_idx_helpers.hh"
+#include <cassert>
 
 namespace Ume {
 namespace SOA_Idx {
@@ -33,6 +34,7 @@ Sides::Sides(Mesh *mesh) : Entity{mesh} {
 }
 
 void Sides::write(std::ostream &os) const {
+  write_bin(os, std::string{"sides"});
   Entity::write(os);
   IVWRITE("m:s>z");
   IVWRITE("m:s>p1");
@@ -45,10 +47,12 @@ void Sides::write(std::ostream &os) const {
   IVWRITE("m:s>s3");
   IVWRITE("m:s>s4");
   IVWRITE("m:s>s5");
-  os << '\n';
 }
 
 void Sides::read(std::istream &is) {
+  std::string dummy;
+  read_bin(is, dummy);
+  assert(dummy == "sides");
   Entity::read(is);
   IVREAD("m:s>z");
   IVREAD("m:s>p1");
@@ -61,7 +65,6 @@ void Sides::read(std::istream &is) {
   IVREAD("m:s>s3");
   IVREAD("m:s>s4");
   IVREAD("m:s>s5");
-  skip_line(is);
 }
 
 bool Sides::operator==(Sides const &rhs) const {
@@ -104,7 +107,7 @@ bool Sides::DSE_side_surf::init_() const {
 
   auto const &smask{sides().mask};
   auto &side_surf = mydata_vec3v();
-  side_surf.resize(sll);
+  side_surf.assign(sll, VEC3_T(0.0));
 
   for (int s = 0; s < sl; ++s) {
     if (smask[s] > 0) {
@@ -125,6 +128,7 @@ bool Sides::DSE_side_surf::init_() const {
     } else
       side_surf[s] = 0.0;
   }
+  sides().scatter(side_surf);
   DSE_INIT_EPILOGUE;
 }
 
@@ -142,7 +146,7 @@ bool Sides::DSE_side_surz::init_() const {
 
   auto const &smask{sides().mask};
   auto &side_surz = mydata_vec3v();
-  side_surz.resize(sll);
+  side_surz.assign(sll, VEC3_T(0.0));
 
   for (int s = 0; s < sl; ++s) {
     if (smask[s]) {
@@ -155,6 +159,7 @@ bool Sides::DSE_side_surz::init_() const {
     } else
       side_surz[s] = 0.0;
   }
+  sides().scatter(side_surz);
   DSE_INIT_EPILOGUE;
 }
 
@@ -171,20 +176,26 @@ bool Sides::DSE_side_vol::init_() const {
   auto const &fx = caccess_vec3v("fcoord");
   auto const &smask{sides().mask};
   auto &side_vol = mydata_dblv();
-  side_vol.resize(sll);
+  side_vol.assign(sll, 0.0);
 
   for (int s = 0; s < sl; ++s) {
     if (smask[s] > 0) {
       Vec3 const &zc = zx[s2z[s]];
-      Vec3 const &p1 = px[s2p2[s]];
-      Vec3 const &p2 = px[s2p1[s]];
+      Vec3 const &p1 = px[s2p1[s]];
+      Vec3 const &p2 = px[s2p2[s]];
       Vec3 const &fc = fx[s2f[s]];
       /* Note that this is a signed volume of the tetrahedron formed by the zone
          center, face center, and edge endpoints. */
-      side_vol[s] = dotprod(fc - zc, crossprod(p1 - zc, p2 - zc)) / 6.0;
+      auto const fz = fc - zc;
+      auto const p1z = p1 - zc;
+      auto const p2z = p2 - zc;
+      auto const cp = crossprod(p2z, p1z);
+
+      side_vol[s] = dotprod(fz, cp) / 6.0;
     } else
       side_vol[s] = 0.0;
   }
+  sides().scatter(side_vol);
   DSE_INIT_EPILOGUE;
 }
 

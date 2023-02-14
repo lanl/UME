@@ -170,9 +170,9 @@ void read_points(std::istream &is, Points &pts, const int kkpl, const int kkpll,
       std::cerr << "Point " << i + 1 << " read error" << std::endl;
       exit(1);
     }
-    is >> pts.mask[i] >> pts.comm_type[i] >> coords[0][i];
+    is >> pts.mask[i] >> pts.comm_type[i] >> coords[i][0];
     for (int d = 1; d < ndims; ++d) {
-      is >> coords[d][i];
+      is >> coords[i][d];
     }
     is >> std::ws;
   }

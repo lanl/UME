@@ -4,6 +4,7 @@
 
 #include "SOA_Idx_Mesh.hh"
 #include "soa_idx_helpers.hh"
+#include <set>
 
 namespace Ume {
 namespace SOA_Idx {
@@ -12,16 +13,20 @@ namespace SOA_Idx {
 
 Zones::Zones(Mesh *mesh) : Entity{mesh} {
   ds().insert("zcoord", std::make_unique<DSE_zcoord>(*this));
+  ds().insert("m:z>pz", std::make_unique<DSE_zone_to_pt_zone>(*this));
+  ds().insert("m:z>p", std::make_unique<DSE_zone_to_points>(*this));
 }
 
 void Zones::write(std::ostream &os) const {
+  write_bin(os, std::string{"zones"});
   Entity::write(os);
-  os << '\n';
 }
 
 void Zones::read(std::istream &is) {
+  std::string dummy;
+  read_bin(is, dummy);
+  assert(dummy == "zones");
   Entity::read(is);
-  skip_line(is);
 }
 
 bool Zones::operator==(Zones const &rhs) const {
@@ -61,7 +66,64 @@ bool Zones::DSE_zcoord::init_() const {
       zcoord[z] /= static_cast<double>(num_zone_pts[z]);
     }
   }
+  zones().scatter(zcoord);
   DSE_INIT_EPILOGUE;
 }
+
+bool Zones::DSE_zone_to_pt_zone::init_() const {
+  DSE_INIT_PREAMBLE("DSE_zone_to_pt_zone");
+  int const pll = points().size();
+  int const zll = zones().size();
+  int const cll = corners().size();
+  auto const &p2zs{caccess_intrr("m:p>zs")};
+  auto const &c2p{caccess_intv("m:c>p")};
+  auto const &c2z{caccess_intv("m:c>z")};
+  auto &z2pz = mydata_intrr();
+  z2pz.init(zll);
+  std::vector<std::set<int>> accum(zll);
+
+  /* Iterate over corners, add all zones attached to c2p[c] to c2z[z]; */
+  for (int c = 0; c < cll; ++c) {
+    int const p = c2p[c];
+    int const z = c2z[c];
+    if (p < pll && z < zll)
+      accum.at(z).insert(p2zs.begin(p), p2zs.end(p));
+  }
+
+  /* Fill the ragged-right arrays, eliminiting zone self-links */
+  for (int z = 0; z < zll; ++z) {
+    accum[z].erase(z);
+    z2pz.append(z, accum[z].begin(), accum[z].end());
+  }
+  DSE_INIT_EPILOGUE;
+}
+
+bool Zones::DSE_zone_to_points::init_() const {
+  DSE_INIT_PREAMBLE("DSE_zone_to_points");
+  int const pll = points().size();
+  int const zll = zones().size();
+  int const cll = corners().size();
+  auto const &c2p{caccess_intv("m:c>p")};
+  auto const &c2z{caccess_intv("m:c>z")};
+  auto &z2p = mydata_intrr();
+  z2p.init(zll);
+  std::vector<std::vector<int>> accum(zll);
+
+  /* Iterate over corners, connect points to zones */
+  for (int c = 0; c < cll; ++c) {
+    int const p = c2p[c];
+    int const z = c2z[c];
+    if (p < pll && z < zll)
+      accum.at(z).push_back(p);
+  }
+
+  /* Fill the ragged-right arrays*/
+  for (int z = 0; z < zll; ++z) {
+    std::sort(accum[z].begin(), accum[z].end());
+    z2p.append(z, accum[z].begin(), accum[z].end());
+  }
+  DSE_INIT_EPILOGUE;
+}
+
 } // namespace SOA_Idx
 } // namespace Ume

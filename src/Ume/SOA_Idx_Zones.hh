@@ -18,9 +18,29 @@ struct Zones : public Entity {
   void read(std::istream &is) override;
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Zones const &rhs) const;
+
+  // The center of each zone
   class DSE_zcoord : public DSE_Base<Zones> {
   public:
     explicit DSE_zcoord(Zones &z) : DSE_Base(Types::VEC3V, z) {}
+
+  protected:
+    bool init_() const override;
+  };
+
+  // The point-connected zone neighbors
+  class DSE_zone_to_pt_zone : public DSE_Base<Zones> {
+  public:
+    explicit DSE_zone_to_pt_zone(Zones &z) : DSE_Base(Types::INTRR, z) {}
+
+  protected:
+    bool init_() const override;
+  };
+
+  // The points for each zone
+  class DSE_zone_to_points : public DSE_Base<Zones> {
+  public:
+    explicit DSE_zone_to_points(Zones &z) : DSE_Base(Types::INTRR, z) {}
 
   protected:
     bool init_() const override;

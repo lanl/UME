@@ -2,6 +2,7 @@
 
 add_executable(ume_tests
   test_datastore.cc
+  test_io.cc
   test_utils.cc
   test_vecn.cc
 )

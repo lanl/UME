@@ -27,7 +27,9 @@ protected:
   friend class Datastore;
   Types type_;
   //  std::weak_ptr<Datastore> ds_;
-  mutable std::variant<INT_T, INTV_T, DBL_T, DBLV_T, VEC3_T, VEC3V_T> data_;
+  mutable std::variant<INT_T, INTV_T, INTRR_T, DBL_T, DBLV_T, DBLRR_T, VEC3_T,
+      VEC3V_T, VEC3RR_T>
+      data_;
   mutable bool dirty_ = false;
   enum class Init_State { UNINITIALIZED, IN_PROGRESS, INITIALIZED };
   mutable Init_State init_state_{Init_State::UNINITIALIZED};
@@ -80,10 +82,13 @@ public:
 
   MAKE_ACCESS(int, INT_T);
   MAKE_ACCESS(intv, INTV_T);
+  MAKE_ACCESS(intrr, INTRR_T);
   MAKE_ACCESS(dbl, DBL_T);
   MAKE_ACCESS(dblv, DBLV_T);
+  MAKE_ACCESS(dblrr, DBLRR_T);
   MAKE_ACCESS(vec3, VEC3_T);
   MAKE_ACCESS(vec3v, VEC3V_T);
+  MAKE_ACCESS(vec3rr, VEC3RR_T);
 
 #undef MAKE_ACCESS
 

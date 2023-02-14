@@ -17,20 +17,23 @@ Corners::Corners(Mesh *mesh) : Entity{mesh} {
   ds().insert("m:c>z", std::make_unique<Ume::DS_Entry>(Types::INTV));
   ds().insert("corner_vol", std::make_unique<DSE_corner_vol>(*this));
   ds().insert("corner_csurf", std::make_unique<DSE_corner_csurf>(*this));
+  ds().insert("m:c>ss", std::make_unique<DSE_corner_to_sides>(*this));
 }
 
 void Corners::write(std::ostream &os) const {
+  write_bin(os, std::string{"corners"});
   Entity::write(os);
   IVWRITE("m:c>p");
   IVWRITE("m:c>z");
-  os << '\n';
 }
 
 void Corners::read(std::istream &is) {
+  std::string dummy;
+  read_bin(is, dummy);
+  assert(dummy == "corners");
   Entity::read(is);
   IVREAD("m:c>p");
   IVREAD("m:c>z");
-  skip_line(is);
 }
 
 bool Corners::operator==(Corners const &rhs) const {
@@ -53,7 +56,7 @@ bool Corners::DSE_corner_vol::init_() const {
   auto const &side_vol{caccess_dblv("side_vol")};
   auto const &smask{sides().mask};
   auto &corner_vol = mydata_dblv();
-  corner_vol.resize(cll, 0.0);
+  corner_vol.assign(cll, 0.0);
 
   for (int s = 0; s < sl; ++s) {
     if (smask[s] > 0) {
@@ -62,6 +65,7 @@ bool Corners::DSE_corner_vol::init_() const {
       corner_vol[s2c2[s]] += hsv;
     }
   }
+  corners().scatter(corner_vol);
   DSE_INIT_EPILOGUE;
 }
 
@@ -75,13 +79,35 @@ bool Corners::DSE_corner_csurf::init_() const {
   auto const &side_surf{caccess_vec3v("side_surf")};
   auto const &smask{sides().mask};
   auto &corner_csurf = mydata_vec3v();
-  corner_csurf.resize(cll, Vec3(0.0));
+  corner_csurf.assign(cll, Vec3(0.0));
 
   for (int s = 0; s < sl; ++s) {
     if (smask[s]) {
       corner_csurf[s2c1[s]] += side_surf[s];
       corner_csurf[s2c2[s]] -= side_surf[s];
     }
+  }
+  DSE_INIT_EPILOGUE;
+}
+
+bool Corners::DSE_corner_to_sides::init_() const {
+  DSE_INIT_PREAMBLE("DSE_corner_to_sides");
+
+  int const cll = corners().size();
+  int const sll = sides().size();
+  auto const &s2c1{caccess_intv("m:s>c1")};
+  auto const &s2c2{caccess_intv("m:s>c2")};
+  auto &corner_to_sides = mydata_intrr();
+  corner_to_sides.init(cll);
+
+  std::vector<std::vector<int>> accum(cll);
+  for (int s = 0; s < sll; ++s) {
+    accum.at(s2c1[s]).push_back(s);
+    accum.at(s2c2[s]).push_back(s);
+  }
+
+  for (int c = 0; c < cll; ++c) {
+    corner_to_sides.append(c, accum[c].begin(), accum[c].end());
   }
   DSE_INIT_EPILOGUE;
 }

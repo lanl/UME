@@ -4,6 +4,7 @@
 
 #include "Ume/Comm_MPI.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/gradient.hh"
 #include "Ume/utils.hh"
 #include <cassert>
 #include <cstdio>
@@ -16,6 +17,10 @@ bool read_mesh(
     char const *const basename, int const mype, Ume::SOA_Idx::Mesh &mesh);
 bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh);
 
+using DBLV_T = typename Ume::DS_Types::DBLV_T;
+using VEC3V_T = typename Ume::DS_Types::VEC3V_T;
+using VEC3_T = typename Ume::DS_Types::VEC3_T;
+
 int main(int argc, char *argv[]) {
 
   Ume::SOA_Idx::Mesh mesh;
@@ -25,6 +30,8 @@ int main(int argc, char *argv[]) {
   Ume::Comm::MPI comm(&argc, &argv);
   mesh.comm = &comm; // Attach the communicator to the mesh
 
+  if (comm.pe() == 0)
+    std::cout << "Initializing mesh..." << std::endl;
   /* Read the data file */
   if (!read_mesh(argv[1], comm.pe(), mesh)) {
     std::cerr << "Aborting." << std::endl;
@@ -35,14 +42,72 @@ int main(int argc, char *argv[]) {
      UME_DEBUG_RANK environment variable. */
   Ume::debug_attach_point(comm.pe());
 
-  auto const &test = mesh.ds->caccess_vec3v("corner_csurf");
-  auto const &test2 = mesh.ds->caccess_vec3v("side_surz");
-  auto const &test3 = mesh.ds->caccess_vec3v("point_norm");
+  /*
   if (test_point_gathscat(mesh)) {
     std::cout << comm.id() << ": test_point_gathscat PASS" << std::endl;
   } else {
     std::cout << comm.id() << ": test_point_gathscat FAIL" << std::endl;
   }
+  */
+
+  if (comm.pe() == 0)
+    std::cout << "Creating zone field..." << std::endl;
+  auto const &kztyp = mesh.zones.mask;
+
+  // Find a local zone to set a value in
+  int czi = mesh.zones.lsize / 2;
+  while (czi < mesh.zones.lsize && kztyp[czi] < 1)
+    czi += 1;
+  assert(czi < mesh.zones.lsize);
+
+  DBLV_T zfield(mesh.zones.size(), 0.0);
+  zfield[czi] = 100000.0;
+
+  if (comm.pe() == 0)
+    std::cout << "Calculating gradient..." << std::endl;
+  VEC3V_T pgrad, zgrad;
+  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+
+  // Double check that the gradients are non-zero where we expect
+  if (comm.pe() == 0)
+    std::cout << "Checking result..." << std::endl;
+  auto const &z2pz = mesh.ds->caccess_intrr("m:z>pz");
+  auto const &z2p = mesh.ds->caccess_intrr("m:z>p");
+  auto const &kptyp = mesh.points.mask;
+  std::vector<int> grad_zones;
+  for (int z = 0; z < mesh.zones.size(); ++z) {
+    if (z == czi || kztyp[z] < 1)
+      continue;
+    if (zgrad[z] != 0.0)
+      grad_zones.push_back(z);
+  }
+
+  std::vector<int> grad_points;
+  for (int p = 0; p < mesh.points.size(); ++p) {
+    if (kptyp[p] > 0 && pgrad[p] != 0.0)
+      grad_points.push_back(p);
+  }
+
+  std::sort(grad_zones.begin(), grad_zones.end());
+  std::sort(grad_points.begin(), grad_points.end());
+  std::vector<int> diff;
+  std::set_difference(grad_zones.begin(), grad_zones.end(), z2pz.begin(czi),
+      z2pz.end(czi), std::back_inserter(diff));
+  if (!diff.empty()) {
+    std::cout << "PE" << mesh.mype << " zone diff " << diff.size() << " found "
+              << grad_zones.size() << " expected " << z2pz.size(czi) << '\n';
+  }
+
+  diff.clear();
+  std::set_difference(grad_points.begin(), grad_points.end(), z2p.begin(czi),
+      z2p.end(czi), std::back_inserter(diff));
+  if (!diff.empty()) {
+    std::cout << "PE" << mesh.mype << " pt diff " << diff.size() << " found "
+              << grad_points.size() << " expected " << z2p.size(czi) << '\n';
+  }
+
+  if (comm.pe() == 0)
+    std::cout << "Done." << std::endl;
   comm.stop();
   return 0;
 }

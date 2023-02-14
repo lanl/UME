@@ -110,6 +110,7 @@ public:
     return lhs;
   }
   bool operator==(const_ref rhs) const { return data_ == rhs.data_; }
+  bool operator!=(const_ref rhs) const { return !(data_ == rhs.data_); }
   bool operator<(const_ref rhs) const { return data_ < rhs.data_; }
   bool operator<=(const_ref rhs) const { return data_ <= rhs.data_; }
   friend std::ostream &operator<<(std::ostream &os, const_ref vec) {
@@ -126,6 +127,20 @@ public:
   constexpr auto end() const { return data_.end(); }
   constexpr auto cbegin() { return data_.cbegin(); }
   constexpr auto cend() { return data_.cend(); }
+
+  constexpr bool operator==(T const val) const {
+    for (auto const &d : data_)
+      if (d != val)
+        return false;
+    return true;
+  }
+
+  constexpr bool operator!=(T const val) const {
+    for (auto const &d : data_)
+      if (d != val)
+        return true;
+    return false;
+  }
 
 private:
   std::array<T, N> data_;
