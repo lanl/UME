@@ -1,7 +1,6 @@
 /*!
   \file Ume/gradient.cc
 */
-
 #include "Ume/gradient.hh"
 
 namespace Ume {
@@ -55,6 +54,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
           (point_gradient[p] - point_normal[p] * ppdot) / point_volume[p];
     }
   }
+  mesh.points.scatter(point_gradient);
 }
 
 void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
@@ -88,6 +88,8 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
         corner_volume[corner_idx] / zone_volume[zone_idx];
     zone_gradient[zone_idx] += point_gradient[point_idx] * c_z_vol_ratio;
   }
+
+  mesh.zones.scatter(zone_gradient);
 }
 
 } // namespace Ume
