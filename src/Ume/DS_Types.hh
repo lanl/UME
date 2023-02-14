@@ -17,7 +17,7 @@ template <class T> struct RaggedRight {
   RaggedRight() = default;
   explicit RaggedRight(int base_size) { init(base_size); }
   bool operator==(RaggedRight<T> const &rhs) const {
-    return (begin == rhs.begin && end == rhs.end && data == rhs.data);
+    return (bidx == rhs.bidx && eidx == rhs.eidx && data == rhs.data);
   }
   T *begin(int n) { return data.data() + bidx[n]; }
   T const *begin(int n) const { return data.data() + bidx[n]; }
