@@ -1,8 +1,8 @@
 /*!
   \file SOA_Entity.hh
 */
-#ifndef SOA_ENTITY_HH
-#define SOA_ENTITY_HH 1
+#ifndef UME_SOA_ENTITY_HH
+#define UME_SOA_ENTITY_HH 1
 
 #include "Ume/Comm_Neighbors.hh"
 #include "Ume/Comm_Transport.hh"

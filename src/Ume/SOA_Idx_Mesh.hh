@@ -1,8 +1,8 @@
 /*!
   \file Ume/SOA_Idx_Mesh.hh
 */
-#ifndef SOA_IDX_MESH_HH
-#define SOA_IDX_MESH_HH 1
+#ifndef UME_SOA_IDX_MESH_HH
+#define UME_SOA_IDX_MESH_HH 1
 
 #include "Ume/Mesh_Base.hh"
 #include "Ume/SOA_Entity.hh"

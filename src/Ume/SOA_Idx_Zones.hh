@@ -2,8 +2,8 @@
 \file SOA_Idx_Zones.hh
 */
 
-#ifndef SOA_IDX_ZONES_HH
-#define SOA_IDX_ZONES_HH 1
+#ifndef UME_SOA_IDX_ZONES_HH
+#define UME_SOA_IDX_ZONES_HH 1
 
 #include "Ume/DSE_Base.hh"
 #include "Ume/SOA_Entity.hh"

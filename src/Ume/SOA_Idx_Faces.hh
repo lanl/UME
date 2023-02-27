@@ -2,8 +2,8 @@
 \file Ume/SOA_Idx_Faces.hh
 */
 
-#ifndef SOA_IDX_FACES_HH
-#define SOA_IDX_FACES_HH 1
+#ifndef UME_SOA_IDX_FACES_HH
+#define UME_SOA_IDX_FACES_HH 1
 
 #include "Ume/DSE_Base.hh"
 #include "Ume/SOA_Entity.hh"

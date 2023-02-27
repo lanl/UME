@@ -2,8 +2,8 @@
 \file Ume/SOA_Idx_Corners.hh
 */
 
-#ifndef SOA_IDX_CORNERS_HH
-#define SOA_IDX_CORNERS_HH 1
+#ifndef UME_SOA_IDX_CORNERS_HH
+#define UME_SOA_IDX_CORNERS_HH 1
 
 #include "Ume/DSE_Base.hh"
 #include "Ume/SOA_Entity.hh"

@@ -5,8 +5,8 @@
   of specific mesh entity classes (e.g. Sides).
 */
 
-#ifndef SOA_IDX_HELPERS_HH
-#define SOA_IDX_HELPERS_HH 1
+#ifndef UME_SOA_IDX_HELPERS_HH
+#define UME_SOA_IDX_HELPERS_HH 1
 
 #define TRACE_INIT 0
 
