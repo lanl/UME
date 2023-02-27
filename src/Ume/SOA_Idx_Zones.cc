@@ -93,7 +93,7 @@ bool Zones::DSE_zone_to_pt_zone::init_() const {
   /* Fill the ragged-right arrays, eliminiting zone self-links */
   for (int z = 0; z < zll; ++z) {
     accum[z].erase(z);
-    z2pz.append(z, accum[z].begin(), accum[z].end());
+    z2pz.assign(z, accum[z].begin(), accum[z].end());
   }
   DSE_INIT_EPILOGUE;
 }
@@ -120,7 +120,7 @@ bool Zones::DSE_zone_to_points::init_() const {
   /* Fill the ragged-right arrays*/
   for (int z = 0; z < zll; ++z) {
     std::sort(accum[z].begin(), accum[z].end());
-    z2p.append(z, accum[z].begin(), accum[z].end());
+    z2p.assign(z, accum[z].begin(), accum[z].end());
   }
   DSE_INIT_EPILOGUE;
 }

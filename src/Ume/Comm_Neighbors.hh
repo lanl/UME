@@ -9,6 +9,8 @@
 #include <vector>
 
 namespace Ume {
+
+//! Namespace for routines dealing with communication between mesh partitions
 namespace Comm {
 
 //! Identify the remote PE and communicating elements in a one-way pattern

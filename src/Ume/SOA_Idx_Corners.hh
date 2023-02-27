@@ -1,5 +1,5 @@
-/*
-\file SOA_Idx_Corners.hh
+/*!
+\file Ume/SOA_Idx_Corners.hh
 */
 
 #ifndef SOA_IDX_CORNERS_HH

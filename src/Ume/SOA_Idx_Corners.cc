@@ -1,5 +1,5 @@
 /*!
-  \file SOA_Idx_Faces.cc
+  \file Ume/SOA_Idx_Faces.cc
 */
 
 #include "SOA_Idx_Mesh.hh"
@@ -107,7 +107,7 @@ bool Corners::DSE_corner_to_sides::init_() const {
   }
 
   for (int c = 0; c < cll; ++c) {
-    corner_to_sides.append(c, accum[c].begin(), accum[c].end());
+    corner_to_sides.assign(c, accum[c].begin(), accum[c].end());
   }
   DSE_INIT_EPILOGUE;
 }

@@ -62,7 +62,7 @@ bool Points::DSE_point_to_zones::init_() const {
   }
   for (int p = 0; p < pll; ++p) {
     std::sort(accum[p].begin(), accum[p].end());
-    p2zs.append(p, accum[p].begin(), accum[p].end());
+    p2zs.assign(p, accum[p].begin(), accum[p].end());
   }
 
   DSE_INIT_EPILOGUE;

@@ -1,4 +1,4 @@
-/*
+/*!
    \file Ume/gradient.hh
 */
 #ifndef UME_GRADIENT_HH

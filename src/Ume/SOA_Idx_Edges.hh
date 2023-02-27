@@ -1,5 +1,5 @@
-/*
-\file SOA_Idx_Edges.hh
+/*!
+\file Ume/SOA_Idx_Edges.hh
 */
 
 #ifndef SOA_IDX_EDGES_HH

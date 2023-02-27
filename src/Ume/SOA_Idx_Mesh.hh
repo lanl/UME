@@ -1,5 +1,5 @@
 /*!
-  \file SOA_Idx_Mesh.hh
+  \file Ume/SOA_Idx_Mesh.hh
 */
 #ifndef SOA_IDX_MESH_HH
 #define SOA_IDX_MESH_HH 1
@@ -21,6 +21,7 @@ namespace SOA_Idx {
 
 using Types = Ume::DS_Types::Types;
 
+//! An Struct-Of-Arrays Mesh
 struct Mesh : public Mesh_Base {
   enum Geometry_Type { CARTESIAN, CYLINDRICAL, SPHERICAL };
   int mype;
