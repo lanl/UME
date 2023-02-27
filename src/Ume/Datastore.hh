@@ -19,7 +19,7 @@ class Datastore;
 //! Datastore entry
 /*! Basically a variant for all possible types that can be stored in the
     Datastore, plus some metadata. DS_Entry generally serves as a base class for
-    actual variable classes. See DSE_Base for more details. */
+    actual variable classes. See Entity_Field for more details. */
 class DS_Entry : public DS_Types {
 public:
   DS_Entry() = default;

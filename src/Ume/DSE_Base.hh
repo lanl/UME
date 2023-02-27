@@ -1,8 +1,8 @@
 /*!
-  \file DSE_Base.hh
+  \file Ume/Entity_Field.hh
 */
-#ifndef DSE_BASE_HH
-#define DSE_BASE_HH 1
+#ifndef UME_ENTITY_FIELD_HH
+#define UME_ENTITY_FIELD_HH 1
 
 #include "Ume/Datastore.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
@@ -17,16 +17,21 @@ struct Points;
 struct Sides;
 struct Zones;
 
-//! A base class for Datastore entries
-template <typename B> class DSE_Base : public DS_Entry {
+//! A base class for entity field variables in the Datastore
+/*! This extends DS_Entry with access/caccess members for retrieving other data
+    when intializing the variable, and adds accessors for Mesh and entity
+    information. */
+template <typename Entity> class Entity_Field : public DS_Entry {
 public:
-  DSE_Base(Types t, B &b) : DS_Entry(t), baseEnt_{b} {}
+  Entity_Field(Types t, Entity &be) : DS_Entry(t), base_entity_{b} {}
+
+  //! Define Datastore accessors via the base entity and an accessor for mydata
 #define MAKE_DS_ACCESS(Y, R) \
   R &access_##Y(char const *const name) { \
-    return baseEnt_.ds().access_##Y(name); \
+    return base_entity_.ds().access_##Y(name); \
   } \
   R const &caccess_##Y(char const *const name) const { \
-    return baseEnt_.ds().caccess_##Y(name); \
+    return base_entity_.ds().caccess_##Y(name); \
   } \
   R &mydata_##Y() const { return std::get<R>(data_); }
 
@@ -41,9 +46,10 @@ public:
   MAKE_DS_ACCESS(vec3rr, VEC3RR_T);
 #undef MAKE_DS_ACCESS
 
+  //! Define Entity accessors
 #define ENT_ACCESS(U, L) \
-  U &L() { return baseEnt_.mesh().L; } \
-  U &L() const { return baseEnt_.mesh().L; }
+  U &L() { return base_entity_.mesh().L; } \
+  U &L() const { return base_entity_.mesh().L; }
 
   ENT_ACCESS(Corners, corners)
   ENT_ACCESS(Edges, edges)
@@ -53,10 +59,12 @@ public:
   ENT_ACCESS(Zones, zones)
 #undef ENT_ACCESS
 
-  constexpr Mesh &mesh() { return baseEnt_.mesh(); }
-  constexpr Mesh const &mesh() const { return baseEnt_.mesh(); }
+  //! Mesh accessors
+  constexpr Mesh &mesh() { return base_entity_.mesh(); }
+  constexpr Mesh const &mesh() const { return base_entity_.mesh(); }
 
-  B &baseEnt_;
+private:
+  Entity &base_entity_;
 };
 
 } // namespace SOA_Idx

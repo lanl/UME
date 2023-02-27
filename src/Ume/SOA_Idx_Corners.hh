@@ -5,7 +5,7 @@
 #ifndef UME_SOA_IDX_CORNERS_HH
 #define UME_SOA_IDX_CORNERS_HH 1
 
-#include "Ume/DSE_Base.hh"
+#include "Ume/Entity_Field.hh"
 #include "Ume/SOA_Entity.hh"
 
 namespace Ume {
@@ -27,25 +27,25 @@ public:
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Corners const &rhs) const;
 
-  class DSE_corner_vol : public DSE_Base<Corners> {
+  class DSE_corner_vol : public Entity_Field<Corners> {
   public:
-    explicit DSE_corner_vol(Corners &c) : DSE_Base(Types::DBLV, c) {}
+    explicit DSE_corner_vol(Corners &c) : Entity_Field(Types::DBLV, c) {}
 
   protected:
     bool init_() const override;
   };
 
-  class DSE_corner_csurf : public DSE_Base<Corners> {
+  class DSE_corner_csurf : public Entity_Field<Corners> {
   public:
-    explicit DSE_corner_csurf(Corners &c) : DSE_Base(Types::VEC3V, c) {}
+    explicit DSE_corner_csurf(Corners &c) : Entity_Field(Types::VEC3V, c) {}
 
   protected:
     bool init_() const override;
   };
 
-  class DSE_corner_to_sides : public DSE_Base<Corners> {
+  class DSE_corner_to_sides : public Entity_Field<Corners> {
   public:
-    explicit DSE_corner_to_sides(Corners &c) : DSE_Base(Types::INTRR, c) {}
+    explicit DSE_corner_to_sides(Corners &c) : Entity_Field(Types::INTRR, c) {}
 
   protected:
     bool init_() const override;

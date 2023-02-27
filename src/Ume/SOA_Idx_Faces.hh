@@ -5,7 +5,7 @@
 #ifndef UME_SOA_IDX_FACES_HH
 #define UME_SOA_IDX_FACES_HH 1
 
-#include "Ume/DSE_Base.hh"
+#include "Ume/Entity_Field.hh"
 #include "Ume/SOA_Entity.hh"
 
 namespace Ume {
@@ -19,9 +19,9 @@ struct Faces : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Faces const &rhs) const;
 
-  class DSE_fcoord : public DSE_Base<Faces> {
+  class DSE_fcoord : public Entity_Field<Faces> {
   public:
-    explicit DSE_fcoord(Faces &f) : DSE_Base(Types::VEC3V, f) {}
+    explicit DSE_fcoord(Faces &f) : Entity_Field(Types::VEC3V, f) {}
 
   protected:
     bool init_() const override;

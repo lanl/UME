@@ -5,7 +5,7 @@
 #ifndef UME_SOA_IDX_ZONES_HH
 #define UME_SOA_IDX_ZONES_HH 1
 
-#include "Ume/DSE_Base.hh"
+#include "Ume/Entity_Field.hh"
 #include "Ume/SOA_Entity.hh"
 
 namespace Ume {
@@ -20,27 +20,27 @@ struct Zones : public Entity {
   bool operator==(Zones const &rhs) const;
 
   // The center of each zone
-  class DSE_zcoord : public DSE_Base<Zones> {
+  class DSE_zcoord : public Entity_Field<Zones> {
   public:
-    explicit DSE_zcoord(Zones &z) : DSE_Base(Types::VEC3V, z) {}
+    explicit DSE_zcoord(Zones &z) : Entity_Field(Types::VEC3V, z) {}
 
   protected:
     bool init_() const override;
   };
 
   // The point-connected zone neighbors
-  class DSE_zone_to_pt_zone : public DSE_Base<Zones> {
+  class DSE_zone_to_pt_zone : public Entity_Field<Zones> {
   public:
-    explicit DSE_zone_to_pt_zone(Zones &z) : DSE_Base(Types::INTRR, z) {}
+    explicit DSE_zone_to_pt_zone(Zones &z) : Entity_Field(Types::INTRR, z) {}
 
   protected:
     bool init_() const override;
   };
 
   // The points for each zone
-  class DSE_zone_to_points : public DSE_Base<Zones> {
+  class DSE_zone_to_points : public Entity_Field<Zones> {
   public:
-    explicit DSE_zone_to_points(Zones &z) : DSE_Base(Types::INTRR, z) {}
+    explicit DSE_zone_to_points(Zones &z) : Entity_Field(Types::INTRR, z) {}
 
   protected:
     bool init_() const override;
