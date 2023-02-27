@@ -2,8 +2,8 @@
   \file Ume/DS_Types.hh
 */
 
-#ifndef DS_TYPES_HH
-#define DS_TYPES_HH 1
+#ifndef UME_DS_TYPES_HH
+#define UME_DS_TYPES_HH 1
 
 #include "Ume/RaggedRight.hh"
 #include "Ume/VecN.hh"

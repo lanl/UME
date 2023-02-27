@@ -2,8 +2,8 @@
 \file Ume/Comm_Transport.hh
 */
 
-#ifndef COMM_TRANSPORT_HH
-#define COMM_TRANSPORT_HH 1
+#ifndef UME_COMM_TRANSPORT_HH
+#define UME_COMM_TRANSPORT_HH 1
 
 #include "Ume/Comm_Buffers.hh"
 

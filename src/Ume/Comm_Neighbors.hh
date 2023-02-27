@@ -2,8 +2,8 @@
 \file Ume/Comm_Neighbors.hh
 */
 
-#ifndef COMM_NEIGHBORS_HH
-#define COMM_NEIGHBORS_HH 1
+#ifndef UME_COMM_NEIGHBORS_HH
+#define UME_COMM_NEIGHBORS_HH 1
 
 #include "utils.hh"
 #include <vector>

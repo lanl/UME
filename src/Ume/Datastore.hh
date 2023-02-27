@@ -2,8 +2,8 @@
   \file Ume/Datastore.hh
 */
 
-#ifndef DATASTORE_HH
-#define DATASTORE_HH 1
+#ifndef UME_DATASTORE_HH
+#define UME_DATASTORE_HH 1
 
 #include "Ume/DS_Types.hh"
 #include <memory>

@@ -1,5 +1,5 @@
 /*!
-\file utils.hh
+\file Ume/utils.hh
 */
 
 #include <istream>
@@ -9,8 +9,8 @@
 #include <string>
 #include <vector>
 
-#ifndef UTILS_HH
-#define UTILS_HH 1
+#ifndef UME_UTILS_HH
+#define UME_UTILS_HH 1
 
 namespace Ume {
 inline void skip_line(std::istream &S) {

@@ -1,8 +1,8 @@
 /*!
   \file Mesh_Base.hh
 */
-#ifndef MESH_BASE_HH
-#define MESH_BASE_HH 1
+#ifndef UME_MESH_BASE_HH
+#define UME_MESH_BASE_HH 1
 
 #include "Ume/Comm_Transport.hh"
 #include "Ume/Datastore.hh"

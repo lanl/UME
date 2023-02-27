@@ -2,8 +2,8 @@
 \file Ume/Comm_Buffers.hh
 */
 
-#ifndef COMM_BUFFERS_HH
-#define COMM_BUFFERS_HH 1
+#ifndef UME_COMM_BUFFERS_HH
+#define UME_COMM_BUFFERS_HH 1
 
 #include "Ume/Comm_Neighbors.hh"
 #include "Ume/DS_Types.hh"

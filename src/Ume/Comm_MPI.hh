@@ -2,8 +2,8 @@
 \file Ume/Comm_MPI.hh
 */
 
-#ifndef COMM_MPI_HH
-#define COMM_MPI_HH 1
+#ifndef UME_COMM_MPI_HH
+#define UME_COMM_MPI_HH 1
 
 #include "Ume/Comm_Transport.hh"
 #include <unordered_map>

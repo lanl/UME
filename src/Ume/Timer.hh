@@ -2,8 +2,8 @@
   \file Timer.hh
 */
 
-#ifndef TIMER_HH
-#define TIMER_HH 1
+#ifndef UME_TIMER_HH
+#define UME_TIMER_HH 1
 
 #include <cassert>
 #include <chrono>
