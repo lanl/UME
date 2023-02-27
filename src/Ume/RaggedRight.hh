@@ -1,9 +1,9 @@
 /*!
-  Ume/RaggedRight.hh
+  \file Ume/RaggedRight.hh
 */
 
-#ifndef RAGGEDRIGHT_HH
-#define RAGGEDRIGHT_HH
+#ifndef UME_RAGGEDRIGHT_HH
+#define UME_RAGGEDRIGHT_HH
 
 #include <vector>
 
