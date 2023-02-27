@@ -1,5 +1,5 @@
 /*
-\file SOA_Idx_Zones.hh
+\file Ume/SOA_Idx_Zones.hh
 */
 
 #ifndef UME_SOA_IDX_ZONES_HH

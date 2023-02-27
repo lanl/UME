@@ -1,5 +1,5 @@
 /*!
-  \file SOA_Idx_Sides.hh
+  \file Ume/SOA_Idx_Sides.hh
 */
 
 #ifndef UME_SOA_IDX_SIDES_HH

@@ -1,5 +1,5 @@
 /*!
-  \file Timer.hh
+  \file Ume/Timer.hh
 */
 
 #ifndef UME_TIMER_HH

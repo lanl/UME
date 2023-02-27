@@ -1,5 +1,5 @@
 /*!
-  \file SOA_Idx_Points.cc
+  \file Ume/SOA_Idx_Points.cc
 */
 
 #include "SOA_Idx_Mesh.hh"

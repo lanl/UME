@@ -1,5 +1,5 @@
 /*!
-  \file VecN.hh
+  \file Ume/VecN.hh
 */
 #ifndef UME_VECN_HH
 #define UME_VECN_HH 1

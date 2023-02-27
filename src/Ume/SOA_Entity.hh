@@ -1,5 +1,5 @@
 /*!
-  \file SOA_Entity.hh
+  \file Ume/SOA_Entity.hh
 */
 #ifndef UME_SOA_ENTITY_HH
 #define UME_SOA_ENTITY_HH 1

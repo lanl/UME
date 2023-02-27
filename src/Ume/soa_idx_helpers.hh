@@ -1,5 +1,5 @@
 /*!
-  \file soa_idx_helpers.hh
+  \file Ume/soa_idx_helpers.hh
 
   A collection of macros used to reduce boilerplate code in the implementation
   of specific mesh entity classes (e.g. Sides).
