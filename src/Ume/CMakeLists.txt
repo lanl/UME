@@ -16,6 +16,7 @@ set(UME_INCLUDE_FILES
   DS_Types.hh
   Datastore.hh
   Mesh_Base.hh
+  RaggedRight.hh
   SOA_Entity.hh
   SOA_Idx_Corners.hh
   SOA_Idx_Edges.hh
