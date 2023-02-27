@@ -23,7 +23,7 @@ struct Zones;
     information. */
 template <typename Entity> class Entity_Field : public DS_Entry {
 public:
-  Entity_Field(Types t, Entity &be) : DS_Entry(t), base_entity_{b} {}
+  Entity_Field(Types t, Entity &be) : DS_Entry(t), base_entity_{be} {}
 
   //! Define Datastore accessors via the base entity and an accessor for mydata
 #define MAKE_DS_ACCESS(Y, R) \
