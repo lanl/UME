@@ -1,5 +1,14 @@
 /*!
   \file ume_mpi.cc
+
+  This is an example of MPI-based driver that reads one partition of an Ume
+  binary mesh into each rank, and then performs (and tests) a gradient
+  operation.
+
+  Note that there must be as many *.ume files as there are MPI ranks, and they
+  should have filenames of the form '<basename>.<pe>.ume', where <basename> is
+  an arbitray string provided on the command line, and <pe> is a rank number
+  with a printf format of "%05d" (zero-filled, five digits)
 */
 
 #include "Ume/Comm_MPI.hh"
@@ -60,9 +69,11 @@ int main(int argc, char *argv[]) {
     czi += 1;
   assert(czi < mesh.zones.lsize);
 
+  // Create a zone-field that is zero everywhere but in czi.
   DBLV_T zfield(mesh.zones.size(), 0.0);
   zfield[czi] = 100000.0;
 
+  // Do a zone-centered gradient calculation on that field (in parallel)
   if (comm.pe() == 0)
     std::cout << "Calculating gradient..." << std::endl;
   VEC3V_T pgrad, zgrad;

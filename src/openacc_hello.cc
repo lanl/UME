@@ -1,3 +1,9 @@
+/*!
+  \file openacc_hello.cc
+
+  This is just a test that we can use the OpenACC programming model if enabled.
+*/
+
 #include <iostream>
 #include <openacc.h>
 

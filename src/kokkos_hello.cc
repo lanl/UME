@@ -1,3 +1,9 @@
+/*!
+  \file kokkos_hello.cc
+
+  This is just a test that we can use the Kokkos library if enabled.
+*/
+
 /*
 //@HEADER
 // ************************************************************************

@@ -1,5 +1,8 @@
 /*!
   \file ume_serial.cc
+
+  This is an example of a serial driver for Ume.  It simply reads one or more
+  binary Ume file(s) and accesses some computed variables in the first one.
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
@@ -31,7 +34,7 @@ std::vector<Mesh> read_meshes(int const argc, char *argv[]) {
   ranks.resize(argc - 1);
   bool need_sort{false};
   if (argc == 1) {
-    std::cerr << "Usage: ume_driver <ume file>+" << std::endl;
+    std::cerr << "Usage: ume_serial <ume file>+" << std::endl;
     std::exit(1);
   }
   for (int i = 1; i < argc; ++i) {
