@@ -27,25 +27,25 @@ public:
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Corners const &rhs) const;
 
-  class DSE_corner_vol : public Entity_Field<Corners> {
+  class VAR_corner_vol : public Entity_Field<Corners> {
   public:
-    explicit DSE_corner_vol(Corners &c) : Entity_Field(Types::DBLV, c) {}
+    explicit VAR_corner_vol(Corners &c) : Entity_Field(Types::DBLV, c) {}
 
   protected:
     bool init_() const override;
   };
 
-  class DSE_corner_csurf : public Entity_Field<Corners> {
+  class VAR_corner_csurf : public Entity_Field<Corners> {
   public:
-    explicit DSE_corner_csurf(Corners &c) : Entity_Field(Types::VEC3V, c) {}
+    explicit VAR_corner_csurf(Corners &c) : Entity_Field(Types::VEC3V, c) {}
 
   protected:
     bool init_() const override;
   };
 
-  class DSE_corner_to_sides : public Entity_Field<Corners> {
+  class VAR_corner_to_sides : public Entity_Field<Corners> {
   public:
-    explicit DSE_corner_to_sides(Corners &c) : Entity_Field(Types::INTRR, c) {}
+    explicit VAR_corner_to_sides(Corners &c) : Entity_Field(Types::INTRR, c) {}
 
   protected:
     bool init_() const override;

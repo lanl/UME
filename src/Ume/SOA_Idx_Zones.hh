@@ -20,27 +20,27 @@ struct Zones : public Entity {
   bool operator==(Zones const &rhs) const;
 
   // The center of each zone
-  class DSE_zcoord : public Entity_Field<Zones> {
+  class VAR_zcoord : public Entity_Field<Zones> {
   public:
-    explicit DSE_zcoord(Zones &z) : Entity_Field(Types::VEC3V, z) {}
+    explicit VAR_zcoord(Zones &z) : Entity_Field(Types::VEC3V, z) {}
 
   protected:
     bool init_() const override;
   };
 
   // The point-connected zone neighbors
-  class DSE_zone_to_pt_zone : public Entity_Field<Zones> {
+  class VAR_zone_to_pt_zone : public Entity_Field<Zones> {
   public:
-    explicit DSE_zone_to_pt_zone(Zones &z) : Entity_Field(Types::INTRR, z) {}
+    explicit VAR_zone_to_pt_zone(Zones &z) : Entity_Field(Types::INTRR, z) {}
 
   protected:
     bool init_() const override;
   };
 
   // The points for each zone
-  class DSE_zone_to_points : public Entity_Field<Zones> {
+  class VAR_zone_to_points : public Entity_Field<Zones> {
   public:
-    explicit DSE_zone_to_points(Zones &z) : Entity_Field(Types::INTRR, z) {}
+    explicit VAR_zone_to_points(Zones &z) : Entity_Field(Types::INTRR, z) {}
 
   protected:
     bool init_() const override;

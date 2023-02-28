@@ -19,9 +19,9 @@ struct Faces : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Faces const &rhs) const;
 
-  class DSE_fcoord : public Entity_Field<Faces> {
+  class VAR_fcoord : public Entity_Field<Faces> {
   public:
-    explicit DSE_fcoord(Faces &f) : Entity_Field(Types::VEC3V, f) {}
+    explicit VAR_fcoord(Faces &f) : Entity_Field(Types::VEC3V, f) {}
 
   protected:
     bool init_() const override;

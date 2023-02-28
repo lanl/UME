@@ -16,7 +16,7 @@ Faces::Faces(Mesh *mesh) : Entity{mesh} {
   ds().insert("m:f>z1", std::make_unique<Ume::DS_Entry>(Types::INTV));
   // map: face to adjacent zone 2 index
   ds().insert("m:f>z2", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  ds().insert("fcoord", std::make_unique<DSE_fcoord>(*this));
+  ds().insert("fcoord", std::make_unique<VAR_fcoord>(*this));
 }
 
 void Faces::write(std::ostream &os) const {
@@ -45,8 +45,8 @@ void Faces::resize(int const local, int const total, int const ghost) {
   RESIZE("m:f>z2", total);
 }
 
-bool Faces::DSE_fcoord::init_() const {
-  DSE_INIT_PREAMBLE("DSE_fcoord");
+bool Faces::VAR_fcoord::init_() const {
+  VAR_INIT_PREAMBLE("VAR_fcoord");
 
   int const fll{faces().size()};
   int const fl{faces().lsize};
@@ -74,7 +74,7 @@ bool Faces::DSE_fcoord::init_() const {
     }
   }
 
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 } // namespace SOA_Idx
 } // namespace Ume

@@ -15,8 +15,8 @@ namespace SOA_Idx {
 Points::Points(Mesh *mesh) : Entity{mesh} {
   // point coordinates
   ds().insert("pcoord", std::make_unique<Ume::DS_Entry>(Types::VEC3V));
-  ds().insert("point_norm", std::make_unique<DSE_point_norm>(*this));
-  ds().insert("m:p>zs", std::make_unique<DSE_point_to_zones>(*this));
+  ds().insert("point_norm", std::make_unique<VAR_point_norm>(*this));
+  ds().insert("m:p>zs", std::make_unique<VAR_point_to_zones>(*this));
 }
 
 void Points::write(std::ostream &os) const {
@@ -43,8 +43,8 @@ void Points::resize(int const local, int const total, int const ghost) {
   (ds().access_vec3v("pcoord")).resize(total);
 }
 
-bool Points::DSE_point_to_zones::init_() const {
-  DSE_INIT_PREAMBLE("DSE_point_to_zones");
+bool Points::VAR_point_to_zones::init_() const {
+  VAR_INIT_PREAMBLE("VAR_point_to_zones");
   int const pll = points().size();
   int const cll = corners().size();
   int const zll = zones().size();
@@ -65,11 +65,11 @@ bool Points::DSE_point_to_zones::init_() const {
     p2zs.assign(p, accum[p].begin(), accum[p].end());
   }
 
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
-bool Points::DSE_point_norm::init_() const {
-  DSE_INIT_PREAMBLE("DSE_point_norm");
+bool Points::VAR_point_norm::init_() const {
+  VAR_INIT_PREAMBLE("VAR_point_norm");
   int const pll = points().size();
   int const pl = points().lsize;
   int const sl = sides().lsize;
@@ -101,7 +101,7 @@ bool Points::DSE_point_norm::init_() const {
       normalize(point_norm[p]);
     }
   }
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
 } // namespace SOA_Idx

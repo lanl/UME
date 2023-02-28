@@ -21,17 +21,17 @@ struct Points : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Points const &rhs) const;
 
-  class DSE_point_to_zones : public Entity_Field<Points> {
+  class VAR_point_to_zones : public Entity_Field<Points> {
   public:
-    explicit DSE_point_to_zones(Points &p) : Entity_Field(Types::INTRR, p) {}
+    explicit VAR_point_to_zones(Points &p) : Entity_Field(Types::INTRR, p) {}
 
   protected:
     bool init_() const override;
   };
 
-  class DSE_point_norm : public Entity_Field<Points> {
+  class VAR_point_norm : public Entity_Field<Points> {
   public:
-    explicit DSE_point_norm(Points &p) : Entity_Field(Types::VEC3V, p) {}
+    explicit VAR_point_norm(Points &p) : Entity_Field(Types::VEC3V, p) {}
 
   protected:
     bool init_() const override;

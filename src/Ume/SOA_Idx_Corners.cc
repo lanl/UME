@@ -15,9 +15,9 @@ Corners::Corners(Mesh *mesh) : Entity{mesh} {
   ds().insert("m:c>p", std::make_unique<Ume::DS_Entry>(Types::INTV));
   // map: corner->index of parent zone zone
   ds().insert("m:c>z", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  ds().insert("corner_vol", std::make_unique<DSE_corner_vol>(*this));
-  ds().insert("corner_csurf", std::make_unique<DSE_corner_csurf>(*this));
-  ds().insert("m:c>ss", std::make_unique<DSE_corner_to_sides>(*this));
+  ds().insert("corner_vol", std::make_unique<VAR_corner_vol>(*this));
+  ds().insert("corner_csurf", std::make_unique<VAR_corner_csurf>(*this));
+  ds().insert("m:c>ss", std::make_unique<VAR_corner_to_sides>(*this));
 }
 
 void Corners::write(std::ostream &os) const {
@@ -46,8 +46,8 @@ void Corners::resize(int const local, int const total, int const ghost) {
   RESIZE("m:c>z", total);
 }
 
-bool Corners::DSE_corner_vol::init_() const {
-  DSE_INIT_PREAMBLE("DSE_corner_vol");
+bool Corners::VAR_corner_vol::init_() const {
+  VAR_INIT_PREAMBLE("VAR_corner_vol");
 
   int const cll = corners().size();
   int const sl = sides().lsize;
@@ -66,11 +66,11 @@ bool Corners::DSE_corner_vol::init_() const {
     }
   }
   corners().scatter(corner_vol);
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
-bool Corners::DSE_corner_csurf::init_() const {
-  DSE_INIT_PREAMBLE("DSE_corner_csurf");
+bool Corners::VAR_corner_csurf::init_() const {
+  VAR_INIT_PREAMBLE("VAR_corner_csurf");
 
   int const cll = corners().size();
   int const sl = sides().lsize;
@@ -87,11 +87,11 @@ bool Corners::DSE_corner_csurf::init_() const {
       corner_csurf[s2c2[s]] -= side_surf[s];
     }
   }
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
-bool Corners::DSE_corner_to_sides::init_() const {
-  DSE_INIT_PREAMBLE("DSE_corner_to_sides");
+bool Corners::VAR_corner_to_sides::init_() const {
+  VAR_INIT_PREAMBLE("VAR_corner_to_sides");
 
   int const cll = corners().size();
   int const sll = sides().size();
@@ -109,7 +109,7 @@ bool Corners::DSE_corner_to_sides::init_() const {
   for (int c = 0; c < cll; ++c) {
     corner_to_sides.assign(c, accum[c].begin(), accum[c].end());
   }
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
 } // namespace SOA_Idx
