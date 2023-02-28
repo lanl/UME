@@ -2,8 +2,8 @@
   \file Ume/SOA_Idx_Faces.cc
 */
 
-#include "SOA_Idx_Mesh.hh"
-#include "soa_idx_helpers.hh"
+#include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/soa_idx_helpers.hh"
 
 namespace Ume {
 namespace SOA_Idx {

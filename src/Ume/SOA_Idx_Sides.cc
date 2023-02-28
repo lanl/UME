@@ -2,8 +2,8 @@
   \file Ume/SOA_Idx_Sides.hh
 */
 
-#include "SOA_Idx_Mesh.hh"
-#include "soa_idx_helpers.hh"
+#include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/soa_idx_helpers.hh"
 #include <cassert>
 
 namespace Ume {

@@ -5,7 +5,7 @@
 #ifndef UME_COMM_NEIGHBORS_HH
 #define UME_COMM_NEIGHBORS_HH 1
 
-#include "utils.hh"
+#include "Ume/utils.hh"
 #include <vector>
 
 namespace Ume {

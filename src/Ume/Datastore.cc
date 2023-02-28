@@ -2,7 +2,7 @@
 \file Ume/Datastore.cc
 */
 
-#include "Datastore.hh"
+#include "Ume/Datastore.hh"
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
