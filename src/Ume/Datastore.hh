@@ -23,8 +23,11 @@ class Datastore;
 class DS_Entry : public DS_Types {
 public:
   DS_Entry() = default;
+  //! Set the type of the data
   explicit DS_Entry(Types t) { set_type(t); }
   virtual ~DS_Entry() = default;
+
+  //! Set the type of the data held in this entry
   void set_type(Types t);
 
 protected:
