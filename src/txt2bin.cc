@@ -1,10 +1,9 @@
 /*!
   \file txt2bin.cc
-*/
-/*
-   This reads a file in the LAP ASCII DefliDump format (see
-   $OPUS/DELFI/Output/DelfiDump), and creates a binary file for use
-   with LAP_Mesh.hh.
+
+  This reads a file in the LAP ASCII UmeDump format (see
+  $OPUS/DELFI/Output/UmeDump), and creates a binary file for use with
+  Ume/SOA_Idx_Mesh.hh
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
