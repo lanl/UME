@@ -19,7 +19,7 @@ struct Zones : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Zones const &rhs) const;
 
-  // The center of each zone
+  //! Zone field variable: the center point of each zone
   class VAR_zcoord : public Entity_Field<Zones> {
   public:
     explicit VAR_zcoord(Zones &z) : Entity_Field(Types::VEC3V, z) {}
@@ -28,7 +28,7 @@ struct Zones : public Entity {
     bool init_() const override;
   };
 
-  // The point-connected zone neighbors
+  //! Zone field variable: point-connected zone neighbors inverse connectivity
   class VAR_zone_to_pt_zone : public Entity_Field<Zones> {
   public:
     explicit VAR_zone_to_pt_zone(Zones &z) : Entity_Field(Types::INTRR, z) {}
@@ -37,7 +37,7 @@ struct Zones : public Entity {
     bool init_() const override;
   };
 
-  // The points for each zone
+  // Zone field variable: zone-to-points inverse connectivity
   class VAR_zone_to_points : public Entity_Field<Zones> {
   public:
     explicit VAR_zone_to_points(Zones &z) : Entity_Field(Types::INTRR, z) {}

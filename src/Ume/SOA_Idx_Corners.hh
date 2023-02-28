@@ -27,6 +27,7 @@ public:
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Corners const &rhs) const;
 
+  //! Corner field variable: corner volume
   class VAR_corner_vol : public Entity_Field<Corners> {
   public:
     explicit VAR_corner_vol(Corners &c) : Entity_Field(Types::DBLV, c) {}
@@ -35,6 +36,7 @@ public:
     bool init_() const override;
   };
 
+  //! Corner field variable: sum of area-weighted face normals
   class VAR_corner_csurf : public Entity_Field<Corners> {
   public:
     explicit VAR_corner_csurf(Corners &c) : Entity_Field(Types::VEC3V, c) {}
@@ -43,6 +45,7 @@ public:
     bool init_() const override;
   };
 
+  //! Corner field variable: corner-to-sides inverse connectivity map
   class VAR_corner_to_sides : public Entity_Field<Corners> {
   public:
     explicit VAR_corner_to_sides(Corners &c) : Entity_Field(Types::INTRR, c) {}

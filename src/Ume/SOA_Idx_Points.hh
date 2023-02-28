@@ -21,6 +21,7 @@ struct Points : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Points const &rhs) const;
 
+  //! Point field variable: point-to-zones inverse connectivity map
   class VAR_point_to_zones : public Entity_Field<Points> {
   public:
     explicit VAR_point_to_zones(Points &p) : Entity_Field(Types::INTRR, p) {}
@@ -29,6 +30,7 @@ struct Points : public Entity {
     bool init_() const override;
   };
 
+  //! Point field variable: sum of adjacent VAR_side_surz
   class VAR_point_norm : public Entity_Field<Points> {
   public:
     explicit VAR_point_norm(Points &p) : Entity_Field(Types::VEC3V, p) {}

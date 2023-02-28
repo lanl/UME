@@ -19,6 +19,7 @@ struct Faces : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Faces const &rhs) const;
 
+  //! Face field variable: face centers
   class VAR_fcoord : public Entity_Field<Faces> {
   public:
     explicit VAR_fcoord(Faces &f) : Entity_Field(Types::VEC3V, f) {}

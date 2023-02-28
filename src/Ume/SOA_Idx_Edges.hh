@@ -19,6 +19,7 @@ struct Edges : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Edges const &rhs) const;
 
+  //! Edge field variable: edge centers
   class VAR_ecoord : public Entity_Field<Edges> {
   public:
     explicit VAR_ecoord(Edges &e) : Entity_Field(Types::VEC3V, e) {}
