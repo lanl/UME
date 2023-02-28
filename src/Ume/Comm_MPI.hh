@@ -11,9 +11,14 @@
 namespace Ume {
 namespace Comm {
 
+//! An MPI-based Transport mechanism
 class MPI : public Transport {
 public:
   MPI(int *argc, char ***argv);
+
+  //! Set the rank that the partitioned mesh *thinks* it is
+  /*! This could be used to map between virtual ranks and actual rank numbers.
+      If you don't call this, virtual rank mapping is not used. */
   void set_virtual_rank(int const virtual_rank);
   void exchange(Buffers<DS_Types::INTV_T> const &sends,
       Buffers<DS_Types::INTV_T> &recvs) override;
@@ -24,6 +29,7 @@ public:
   int stop() override;
   void abort(char const *const message) override;
 
+  //! Return a new MPI_Tag value
   int get_tag();
   //! Translate from virtual PE to real PE
   /*! The "virtual PE" is the PE identifier that is loaded from the Ume data
@@ -44,10 +50,10 @@ public:
 
 private:
   bool use_virtual_ranks_;
-  std::unordered_map<int, int> v2r_rank_; //! virtual-to-real rank map
+  std::unordered_map<int, int> v2r_rank_; //!< virtual-to-real rank map
   int rank_;
   int numpe_;
-  int max_tag_;
+  int max_tag_; //!< The maximum allowable tag value
 };
 
 } // namespace Comm
