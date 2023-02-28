@@ -2,8 +2,8 @@
   \file txt2bin.cc
 
   This reads a file in the LAP ASCII UmeDump format (see
-  $OPUS/DELFI/Output/UmeDump), and creates a binary file for use with
-  Ume/SOA_Idx_Mesh.hh
+  `$OPUS/DELFI/Output/UmeDump`), and creates a binary file for use with
+  `Ume/SOA_Idx_Mesh.hh`.  Note that this only reads 3-D meshes.
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
@@ -28,20 +28,26 @@ int main(int argc, char *argv[]) {
   double txt_read_time;
   Mesh m;
   {
+    int retval;
     std::cout << "Reading text file \"" << argv[1] << "\"" << std::endl;
     std::ifstream is(argv[1]);
     if (!is) {
       std::cerr << "Couldn't open \"" << argv[1] << "\" for reading"
                 << std::endl;
-      exit(1);
+      return 2;
     }
     Ume::Timer timer;
     timer.start();
-    read(is, m);
+    retval = read(is, m);
     timer.stop();
-    std::cout << "Text read took " << timer << "\n";
-    txt_read_time = timer.seconds();
     is.close();
+    if (retval) {
+      std::cerr << "exiting due to read errors" << std::endl;
+      return 3;
+    } else {
+      std::cout << "Text read took " << timer << "\n";
+      txt_read_time = timer.seconds();
+    }
   }
 
   {
@@ -50,14 +56,14 @@ int main(int argc, char *argv[]) {
     if (!os) {
       std::cerr << "Couldn't open \"" << argv[2] << "\" for writing"
                 << std::endl;
-      exit(1);
+      return 4;
     }
     Ume::Timer timer;
     timer.start();
     m.write(os);
     timer.stop();
-    std::cout << "Binary write took " << timer << "\n";
     os.close();
+    std::cout << "Binary write took " << timer << "\n";
   }
 
   {
@@ -73,8 +79,9 @@ int main(int argc, char *argv[]) {
               << txt_read_time / timer.seconds() << "x speedup)\n";
     is.close();
     if (!(m == m2)) {
-      std::cerr << "DIFF!" << std::endl;
-      return 1;
+      std::cerr << "Error: write/read test failed, meshes not equivalent."
+                << std::endl;
+      return 5;
     } else {
       std::cout << "Copy verified" << std::endl;
       std::cout << "\nMesh Stats\n-------------------------------\n";
@@ -443,6 +450,11 @@ int read(std::istream &is, Mesh &m) {
   m.numpe = read_tag(is, "Total ranks");
   m.mype = read_tag(is, "This rank");
   int ndims = read_tag(is, "Num dims");
+  if (ndims != 3) {
+    std::cerr << "Error: Ume only works on 3-D meshes, and this input is "
+              << ndims << "-D." << std::endl;
+    return 1;
+  }
   int igeo = read_tag(is, "Geometry type");
   switch (igeo) {
   case 0:
@@ -456,7 +468,7 @@ int read(std::istream &is, Mesh &m) {
     break;
   default:
     std::cerr << "Unknown igeo flag = " << igeo << '\n';
-    exit(1);
+    return 2;
   }
 
   /*
