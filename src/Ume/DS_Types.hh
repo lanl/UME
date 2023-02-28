@@ -1,64 +1,47 @@
-/*
-  \file Ds_Types.hh
+/*!
+  \file Ume/DS_Types.hh
 */
 
-#ifndef DS_TYPES_HH
-#define DS_TYPES_HH 1
+#ifndef UME_DS_TYPES_HH
+#define UME_DS_TYPES_HH 1
 
+#include "Ume/RaggedRight.hh"
 #include "Ume/VecN.hh"
 #include <variant>
 #include <vector>
 
 namespace Ume {
 
-template <class T> struct RaggedRight {
-  std::vector<int> bidx, eidx;
-  std::vector<T> data;
-  RaggedRight() = default;
-  explicit RaggedRight(int base_size) { init(base_size); }
-  bool operator==(RaggedRight<T> const &rhs) const {
-    return (bidx == rhs.bidx && eidx == rhs.eidx && data == rhs.data);
-  }
-  T *begin(int n) { return data.data() + bidx[n]; }
-  T const *begin(int n) const { return data.data() + bidx[n]; }
-  T *end(int n) { return data.data() + eidx[n]; }
-  T const *end(int n) const { return data.data() + eidx[n]; }
-  void init(int const n) {
-    bidx.assign(n, 0);
-    eidx.assign(n, 0);
-  }
-  template <class IT> void append(int n, IT b, IT e) {
-    bidx.at(n) = static_cast<int>(data.size());
-    data.insert(data.end(), b, e);
-    eidx.at(n) = static_cast<int>(data.size());
-  }
-  constexpr int size(int const n) const { return eidx[n] - bidx[n]; }
-};
-
+//! Types that can be held in the datastore
 struct DS_Types {
+  //! An enumeration for switching between types
   enum class Types {
-    INT,
-    INTV,
-    INTRR,
-    DBL,
-    DBLV,
-    DBLRR,
-    VEC3,
-    VEC3V,
-    VEC3RR,
-    NONE
+    INT, //!< scalar integer
+    INTV, //!< vector<int>
+    INTRR, //!< RaggedRight<int>
+    DBL, //!< scalar double
+    DBLV, //!< vector<double>
+    DBLRR, //!< RaggedRight<double>
+    VEC3, //!< scalar Vec3
+    VEC3V, //!< vector<Vec3>
+    VEC3RR, //!< RaggedRight<Vec3>
+    NONE //!< Placeholder
   };
-  using INT_T = int;
-  using INTV_T = std::vector<INT_T>;
-  using INTRR_T = RaggedRight<INT_T>;
-  using DBL_T = double;
-  using DBLV_T = std::vector<DBL_T>;
-  using DBLRR_T = RaggedRight<DBL_T>;
-  using VEC3_T = Vec3;
-  using VEC3V_T = std::vector<VEC3_T>;
-  using VEC3RR_T = RaggedRight<VEC3_T>;
+  // The actual C++ type declarations
+  using INT_T = int; //!< scalar integer type
+  using INTV_T = std::vector<INT_T>; //!< vector<int> type
+  using INTRR_T = RaggedRight<INT_T>; //!< RaggedRight<int> type
+  using DBL_T = double; //!< scalar double type
+  using DBLV_T = std::vector<DBL_T>; //!< vector<double> tye
+  using DBLRR_T = RaggedRight<DBL_T>; //!< RaggedRight<double> type
+  using VEC3_T = Vec3; //!< scalar Vec3 type
+  using VEC3V_T = std::vector<VEC3_T>; //!< vector<Vec3> type
+  using VEC3RR_T = RaggedRight<VEC3_T>; //!< RaggedRight<Vec3> type
 };
 
+//! A way of providing type information
+/*! There is a template specialization provided below for each of the DS_Types
+ */
 template <typename T> struct DS_Type_Info {};
 
 template <> struct DS_Type_Info<DS_Types::INT_T> {

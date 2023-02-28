@@ -4,7 +4,7 @@
   Implementation and explicit instantiation for Buffers<T>.
 */
 
-#include "Comm_Buffers.hh"
+#include "Ume/Comm_Buffers.hh"
 #include <cassert>
 #include <set>
 

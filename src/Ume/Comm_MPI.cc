@@ -1,5 +1,5 @@
 /*!
-\file Comm_MPI.cc
+\file Ume/Comm_MPI.cc
 */
 
 #ifdef HAVE_MPI

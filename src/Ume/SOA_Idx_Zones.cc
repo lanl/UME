@@ -1,9 +1,9 @@
 /*!
-  \file SOA_Idx_Zones.hh
+  \file Ume/SOA_Idx_Zones.hh
 */
 
-#include "SOA_Idx_Mesh.hh"
-#include "soa_idx_helpers.hh"
+#include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/soa_idx_helpers.hh"
 #include <set>
 
 namespace Ume {
@@ -12,9 +12,9 @@ namespace SOA_Idx {
 /* --------------------------------- Zones ----------------------------------*/
 
 Zones::Zones(Mesh *mesh) : Entity{mesh} {
-  ds().insert("zcoord", std::make_unique<DSE_zcoord>(*this));
-  ds().insert("m:z>pz", std::make_unique<DSE_zone_to_pt_zone>(*this));
-  ds().insert("m:z>p", std::make_unique<DSE_zone_to_points>(*this));
+  ds().insert("zcoord", std::make_unique<VAR_zcoord>(*this));
+  ds().insert("m:z>pz", std::make_unique<VAR_zone_to_pt_zone>(*this));
+  ds().insert("m:z>p", std::make_unique<VAR_zone_to_points>(*this));
 }
 
 void Zones::write(std::ostream &os) const {
@@ -37,8 +37,8 @@ void Zones::resize(int const local, int const total, int const ghost) {
   Entity::resize(local, total, ghost);
 }
 
-bool Zones::DSE_zcoord::init_() const {
-  DSE_INIT_PREAMBLE("DSE_zcoord");
+bool Zones::VAR_zcoord::init_() const {
+  VAR_INIT_PREAMBLE("VAR_zcoord");
 
   int const zl = zones().lsize;
   int const zll = zones().size();
@@ -67,11 +67,11 @@ bool Zones::DSE_zcoord::init_() const {
     }
   }
   zones().scatter(zcoord);
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
-bool Zones::DSE_zone_to_pt_zone::init_() const {
-  DSE_INIT_PREAMBLE("DSE_zone_to_pt_zone");
+bool Zones::VAR_zone_to_pt_zone::init_() const {
+  VAR_INIT_PREAMBLE("VAR_zone_to_pt_zone");
   int const pll = points().size();
   int const zll = zones().size();
   int const cll = corners().size();
@@ -93,13 +93,13 @@ bool Zones::DSE_zone_to_pt_zone::init_() const {
   /* Fill the ragged-right arrays, eliminiting zone self-links */
   for (int z = 0; z < zll; ++z) {
     accum[z].erase(z);
-    z2pz.append(z, accum[z].begin(), accum[z].end());
+    z2pz.assign(z, accum[z].begin(), accum[z].end());
   }
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
-bool Zones::DSE_zone_to_points::init_() const {
-  DSE_INIT_PREAMBLE("DSE_zone_to_points");
+bool Zones::VAR_zone_to_points::init_() const {
+  VAR_INIT_PREAMBLE("VAR_zone_to_points");
   int const pll = points().size();
   int const zll = zones().size();
   int const cll = corners().size();
@@ -120,9 +120,9 @@ bool Zones::DSE_zone_to_points::init_() const {
   /* Fill the ragged-right arrays*/
   for (int z = 0; z < zll; ++z) {
     std::sort(accum[z].begin(), accum[z].end());
-    z2p.append(z, accum[z].begin(), accum[z].end());
+    z2p.assign(z, accum[z].begin(), accum[z].end());
   }
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
 } // namespace SOA_Idx

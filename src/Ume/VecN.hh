@@ -1,8 +1,8 @@
 /*!
-  \file VecN.hh
+  \file Ume/VecN.hh
 */
-#ifndef VECN_HH
-#define VECN_HH 1
+#ifndef UME_VECN_HH
+#define UME_VECN_HH 1
 
 #include <algorithm>
 #include <array>

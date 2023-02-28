@@ -1,8 +1,8 @@
 /*!
-  \file SOA_Entity.hh
+  \file Ume/SOA_Entity.hh
 */
-#ifndef SOA_ENTITY_HH
-#define SOA_ENTITY_HH 1
+#ifndef UME_SOA_ENTITY_HH
+#define UME_SOA_ENTITY_HH 1
 
 #include "Ume/Comm_Neighbors.hh"
 #include "Ume/Comm_Transport.hh"
@@ -17,15 +17,15 @@ namespace SOA_Idx {
 
 struct Mesh;
 
-/*! Record information common to all SOA_Idx::Mesh entities */
+//! Record information common to all SOA_Idx::Mesh entities
 struct Entity {
   Entity() = delete;
   explicit Entity(Mesh *mesh) : mesh_{mesh} {}
   enum CommTypes {
-    INTERNAL = 1, /* Not on a communication boundary */
-    SOURCE, /* The source entity in a group of shared copies */
-    COPY, /* Non-source entity in a group of shared copies */
-    GHOST /* A non-shared ghost copy of a remote entity */
+    INTERNAL = 1, //!< Not on a communication boundary
+    SOURCE, //!< The source entity in a group of shared copies
+    COPY, //!< Non-source entity in a group of shared copies
+    GHOST //!< A non-shared ghost copy of a remote entity
   };
 
   //! Mask flag
@@ -88,10 +88,16 @@ struct Entity {
    */
   Ume::Comm::Neighbors mySrcs;
 
+  //! Do a remote gather for a `field` on this entity, combined with `op`
   template <typename FT> void gather(Comm::Op const op, FT &field);
+
+  //! Do a scatter to remotes for a `field` on this entity
   template <typename FT> void scatter(FT &field);
+
+  //! Combined gather-scatter operation
   template <typename FT> void gathscat(Comm::Op const op, FT &field);
 
+  //! Define a named subset of this Entity's elements
   struct Subset {
     std::string name;
     //! The Number of local (non-ghost) elements
@@ -102,6 +108,8 @@ struct Entity {
       return (rhs.name == name && rhs.elements == elements && rhs.mask == mask);
     }
   };
+
+  //! The subsets defined on this Entity
   std::vector<Subset> subsets;
 
   //! The number of local (non-ghost) entities
@@ -111,13 +119,21 @@ struct Entity {
   virtual void read(std::istream &is) = 0;
   virtual void resize(int const local, int const total, int const ghost);
   bool operator==(Entity const &rhs) const;
+
+  //! Return the number of elements in this Entity
   int size() const { return static_cast<int>(mask.size()); }
 
+  //! Return the Datastore of the mesh that this Entity belongs to
   Datastore &ds() { return *(((Mesh_Base *)mesh_)->ds); }
+  //! Return the Datastore of the mesh that this Entity belongs to (const)
   Datastore const &ds() const { return *(((Mesh_Base *)mesh_)->ds); }
+  //! Return the Mesh that this Entity belongs to
   constexpr Mesh &mesh() { return *mesh_; }
+  //! Return the Mesh that this Entity belongs to (const)
   constexpr Mesh const &mesh() const { return *mesh_; }
+  //! Return the Transport that this Entity belongs to
   Ume::Comm::Transport &comm() { return *(((Mesh_Base *)mesh_)->comm); }
+  //! Return the Transport that this Entity belongs to (const)
   Ume::Comm::Transport const &comm() const {
     return *(((Mesh_Base *)mesh_)->comm);
   }

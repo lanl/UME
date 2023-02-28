@@ -2,13 +2,15 @@
 \file Ume/Comm_Neighbors.hh
 */
 
-#ifndef COMM_NEIGHBORS_HH
-#define COMM_NEIGHBORS_HH 1
+#ifndef UME_COMM_NEIGHBORS_HH
+#define UME_COMM_NEIGHBORS_HH 1
 
-#include "utils.hh"
+#include "Ume/utils.hh"
 #include <vector>
 
 namespace Ume {
+
+//! Namespace for routines dealing with communication between mesh partitions
 namespace Comm {
 
 //! Identify the remote PE and communicating elements in a one-way pattern

@@ -1,9 +1,9 @@
 /*!
-  \file SOA_Idx_Sides.hh
+  \file Ume/SOA_Idx_Sides.hh
 */
 
-#include "SOA_Idx_Mesh.hh"
-#include "soa_idx_helpers.hh"
+#include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/soa_idx_helpers.hh"
 #include <cassert>
 
 namespace Ume {
@@ -28,9 +28,9 @@ Sides::Sides(Mesh *mesh) : Entity{mesh} {
   ds().insert("m:s>s3", std::make_unique<Ume::DS_Entry>(Types::INTV));
   ds().insert("m:s>s4", std::make_unique<Ume::DS_Entry>(Types::INTV));
   ds().insert("m:s>s5", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  ds().insert("side_surf", std::make_unique<DSE_side_surf>(*this));
-  ds().insert("side_surz", std::make_unique<DSE_side_surz>(*this));
-  ds().insert("side_vol", std::make_unique<DSE_side_vol>(*this));
+  ds().insert("side_surf", std::make_unique<VAR_side_surf>(*this));
+  ds().insert("side_surz", std::make_unique<VAR_side_surz>(*this));
+  ds().insert("side_vol", std::make_unique<VAR_side_vol>(*this));
 }
 
 void Sides::write(std::ostream &os) const {
@@ -89,8 +89,8 @@ void Sides::resize(int const local, int const total, int const ghost) {
   RESIZE("m:s>s5", total);
 }
 
-bool Sides::DSE_side_surf::init_() const {
-  DSE_INIT_PREAMBLE("DSE_side_surf");
+bool Sides::VAR_side_surf::init_() const {
+  VAR_INIT_PREAMBLE("VAR_side_surf");
   int const sl = sides().lsize;
   int const sll = sides().size();
 
@@ -129,11 +129,11 @@ bool Sides::DSE_side_surf::init_() const {
       side_surf[s] = 0.0;
   }
   sides().scatter(side_surf);
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
-bool Sides::DSE_side_surz::init_() const {
-  DSE_INIT_PREAMBLE("DSE_side_surz");
+bool Sides::VAR_side_surz::init_() const {
+  VAR_INIT_PREAMBLE("VAR_side_surz");
   int const sl = sides().lsize;
   int const sll = sides().size();
 
@@ -160,11 +160,11 @@ bool Sides::DSE_side_surz::init_() const {
       side_surz[s] = 0.0;
   }
   sides().scatter(side_surz);
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
-bool Sides::DSE_side_vol::init_() const {
-  DSE_INIT_PREAMBLE("DSE_side_vol");
+bool Sides::VAR_side_vol::init_() const {
+  VAR_INIT_PREAMBLE("VAR_side_vol");
   int const sl = sides().lsize;
   int const sll = sides().size();
   auto const &s2z = caccess_intv("m:s>z");
@@ -196,7 +196,7 @@ bool Sides::DSE_side_vol::init_() const {
       side_vol[s] = 0.0;
   }
   sides().scatter(side_vol);
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
 } // namespace SOA_Idx

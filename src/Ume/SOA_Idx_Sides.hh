@@ -1,11 +1,11 @@
 /*!
-  \file SOA_Idx_Sides.hh
+  \file Ume/SOA_Idx_Sides.hh
 */
 
-#ifndef SOA_IDX_SIDES_HH
-#define SOA_IDX_SIDES_HH 1
+#ifndef UME_SOA_IDX_SIDES_HH
+#define UME_SOA_IDX_SIDES_HH 1
 
-#include "Ume/DSE_Base.hh"
+#include "Ume/Entity_Field.hh"
 #include "Ume/SOA_Entity.hh"
 
 namespace Ume {
@@ -23,25 +23,36 @@ struct Sides : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Sides const &rhs) const;
 
-  class DSE_side_surf : public DSE_Base<Sides> {
+  //! Side field variable: area-weighted normal of corner facet
+  /*! The two corners that intersect this side do so on the plane of the
+      triangular facet formed from the centers of the zone, face, and edge which
+      bisects this side. This variable contains the area-weighted normal of that
+      facet for each side.  The corners will sum this vector across all sides to
+      produce a area-weighted surface normal. */
+  class VAR_side_surf : public Entity_Field<Sides> {
   public:
-    explicit DSE_side_surf(Sides &s) : DSE_Base(Types::VEC3V, s) {}
+    explicit VAR_side_surf(Sides &s) : Entity_Field(Types::VEC3V, s) {}
 
   protected:
     bool init_() const override;
   };
 
-  class DSE_side_surz : public DSE_Base<Sides> {
+  //! Side field variable: area-weighted normal of zone facet
+  /*! Similar to VAR_side_surf, this contains the area-weighted normal of the
+      facet that separates zones, defined by the side edge and the center of the
+      side face. */
+  class VAR_side_surz : public Entity_Field<Sides> {
   public:
-    explicit DSE_side_surz(Sides &s) : DSE_Base(Types::VEC3V, s) {}
+    explicit VAR_side_surz(Sides &s) : Entity_Field(Types::VEC3V, s) {}
 
   protected:
     bool init_() const override;
   };
 
-  class DSE_side_vol : public DSE_Base<Sides> {
+  //! Side field variable: volume of the side
+  class VAR_side_vol : public Entity_Field<Sides> {
   public:
-    explicit DSE_side_vol(Sides &s) : DSE_Base(Types::DBLV, s) {}
+    explicit VAR_side_vol(Sides &s) : Entity_Field(Types::DBLV, s) {}
 
   protected:
     bool init_() const override;

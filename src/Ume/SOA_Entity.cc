@@ -1,5 +1,8 @@
-#include "SOA_Entity.hh"
-#include "utils.hh"
+/*!
+  \file Ume/SOA_Entity.cc
+*/
+#include "Ume/SOA_Entity.hh"
+#include "Ume/utils.hh"
 #include <cassert>
 
 namespace Ume {

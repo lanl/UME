@@ -1,9 +1,9 @@
 /*!
-  \file SOA_Idx_Faces.cc
+  \file Ume/SOA_Idx_Faces.cc
 */
 
-#include "SOA_Idx_Mesh.hh"
-#include "soa_idx_helpers.hh"
+#include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/soa_idx_helpers.hh"
 #include <cassert>
 
 namespace Ume {
@@ -16,7 +16,7 @@ Edges::Edges(Mesh *mesh) : Entity{mesh} {
   ds().insert("m:e>p1", std::make_unique<Ume::DS_Entry>(Types::INTV));
   // map: edge to end point 2 index
   ds().insert("m:e>p2", std::make_unique<Ume::DS_Entry>(Types::INTV));
-  ds().insert("ecoord", std::make_unique<DSE_ecoord>(*this));
+  ds().insert("ecoord", std::make_unique<VAR_ecoord>(*this));
 }
 
 void Edges::write(std::ostream &os) const {
@@ -45,8 +45,8 @@ void Edges::resize(int const local, int const total, int const ghost) {
   RESIZE("m:e>p2", total);
 }
 
-bool Edges::DSE_ecoord::init_() const {
-  DSE_INIT_PREAMBLE("DSE_ecoord");
+bool Edges::VAR_ecoord::init_() const {
+  VAR_INIT_PREAMBLE("VAR_ecoord");
 
   int const el = edges().lsize;
   int const ell = edges().size();
@@ -65,7 +65,7 @@ bool Edges::DSE_ecoord::init_() const {
     }
   }
 
-  DSE_INIT_EPILOGUE;
+  VAR_INIT_EPILOGUE;
 }
 
 } // namespace SOA_Idx

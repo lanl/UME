@@ -1,12 +1,12 @@
 /*!
-  \file soa_idx_helpers.hh
+  \file Ume/soa_idx_helpers.hh
 
   A collection of macros used to reduce boilerplate code in the implementation
   of specific mesh entity classes (e.g. Sides).
 */
 
-#ifndef SOA_IDX_HELPERS_HH
-#define SOA_IDX_HELPERS_HH 1
+#ifndef UME_SOA_IDX_HELPERS_HH
+#define UME_SOA_IDX_HELPERS_HH 1
 
 #define TRACE_INIT 0
 
@@ -20,7 +20,7 @@
 
 #if TRACE_INIT
 #include <iostream>
-#define DSE_INIT_PREAMBLE(N) \
+#define VAR_INIT_PREAMBLE(N) \
   if (init_state_ == Init_State::INITIALIZED) \
     return false; \
   init_depth(1); \
@@ -30,18 +30,18 @@
   assert(init_state_ != Init_State::IN_PROGRESS); \
   init_state_ = Init_State::IN_PROGRESS
 
-#define DSE_INIT_EPILOGUE \
+#define VAR_INIT_EPILOGUE \
   init_state_ = Init_State::INITIALIZED; \
   init_depth(-1); \
   return true;
 #else
-#define DSE_INIT_PREAMBLE(N) \
+#define VAR_INIT_PREAMBLE(N) \
   if (init_state_ == Init_State::INITIALIZED) \
     return false; \
   assert(init_state_ != Init_State::IN_PROGRESS); \
   init_state_ = Init_State::IN_PROGRESS
 
-#define DSE_INIT_EPILOGUE \
+#define VAR_INIT_EPILOGUE \
   init_state_ = Init_State::INITIALIZED; \
   return true;
 #endif

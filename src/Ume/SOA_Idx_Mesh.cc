@@ -1,9 +1,8 @@
 /*!
-  \file SOA_Idx_Mesh.cc
+  \file Ume/SOA_Idx_Mesh.cc
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
-#include "Ume/soa_idx_geom.hh"
 #include "Ume/soa_idx_helpers.hh"
 #include <istream>
 #include <ostream>

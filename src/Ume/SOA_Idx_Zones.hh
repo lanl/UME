@@ -1,11 +1,11 @@
 /*
-\file SOA_Idx_Zones.hh
+\file Ume/SOA_Idx_Zones.hh
 */
 
-#ifndef SOA_IDX_ZONES_HH
-#define SOA_IDX_ZONES_HH 1
+#ifndef UME_SOA_IDX_ZONES_HH
+#define UME_SOA_IDX_ZONES_HH 1
 
-#include "Ume/DSE_Base.hh"
+#include "Ume/Entity_Field.hh"
 #include "Ume/SOA_Entity.hh"
 
 namespace Ume {
@@ -19,28 +19,28 @@ struct Zones : public Entity {
   void resize(int const local, int const total, int const ghost) override;
   bool operator==(Zones const &rhs) const;
 
-  // The center of each zone
-  class DSE_zcoord : public DSE_Base<Zones> {
+  //! Zone field variable: the center point of each zone
+  class VAR_zcoord : public Entity_Field<Zones> {
   public:
-    explicit DSE_zcoord(Zones &z) : DSE_Base(Types::VEC3V, z) {}
+    explicit VAR_zcoord(Zones &z) : Entity_Field(Types::VEC3V, z) {}
 
   protected:
     bool init_() const override;
   };
 
-  // The point-connected zone neighbors
-  class DSE_zone_to_pt_zone : public DSE_Base<Zones> {
+  //! Zone field variable: point-connected zone neighbors inverse connectivity
+  class VAR_zone_to_pt_zone : public Entity_Field<Zones> {
   public:
-    explicit DSE_zone_to_pt_zone(Zones &z) : DSE_Base(Types::INTRR, z) {}
+    explicit VAR_zone_to_pt_zone(Zones &z) : Entity_Field(Types::INTRR, z) {}
 
   protected:
     bool init_() const override;
   };
 
-  // The points for each zone
-  class DSE_zone_to_points : public DSE_Base<Zones> {
+  // Zone field variable: zone-to-points inverse connectivity
+  class VAR_zone_to_points : public Entity_Field<Zones> {
   public:
-    explicit DSE_zone_to_points(Zones &z) : DSE_Base(Types::INTRR, z) {}
+    explicit VAR_zone_to_points(Zones &z) : Entity_Field(Types::INTRR, z) {}
 
   protected:
     bool init_() const override;
