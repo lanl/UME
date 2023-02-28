@@ -14,11 +14,6 @@ target_link_libraries(txt2bin Ume)
 target_compile_options(txt2bin PRIVATE ${WARNING_FLAGS}
   ${COMMON_COMPILE_OPTIONS})
 
-add_executable(parallel parallel.cc)
-target_link_libraries(parallel Ume)
-target_compile_options(parallel PRIVATE ${WARNING_FLAGS}
-  ${COMMON_COMPILE_OPTIONS})
-
 
 #############################################################################
 # Things that depend on MPI
