@@ -52,6 +52,27 @@ add_library(Ume
   utils.cc
   )
 
+add_library(UmeScoria
+  ${UME_INCLUDE_FILES}
+  ${CLIENT_SOURCE_FILES}
+  ${SHARED_SOURCE_FILES}
+  Comm_Buffers.cc
+  Comm_MPI.cc
+  Comm_Neighbors.cc
+  Comm_Transport.cc
+  Datastore.cc
+  SOA_Entity.cc
+  SOA_Idx_Corners.cc
+  SOA_Idx_Edges.cc
+  SOA_Idx_Faces.cc
+  SOA_Idx_Mesh.cc
+  SOA_Idx_Points.cc
+  SOA_Idx_Sides.cc
+  SOA_Idx_Zones.cc
+  gradient.cc
+  utils.cc
+  )
+
 set_target_properties(Ume PROPERTIES
   COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
   COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS}"
@@ -60,7 +81,7 @@ set_target_properties(Ume PROPERTIES
 
 target_include_directories(Ume
   PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/clients/ume/src>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDE_DIR}>
   )
 
@@ -70,6 +91,29 @@ target_link_libraries(Ume
   )
 
 target_compile_options(Ume
+  PRIVATE ${WARNING_FLAGS}
+  )
+
+target_compile_definitions(UmeScoria PUBLIC USE_SCORIA)
+
+set_target_properties(UmeScoria PROPERTIES
+  COMPILE_DEFINITIONS "${COMMON_COMPiLE_DEFINITIONS}"
+  COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS}"
+  OUTPUT_NAME "umescoria"
+  )
+
+target_include_directories(UmeScoria
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/clients/ume/src>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDE_DIR}>
+  )
+
+target_link_libraries(UmeScoria
+  PUBLIC
+  shm ${COMMON_LINK_LIBRARIES}
+  )
+
+target_compile_options(UmeScoria
   PRIVATE ${WARNING_FLAGS}
   )
 
