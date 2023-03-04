@@ -5,6 +5,27 @@
   binary Ume file(s) and accesses some computed variables in the first one.
 */
 
+/*
+** Scoria Include
+*/
+#ifdef USE_SCORIA
+extern "C" {
+  #include "client.h"
+  #include "config.h"
+
+  #include "client_cleanup.h"
+  #include "client_init.h"
+  #include "client_memory.h"
+  #include "client_wait_requests.h"
+
+  #include "shm_malloc.h"
+}
+#endif /* USE_SCORIA */
+  
+/*
+** Ume Include
+*/
+#include "shm_allocator.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
 #include <fstream>
 #include <iostream>
@@ -12,10 +33,11 @@
 
 using namespace Ume::SOA_Idx;
 
-std::vector<Mesh> read_meshes(int argc, char *argv[]);
+UmeVector<Mesh> read_meshes(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
-  std::vector<Mesh> ranks{read_meshes(argc, argv)};
+  UmeVector<Mesh> ranks{read_meshes(argc, argv)};
+
   if (ranks.empty())
     return 1;
 
@@ -29,8 +51,8 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-std::vector<Mesh> read_meshes(int const argc, char *argv[]) {
-  std::vector<Mesh> ranks;
+UmeVector<Mesh> read_meshes(int const argc, char *argv[]) {
+  UmeVector<Mesh> ranks;
   ranks.resize(argc - 1);
   bool need_sort{false};
   if (argc == 1) {
@@ -43,7 +65,7 @@ std::vector<Mesh> read_meshes(int const argc, char *argv[]) {
     if (!is) {
       std::cerr << "Unable to open file \"" << argv[i] << "\" for reading."
                 << std::endl;
-      return std::vector<Mesh>{};
+      return UmeVector<Mesh>{};
     }
     ranks[i - 1].read(is);
     if (ranks[i - 1].mype != i - 1)
