@@ -52,6 +52,12 @@ using VEC3V_T = typename Ume::DS_Types::VEC3V_T;
 using VEC3_T = typename Ume::DS_Types::VEC3_T;
 
 int main(int argc, char *argv[]) {
+#ifdef USE_SCORIA
+  struct client client;
+  client.chatty = 0;
+
+  init(&client);
+#endif /* USE_SCORIA */
 
   Ume::SOA_Idx::Mesh mesh;
 
@@ -141,6 +147,15 @@ int main(int argc, char *argv[]) {
   if (comm.pe() == 0)
     std::cout << "Done." << std::endl;
   comm.stop();
+
+#ifdef USE_SCORIA
+  struct request req;
+  scoria_quit(&client, &req);
+  wait_request(&client, &req);
+
+  cleanup(&client);
+#endif /* USE_SCORIA */
+
   return 0;
 }
 

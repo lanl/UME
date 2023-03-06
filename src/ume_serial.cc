@@ -36,6 +36,13 @@ using namespace Ume::SOA_Idx;
 UmeVector<Mesh> read_meshes(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
+#ifdef USE_SCORIA
+  struct client client;
+  client.chatty = 0;
+
+  init(&client);
+#endif /* USE_SCORIA */
+
   UmeVector<Mesh> ranks{read_meshes(argc, argv)};
 
   if (ranks.empty())
@@ -47,6 +54,14 @@ int main(int argc, char *argv[]) {
   auto const &test = ranks[0].ds->caccess_vec3v("corner_csurf");
   auto const &test2 = ranks[0].ds->caccess_vec3v("side_surz");
   auto const &test3 = ranks[0].ds->caccess_vec3v("point_norm");
+
+#ifdef USE_SCORIA
+  struct request req;
+  scoria_quit(&client, &req);
+  wait_request(&client, &req);
+
+  cleanup(&client);
+#endif /* USE_SCORIA */
 
   return 0;
 }

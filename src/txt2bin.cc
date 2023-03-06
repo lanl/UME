@@ -46,6 +46,13 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+#ifdef USE_SCORIA
+  struct client client;
+  client.chatty = 0;
+
+  init(&client);
+#endif /* USE_SCORIA */
+
   double txt_read_time;
   Mesh m;
   {
@@ -110,6 +117,14 @@ int main(int argc, char *argv[]) {
       std::cout << std::endl;
     }
   }
+
+#ifdef USE_SCORIA
+  struct request req;
+  scoria_quit(&client, &req);
+  wait_request(&client, &req);
+
+  cleanup(&client);
+#endif /* USE_SCORIA */
 
   return 0;
 }
