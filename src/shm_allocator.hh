@@ -1,15 +1,16 @@
 #ifndef SHM_ALLOCATOR_HH
 #define SHM_ALLOCATOR_HH 1
 
-extern "C" {
-#include "shm_malloc.h"
-}
-
 #include <cstdlib>
 #include <iostream>
 #include <limits>
 #include <memory>
 #include <vector>
+
+#if USE_SCORIA
+extern "C" {
+#include "shm_malloc.h"
+}
 
 template <class T> struct shm_allocator {
   typedef T value_type;
@@ -53,6 +54,7 @@ template <class T, class U>
 bool operator!=(const shm_allocator<T> &, const shm_allocator<U> &) {
   return false;
 }
+#endif
 
 #ifdef USE_SCORIA
 template <class T> using UmeVector = std::vector<T, shm_allocator<T>>;
