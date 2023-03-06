@@ -5,6 +5,7 @@
 #ifndef UME_RAGGEDRIGHT_HH
 #define UME_RAGGEDRIGHT_HH
 
+#include "shm_allocator.hh"
 #include <vector>
 
 namespace Ume {
@@ -46,8 +47,8 @@ template <class T> struct RaggedRight {
   constexpr int size(int const n) const { return eidx[n] - bidx[n]; }
 
 private:
-  std::vector<int> bidx, eidx;
-  std::vector<T> data;
+  UmeVector<int> bidx, eidx;
+  UmeVector<T> data;
 };
 
 } // namespace Ume

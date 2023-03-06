@@ -2,6 +2,8 @@
 \file Ume/utils.hh
 */
 
+#include "shm_allocator.hh"
+
 #include <istream>
 #include <limits>
 #include <memory>
@@ -50,9 +52,8 @@ inline void read_bin<std::string>(std::istream &is, std::string &data) {
   }
 }
 
-//! Binary write for std::vector
-template <class T>
-void write_bin(std::ostream &os, std::vector<T> const &data) {
+//! Binary write for UmeVector
+template <class T> void write_bin(std::ostream &os, UmeVector<T> const &data) {
   write_bin(os, data.size());
   if (!data.empty()) {
     os.write(reinterpret_cast<const char *>(data.data()),
@@ -61,12 +62,12 @@ void write_bin(std::ostream &os, std::vector<T> const &data) {
   os << '\n';
 }
 
-//! Binary read for std::vector
-template <class T> void read_bin(std::istream &is, std::vector<T> &data) {
+//! Binary read for UmeVector
+template <class T> void read_bin(std::istream &is, UmeVector<T> &data) {
   size_t len;
   read_bin(is, len);
   if (len == 0) {
-    std::vector<T> foo;
+    UmeVector<T> foo;
     data.swap(foo);
   } else {
     data.resize(len);

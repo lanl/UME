@@ -1,3 +1,6 @@
+#ifndef SHM_ALLOCATOR_HH
+#define SHM_ALLOCATOR_HH 1
+
 extern "C" {
 #include "shm_malloc.h"
 }
@@ -51,9 +54,10 @@ bool operator!=(const shm_allocator<T> &, const shm_allocator<U> &) {
   return false;
 }
 
-template <class T>
 #ifdef USE_SCORIA
-using UmeVector = std::vector<T, shm_allocator<T>>;
+template <class T> using UmeVector = std::vector<T, shm_allocator<T>>;
 #else
-using UmeVector = std::vector<T>;
+template <class T> using UmeVector = std::vector<T>;
+#endif
+
 #endif

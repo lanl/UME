@@ -7,6 +7,7 @@
 
 #include "Ume/RaggedRight.hh"
 #include "Ume/VecN.hh"
+#include "shm_allocator.hh"
 #include <variant>
 #include <vector>
 
@@ -29,13 +30,13 @@ struct DS_Types {
   };
   // The actual C++ type declarations
   using INT_T = int; //!< scalar integer type
-  using INTV_T = std::vector<INT_T>; //!< vector<int> type
+  using INTV_T = UmeVector<INT_T>; //!< vector<int> type
   using INTRR_T = RaggedRight<INT_T>; //!< RaggedRight<int> type
   using DBL_T = double; //!< scalar double type
-  using DBLV_T = std::vector<DBL_T>; //!< vector<double> tye
+  using DBLV_T = UmeVector<DBL_T>; //!< vector<double> tye
   using DBLRR_T = RaggedRight<DBL_T>; //!< RaggedRight<double> type
   using VEC3_T = Vec3; //!< scalar Vec3 type
-  using VEC3V_T = std::vector<VEC3_T>; //!< vector<Vec3> type
+  using VEC3V_T = UmeVector<VEC3_T>; //!< vector<Vec3> type
   using VEC3RR_T = RaggedRight<VEC3_T>; //!< RaggedRight<Vec3> type
 };
 

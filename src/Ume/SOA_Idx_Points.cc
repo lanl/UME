@@ -4,6 +4,7 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
+#include "shm_allocator.hh"
 #include <cassert>
 #include <iostream>
 
@@ -53,7 +54,7 @@ bool Points::VAR_point_to_zones::init_() const {
   auto &p2zs = mydata_intrr();
 
   p2zs.init(pll);
-  std::vector<std::vector<int>> accum(pll);
+  UmeVector<UmeVector<int>> accum(pll);
   for (int c = 0; c < cll; ++c) {
     int const z = c2z[c];
     int const p = c2p[c];

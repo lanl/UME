@@ -8,6 +8,7 @@
 #include "Ume/Comm_Transport.hh"
 #include "Ume/Datastore.hh"
 #include "Ume/Mesh_Base.hh"
+#include "shm_allocator.hh"
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -29,10 +30,10 @@ struct Entity {
   };
 
   //! Mask flag
-  std::vector<short> mask;
+  UmeVector<short> mask;
 
   //! The communication type for this entity
-  std::vector<int> comm_type;
+  UmeVector<int> comm_type;
 
   /*! @name Minimal parallel connectivity
 
@@ -65,13 +66,13 @@ struct Entity {
    */
   ///@{
   //! Local indices of copies
-  std::vector<int> cpy_idx;
+  UmeVector<int> cpy_idx;
   //! The rank that owns the source entity
-  std::vector<int> src_pe;
+  UmeVector<int> src_pe;
   //! The index of the source entity on the src_pe
-  std::vector<int> src_idx;
+  UmeVector<int> src_idx;
   //! The type of ghost
-  std::vector<int> ghost_mask;
+  UmeVector<int> ghost_mask;
   ///@}
 
   //! Local entity indices that are copies of source entities on a source PE
@@ -102,15 +103,15 @@ struct Entity {
     std::string name;
     //! The Number of local (non-ghost) elements
     int lsize = 0;
-    std::vector<int> elements;
-    std::vector<short> mask;
+    UmeVector<int> elements;
+    UmeVector<short> mask;
     inline bool operator==(Subset const &rhs) const {
       return (rhs.name == name && rhs.elements == elements && rhs.mask == mask);
     }
   };
 
   //! The subsets defined on this Entity
-  std::vector<Subset> subsets;
+  UmeVector<Subset> subsets;
 
   //! The number of local (non-ghost) entities
   int lsize = 0;
