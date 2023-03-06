@@ -6,9 +6,30 @@
   `Ume/SOA_Idx_Mesh.hh`.  Note that this only reads 3-D meshes.
 */
 
+/*
+** Scoria Includes
+*/
+#ifdef USE_SCORIA
+extern "C" {
+#include "client.h"
+#include "config.h"
+
+#include "client_cleanup.h"
+#include "client_init.h"
+#include "client_memory.h"
+#include "client_wait_requests.h"
+
+#include "shm_malloc.h"
+}
+#endif /* USE_SCORIA */
+
+/*
+** Ume Includes
+*/
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/Timer.hh"
 #include "Ume/utils.hh"
+#include "shm_allocator.hh"
 #include <cstring>
 #include <fstream>
 #include <iostream>
