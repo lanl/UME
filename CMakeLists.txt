@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH ${LAP_CMAKE_DIR} ${CMAKE_MODULE_PATH})
 
 include(DisableIntree)
 
-project(UME LANGUAGES CXX)
+project(UME VERSION 1.0.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 

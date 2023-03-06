@@ -82,7 +82,7 @@ set_target_properties(Ume PROPERTIES
 target_include_directories(Ume
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/clients/ume/src>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDE_DIR}>
+  $<INSTALL_INTERFACE:include/Ume>
   )
 
 target_link_libraries(Ume
@@ -117,31 +117,53 @@ target_compile_options(UmeScoria
   PRIVATE ${WARNING_FLAGS}
   )
 
+# -----------------------------------------------------------------------
+# Library/Header installation section
+# -----------------------------------------------------------------------
+
+set(ConfigPackageLocation lib/cmake/Ume)
+
 install(TARGETS Ume
   EXPORT UmeTargets
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Ume
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
   )
 
 install(FILES ${UME_INCLUDE_FILES}
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Ume
+  DESTINATION include
   )
 
 install(EXPORT UmeTargets
   FILE UmeTargets.cmake
   NAMESPACE Ume::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Ume
+  DESTINATION ${ConfigPackageLocation}
   )
 
 include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+    UmeConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
+    COMPATIBILITY AnyNewerVersion
+    )
+
+
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
   "${CMAKE_CURRENT_BINARY_DIR}/UmeConfig.cmake"
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Ume
+  INSTALL_DESTINATION ${ConfigPackageLocation}
 )
+
+configure_file(UmeConfig.cmake.in UmeConfig.cmake @ONLY)
 
 export(EXPORT UmeTargets
        FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/UmeTargets.cmake"
        NAMESPACE Ume::
 )
+
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/UmeConfig.cmake"
+              "${CMAKE_CURRENT_BINARY_DIR}/UmeConfigVersion.cmake"
+        DESTINATION ${ConfigPackageLocation}
+        )
