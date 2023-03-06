@@ -97,7 +97,7 @@ target_compile_options(Ume
 target_compile_definitions(UmeScoria PUBLIC USE_SCORIA)
 
 set_target_properties(UmeScoria PROPERTIES
-  COMPILE_DEFINITIONS "${COMMON_COMPiLE_DEFINITIONS}"
+  COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
   COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS}"
   OUTPUT_NAME "umescoria"
   )
