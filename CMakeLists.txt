@@ -1,13 +1,13 @@
 # Ume/CMakeLists.txt
 cmake_minimum_required(VERSION 3.20)
 
+project(UME VERSION 1.0.0 LANGUAGES CXX)
+
 # Add our cmake include directory to the search path
-set(LAP_CMAKE_DIR "${CMAKE_SOURCE_DIR}/clients/ume/cmake")
+set(LAP_CMAKE_DIR "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_MODULE_PATH ${LAP_CMAKE_DIR} ${CMAKE_MODULE_PATH})
 
 include(DisableIntree)
-
-project(UME VERSION 1.0.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 

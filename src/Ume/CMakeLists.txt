@@ -34,7 +34,7 @@ set(UME_INCLUDE_FILES
   ../shm_allocator.hh
   )
 
-if (USE_SCORIA)
+if (Scoria_REQUIRE_CLIENTS)
 add_library(Ume
     ${UME_INCLUDE_FILES}
     ${CLIENT_SOURCE_FILES}
@@ -82,13 +82,13 @@ set_target_properties(Ume PROPERTIES
   OUTPUT_NAME "ume"
   )
 
-if (USE_SCORIA)
+if (Scoria_REQUIRE_CLIENTS)
   target_compile_definitions(Ume PUBLIC USE_SCORIA)
 endif()
 
 target_include_directories(Ume
   PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/clients/ume/src>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:include/Ume>
   )
 
@@ -97,7 +97,7 @@ target_link_libraries(Ume
   ${COMMON_LINK_LIBRARIES}
   )
 
-if (USE_SCORIA)
+if (Scoria_REQUIRE_CLIENTS)
   target_link_libraries(Ume PUBLIC shm)
 endif()
 
@@ -108,51 +108,51 @@ target_compile_options(Ume
 # -----------------------------------------------------------------------
 # Library/Header installation section
 # -----------------------------------------------------------------------
-if (NOT USE_SCORIA)
-set(ConfigPackageLocation lib/cmake/Ume)
+if (NOT Scoria_REQUIRE_CLIENTS)
+  set(ConfigPackageLocation lib/cmake/Ume)
 
-install(TARGETS Ume
-  EXPORT UmeTargets
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-  )
-
-install(FILES ${UME_INCLUDE_FILES}
-  DESTINATION include
-  )
-
-install(EXPORT UmeTargets
-  FILE UmeTargets.cmake
-  NAMESPACE Ume::
-  DESTINATION ${ConfigPackageLocation}
-  )
-
-include(CMakePackageConfigHelpers)
-
-write_basic_package_version_file(
-    UmeConfigVersion.cmake
-    VERSION ${PACKAGE_VERSION}
-    COMPATIBILITY AnyNewerVersion
+  install(TARGETS Ume
+    EXPORT UmeTargets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
     )
 
+  install(FILES ${UME_INCLUDE_FILES}
+    DESTINATION include
+    )
 
-configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
-  "${CMAKE_CURRENT_BINARY_DIR}/UmeConfig.cmake"
-  INSTALL_DESTINATION ${ConfigPackageLocation}
-)
+  install(EXPORT UmeTargets
+    FILE UmeTargets.cmake
+    NAMESPACE Ume::
+    DESTINATION ${ConfigPackageLocation}
+    )
 
-configure_file(UmeConfig.cmake.in UmeConfig.cmake @ONLY)
+  include(CMakePackageConfigHelpers)
 
-export(EXPORT UmeTargets
-       FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/UmeTargets.cmake"
-       NAMESPACE Ume::
-)
+  write_basic_package_version_file(
+      UmeConfigVersion.cmake
+      VERSION ${PACKAGE_VERSION}
+      COMPATIBILITY AnyNewerVersion
+      )
 
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/UmeConfig.cmake"
-              "${CMAKE_CURRENT_BINARY_DIR}/UmeConfigVersion.cmake"
-        DESTINATION ${ConfigPackageLocation}
+  configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/UmeConfig.cmake"
+    INSTALL_DESTINATION ${ConfigPackageLocation}
+  )
+
+  configure_file(UmeConfig.cmake.in UmeConfig.cmake @ONLY)
+
+  export(EXPORT UmeTargets
+         FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/UmeTargets.cmake"
+         NAMESPACE Ume::
+  )
+
+
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/UmeConfig.cmake"
+                "${CMAKE_CURRENT_BINARY_DIR}/UmeConfigVersion.cmake"
+          DESTINATION ${ConfigPackageLocation}
         )
 endif()
