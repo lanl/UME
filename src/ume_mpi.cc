@@ -11,10 +11,31 @@
   with a printf format of "%05d" (zero-filled, five digits)
 */
 
+/*
+** Scoria Includes
+*/
+#ifdef USE_SCORIA
+extern "C" {
+#include "client.h"
+#include "config.h"
+
+#include "client_cleanup.h"
+#include "client_init.h"
+#include "client_memory.h"
+#include "client_wait_requests.h"
+
+#include "shm_malloc.h"
+}
+#endif /* USE_SCORIA */
+
+/*
+** Ume Includes
+*/
 #include "Ume/Comm_MPI.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/gradient.hh"
 #include "Ume/utils.hh"
+#include "shm_allocator.hh"
 #include <cassert>
 #include <cstdio>
 #include <fstream>
@@ -85,7 +106,7 @@ int main(int argc, char *argv[]) {
   auto const &z2pz = mesh.ds->caccess_intrr("m:z>pz");
   auto const &z2p = mesh.ds->caccess_intrr("m:z>p");
   auto const &kptyp = mesh.points.mask;
-  std::vector<int> grad_zones;
+  UmeVector<int> grad_zones;
   for (int z = 0; z < mesh.zones.size(); ++z) {
     if (z == czi || kztyp[z] < 1)
       continue;
@@ -93,7 +114,7 @@ int main(int argc, char *argv[]) {
       grad_zones.push_back(z);
   }
 
-  std::vector<int> grad_points;
+  UmeVector<int> grad_points;
   for (int p = 0; p < mesh.points.size(); ++p) {
     if (kptyp[p] > 0 && pgrad[p] != 0.0)
       grad_points.push_back(p);
@@ -101,7 +122,7 @@ int main(int argc, char *argv[]) {
 
   std::sort(grad_zones.begin(), grad_zones.end());
   std::sort(grad_points.begin(), grad_points.end());
-  std::vector<int> diff;
+  UmeVector<int> diff;
   std::set_difference(grad_zones.begin(), grad_zones.end(), z2pz.begin(czi),
       z2pz.end(czi), std::back_inserter(diff));
   if (!diff.empty()) {

@@ -6,27 +6,27 @@
 */
 
 /*
-** Scoria Include
+** Scoria Includes
 */
 #ifdef USE_SCORIA
 extern "C" {
-  #include "client.h"
-  #include "config.h"
+#include "client.h"
+#include "config.h"
 
-  #include "client_cleanup.h"
-  #include "client_init.h"
-  #include "client_memory.h"
-  #include "client_wait_requests.h"
+#include "client_cleanup.h"
+#include "client_init.h"
+#include "client_memory.h"
+#include "client_wait_requests.h"
 
-  #include "shm_malloc.h"
+#include "shm_malloc.h"
 }
 #endif /* USE_SCORIA */
-  
+
 /*
-** Ume Include
+** Ume Includes
 */
-#include "shm_allocator.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
+#include "shm_allocator.hh"
 #include <fstream>
 #include <iostream>
 #include <vector>
