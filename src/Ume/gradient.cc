@@ -61,7 +61,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   }
 
   struct request req2;
-  scoria_write(client, point_volume.data(), cl, packed_pv.data(),
+  scoria_writeadd(client, point_volume.data(), cl, packed_pv.data(),
       mc_to_p_map.data(), NULL, 0, NONE, &req2);
   wait_request(client, &req2);
 
@@ -73,7 +73,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
   /*
   struct request req3;
-  scoria_write(client, point_gradient.data(), cl, packed_pg.data(),
+  scoria_writeadd(client, point_gradient.data(), cl, packed_pg.data(),
       mc_to_p_map.data(), NULL, 0, NONE, &req3);
   wait_request(client, &req3);
   */
@@ -163,8 +163,8 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   }
 
   struct request req1;
-  scoria_write(client, zone_volume.data(), num_local_corners, packed_zv.data(),
-      mc_to_z_map.data(), NULL, 0, NONE, &req1);
+  scoria_writeadd(client, zone_volume.data(), num_local_corners,
+      packed_zv.data(), mc_to_z_map.data(), NULL, 0, NONE, &req1);
   wait_request(client, &req1);
 #else
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
@@ -225,7 +225,7 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
   /*
   struct request req4;
-  scoria_write(client, zone_gradient.data(), num_local_corners,
+  scoria_writeadd(client, zone_gradient.data(), num_local_corners,
       packed_zg.data(), mc_to_z_map.data(), NULL, 0, NONE, &req4);
   wait_request(client, &req4);
   */
