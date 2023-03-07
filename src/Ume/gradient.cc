@@ -3,9 +3,6 @@
 */
 #include "Ume/gradient.hh"
 
-#include <fstream>
-#include <iomanip>
-
 namespace Ume {
 
 using DBLV_T = DS_Types::DBLV_T;
@@ -114,21 +111,6 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     point_gradient[p] += csurf[c] * zone_field[z];
   }
 #endif
-  std::ofstream fpv("point_volume.txt");
-  fpv << std::setprecision(10);
-
-  for (auto const &x : point_volume)
-    fpv << x << '\n';
-
-  fpv.close();
-
-  std::ofstream fpg("point_gradient.txt");
-  fpg << std::setprecision(10);
-
-  for (auto const &x : point_gradient)
-    fpg << x << '\n';
-
-  fpg.close();
 
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_volume);
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_gradient);
@@ -201,13 +183,6 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     zone_volume[zone_idx] += corner_volume[corner_idx];
   }
 #endif
-  std::ofstream fzv("zone_volume.txt");
-  fzv << std::setprecision(10);
-
-  for (auto const &x : zone_volume)
-    fzv << x << '\n';
-
-  fzv.close();
 
   // Accumulate the zone-centered gradient
   zone_gradient.assign(mesh.zones.size(), VEC3_T(0.0));
@@ -304,14 +279,6 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     zone_gradient[zone_idx] += point_gradient[point_idx] * c_z_vol_ratio;
   }
 #endif
-
-  std::ofstream fzg("zone_gradient.txt");
-  fzg << std::setprecision(10);
-
-  for (auto const &x : zone_gradient)
-    fzg << x << '\n';
-
-  fzg.close();
 
   mesh.zones.scatter(zone_gradient);
 }

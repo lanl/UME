@@ -39,6 +39,7 @@ extern "C" {
 #include <cassert>
 #include <cstdio>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -46,6 +47,9 @@ extern "C" {
 bool read_mesh(
     char const *const basename, int const mype, Ume::SOA_Idx::Mesh &mesh);
 bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh);
+
+template <class T>
+void write_result(char const *const varname, int const mype, T &data);
 
 using DBLV_T = typename Ume::DS_Types::DBLV_T;
 using VEC3V_T = typename Ume::DS_Types::VEC3V_T;
@@ -111,8 +115,11 @@ int main(int argc, char *argv[]) {
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
 #endif
 
+  // Write out results to file for validation
+  write_result("point_gradient", comm.pe(), pgrad);
+  write_result("zone_gradient", comm.pe(), zgrad);
+
   // Double check that the gradients are non-zero where we expect
-  // TODO: Fix Seg Fault in shm_malloc
 #ifndef USE_SCORIA
   if (comm.pe() == 0)
     std::cout << "Checking result..." << std::endl;
@@ -238,4 +245,17 @@ bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh) {
   }
 
   return result;
+}
+
+template <class T>
+void write_result(char const *const varname, int const mype, T &data) {
+  char fname[80];
+  sprintf(fname, "%s.%05d.out", varname, mype);
+  std::ofstream os(fname);
+
+  os << std::setprecision(10);
+
+  for (auto const &val : data)
+    os << val << '\n';
+  os.close();
 }
