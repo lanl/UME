@@ -45,7 +45,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
   struct request req1;
   scoria_read(client, zone_field.data(), cl, packed_zf.data(),
-      mc_to_z_map.data(), NULL, 0, NONE, &req1);
+      mc_to_z_map.data(), NULL, 22, NONE, &req1);
   wait_request(client, &req1);
 
   DBLV_T packed_pv(cl, 0.0);
@@ -65,11 +65,18 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       mc_to_p_map.data(), NULL, 0, NONE, &req2);
   wait_request(client, &req2);
 
+  // TODO: Scoria Write with VEC3
+  // Temporary fix until Scoria Write with VEC3 is sorted out
+  for (int c = 0; c < cl; ++c) {
+    point_gradient[mc_to_p_map[c]] += packed_pg[c];
+  }
+
+  /*
   struct request req3;
   scoria_write(client, point_gradient.data(), cl, packed_pg.data(),
       mc_to_p_map.data(), NULL, 0, NONE, &req3);
   wait_request(client, &req3);
-
+  */
 #else
   for (int c = 0; c < cl; ++c) {
     if (corner_type[c] < 1)
@@ -184,28 +191,44 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   VEC3V_T packed_pg(num_local_corners);
   packed_pg.assign(num_local_corners, VEC3_T(0.0));
 
+  // TODO: Scoria Read VEC3
+  // Temporary fix until Scoria Read with VEC3 is sorted out
+  for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
+    packed_pg[corner_idx] = point_gradient[mc_to_p_map[corner_idx]];
+  }
+
+  /*
   struct request req2;
   scoria_read(client, point_gradient.data(), num_local_corners,
-      packed_pg.data(), mc_to_p_map.data(), NULL, 0, NONE, &req2);
+      packed_pg.data(), mc_to_p_map.data(), NULL, 22, NONE, &req2);
   wait_request(client, &req2);
+  */
 
   std::fill(packed_zv.begin(), packed_zv.end(), 0);
   struct request req3;
   scoria_read(client, zone_volume.data(), num_local_corners, packed_zv.data(),
-      mc_to_z_map.data(), NULL, 0, NONE, &req3);
+      mc_to_z_map.data(), NULL, 22, NONE, &req3);
   wait_request(client, &req3);
 
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
       continue; // Only operate on interior corners
-    packed_zg[corner_idx] = packed_pg[corner_idx] +
-        corner_volume[corner_idx] / packed_zv[corner_idx];
+    packed_zg[corner_idx] = packed_pg[corner_idx] * corner_volume[corner_idx] /
+        packed_zv[corner_idx];
   }
 
+  // TODO: Scoria Write with VEC3
+  // Temporary fix until Scoria Write with VEC3 is sorted out
+  for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
+    zone_gradient[mc_to_z_map[corner_idx]] += packed_zg[corner_idx];
+  }
+
+  /*
   struct request req4;
   scoria_write(client, zone_gradient.data(), num_local_corners,
       packed_zg.data(), mc_to_z_map.data(), NULL, 0, NONE, &req4);
   wait_request(client, &req4);
+  */
 #else
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
