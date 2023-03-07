@@ -104,7 +104,12 @@ int main(int argc, char *argv[]) {
   if (comm.pe() == 0)
     std::cout << "Calculating gradient..." << std::endl;
   VEC3V_T pgrad, zgrad;
+
+#ifdef USE_SCORIA
+  Ume::gradzatz(&client, mesh, zfield, zgrad, pgrad);
+#else
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+#endif
 
   // Double check that the gradients are non-zero where we expect
   // TODO: Fix Seg Fault in shm_malloc

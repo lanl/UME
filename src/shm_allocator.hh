@@ -25,7 +25,7 @@ template <class T> struct shm_allocator {
       throw std::bad_array_new_length();
 
     if (auto p = static_cast<T *>(shm_malloc(n * sizeof(T)))) {
-      //report(p, n);
+      // report(p, n);
       return p;
     }
 
@@ -34,7 +34,7 @@ template <class T> struct shm_allocator {
 
   void deallocate(T *p, std::size_t n) noexcept {
     (void)n;
-    //report(p, n, 0);
+    // report(p, n, 0);
     shm_free(p);
   }
 
