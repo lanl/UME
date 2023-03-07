@@ -3,6 +3,9 @@
 */
 #include "Ume/gradient.hh"
 
+#include <fstream>
+#include <iomanip>
+
 namespace Ume {
 
 using DBLV_T = DS_Types::DBLV_T;
@@ -47,35 +50,26 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
   DBLV_T packed_pv(cl, 0.0);
 
-  struct request req2;
-  scoria_read(client, point_volume.data(), cl, packed_pv.data(),
-      mc_to_p_map.data(), NULL, 0, NONE, &req2);
-  wait_request(client, &req2);
-
   VEC3V_T packed_pg(cl);
   packed_pg.assign(cl, VEC3_T(0.0));
-
-  struct request req3;
-  scoria_read(client, point_gradient.data(), cl, packed_pg.data(),
-      mc_to_p_map.data(), NULL, 0, NONE, &req3);
-  wait_request(client, &req3);
 
   for (int c = 0; c < cl; ++c) {
     if (corner_type[c] < 1)
       continue; // Only operate on interiod corners
-    packed_pv[c] += corner_volume[c];
-    packed_pg[c] += csurf[c] * packed_zf[c];
+    packed_pv[c] = corner_volume[c];
+    packed_pg[c] = csurf[c] * packed_zf[c];
   }
 
-  struct request req4;
+  struct request req2;
   scoria_write(client, point_volume.data(), cl, packed_pv.data(),
-      mc_to_p_map.data(), NULL, 0, NONE, &req4);
-  wait_request(client, &req4);
+      mc_to_p_map.data(), NULL, 0, NONE, &req2);
+  wait_request(client, &req2);
 
-  struct request req5;
+  struct request req3;
   scoria_write(client, point_gradient.data(), cl, packed_pg.data(),
-      mc_to_p_map.data(), NULL, 0, NONE, &req5);
-  wait_request(client, &req5);
+      mc_to_p_map.data(), NULL, 0, NONE, &req3);
+  wait_request(client, &req3);
+
 #else
   for (int c = 0; c < cl; ++c) {
     if (corner_type[c] < 1)
@@ -86,6 +80,21 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     point_gradient[p] += csurf[c] * zone_field[z];
   }
 #endif
+  std::ofstream fpv("point_volume.txt");
+  fpv << std::setprecision(10);
+
+  for (auto const &x : point_volume)
+    fpv << x << '\n';
+
+  fpv.close();
+
+  std::ofstream fpg("point_gradient.txt");
+  fpg << std::setprecision(10);
+
+  for (auto const &x : point_gradient)
+    fpg << x << '\n';
+
+  fpg.close();
 
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_volume);
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_gradient);
@@ -140,21 +149,16 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #ifdef USE_SCORIA
   DBLV_T packed_zv(num_local_corners, 0.0);
 
-  struct request req1;
-  scoria_read(client, zone_volume.data(), num_local_corners, packed_zv.data(),
-      mc_to_z_map.data(), NULL, 0, NONE, &req1);
-  wait_request(client, &req1);
-
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
       continue; // Only operate on interior corners
-    packed_zv[corner_idx] += corner_volume[corner_idx];
+    packed_zv[corner_idx] = corner_volume[corner_idx];
   }
 
-  struct request req2;
+  struct request req1;
   scoria_write(client, zone_volume.data(), num_local_corners, packed_zv.data(),
-      mc_to_z_map.data(), NULL, 0, NONE, &req2);
-  wait_request(client, &req2);
+      mc_to_z_map.data(), NULL, 0, NONE, &req1);
+  wait_request(client, &req1);
 #else
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
@@ -163,6 +167,13 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     zone_volume[zone_idx] += corner_volume[corner_idx];
   }
 #endif
+  std::ofstream fzv("zone_volume.txt");
+  fzv << std::setprecision(10);
+
+  for (auto const &x : zone_volume)
+    fzv << x << '\n';
+
+  fzv.close();
 
   // Accumulate the zone-centered gradient
   zone_gradient.assign(mesh.zones.size(), VEC3_T(0.0));
@@ -170,36 +181,31 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   VEC3V_T packed_zg(num_local_corners);
   packed_zg.assign(num_local_corners, VEC3_T(0.0));
 
-  struct request req3;
-  scoria_read(client, zone_gradient.data(), num_local_corners, packed_zg.data(),
-      mc_to_z_map.data(), NULL, 0, NONE, &req3);
-  wait_request(client, &req3);
-
   VEC3V_T packed_pg(num_local_corners);
   packed_pg.assign(num_local_corners, VEC3_T(0.0));
 
-  struct request req4;
+  struct request req2;
   scoria_read(client, point_gradient.data(), num_local_corners,
-      packed_pg.data(), mc_to_p_map.data(), NULL, 0, NONE, &req4);
-  wait_request(client, &req4);
+      packed_pg.data(), mc_to_p_map.data(), NULL, 0, NONE, &req2);
+  wait_request(client, &req2);
 
   std::fill(packed_zv.begin(), packed_zv.end(), 0);
-  struct request req5;
+  struct request req3;
   scoria_read(client, zone_volume.data(), num_local_corners, packed_zv.data(),
-      mc_to_z_map.data(), NULL, 0, NONE, &req5);
-  wait_request(client, &req5);
+      mc_to_z_map.data(), NULL, 0, NONE, &req3);
+  wait_request(client, &req3);
 
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
       continue; // Only operate on interior corners
-    packed_zg[corner_idx] += packed_pg[corner_idx] +
+    packed_zg[corner_idx] = packed_pg[corner_idx] +
         corner_volume[corner_idx] / packed_zv[corner_idx];
   }
 
-  struct request req6;
+  struct request req4;
   scoria_write(client, zone_gradient.data(), num_local_corners,
-      packed_zg.data(), mc_to_z_map.data(), NULL, 0, NONE, &req6);
-  wait_request(client, &req6);
+      packed_zg.data(), mc_to_z_map.data(), NULL, 0, NONE, &req4);
+  wait_request(client, &req4);
 #else
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
@@ -211,6 +217,14 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     zone_gradient[zone_idx] += point_gradient[point_idx] * c_z_vol_ratio;
   }
 #endif
+
+  std::ofstream fzg("zone_gradient.txt");
+  fzg << std::setprecision(10);
+
+  for (auto const &x : zone_gradient)
+    fzg << x << '\n';
+
+  fzg.close();
 
   mesh.zones.scatter(zone_gradient);
 }
