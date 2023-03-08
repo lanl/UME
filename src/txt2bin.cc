@@ -9,7 +9,7 @@
 /*
 ** Scoria Includes
 */
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
 extern "C" {
 #include "client.h"
 #include "config.h"
@@ -21,7 +21,7 @@ extern "C" {
 
 #include "shm_malloc.h"
 }
-#endif /* USE_SCORIA */
+#endif
 
 /*
 ** Ume Includes

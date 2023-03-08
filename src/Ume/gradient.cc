@@ -5,7 +5,7 @@
 /*
 ** Scoria Includes
 */
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && !defined(USE_CLIENT)
 extern "C" {
 #include "kernels.h"
 }

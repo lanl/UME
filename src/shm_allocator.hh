@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-#if USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
 extern "C" {
 #include "shm_malloc.h"
 }
