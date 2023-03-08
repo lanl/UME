@@ -1,6 +1,19 @@
 /*!
   \file Ume/gradient.cc
 */
+
+/*
+** Scoria Includes
+*/
+#ifdef USE_SCORIA
+extern "C" {
+#include "kernels.h"
+}
+#endif
+
+/*
+** Ume Includes
+*/
 #include "Ume/gradient.hh"
 
 namespace Ume {
@@ -9,7 +22,7 @@ using DBLV_T = DS_Types::DBLV_T;
 using VEC3V_T = DS_Types::VEC3V_T;
 using VEC3_T = DS_Types::VEC3_T;
 
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
 void gradzatp(struct client *client, Ume::SOA_Idx::Mesh &mesh,
     DBLV_T const &zone_field, VEC3V_T &point_gradient) {
 #else
@@ -59,10 +72,15 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   }
 
   /* --------------------------- SCORIA ---------------------------- */
+#ifdef USE_CLIENT
   struct request req1;
   scoria_read(client, zone_field.data(), cl, packed_zf.data(),
       mc_to_z_map.data(), NULL, num_threads, NONE, &req1);
   wait_request(client, &req1);
+#else
+  read_multi_thread_1(packed_zf.data(), zone_field.data(), cl,
+      mc_to_z_map.data(), num_threads, NONE);
+#endif
 
   for (int c = 0; c < cl; ++c) {
     if (corner_type[c] < 1)
@@ -74,6 +92,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     packed_pg_z[c] = csurf[c][2] * packed_zf[c];
   }
 
+#ifdef USE_CLIENT
   struct request req2;
   scoria_writeadd(client, point_volume.data(), cl, packed_pv.data(),
       mc_to_p_map.data(), NULL, 0, NONE, &req2);
@@ -93,7 +112,16 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   scoria_writeadd(client, point_gradient_z.data(), cl, packed_pg_z.data(),
       mc_to_p_map.data(), NULL, 0, NONE, &req5);
   wait_request(client, &req5);
-
+#else
+  writeadd_single_thread_1(
+      point_volume.data(), packed_pv.data(), cl, mc_to_p_map.data(), NONE);
+  writeadd_single_thread_1(point_gradient_x.data(), packed_pg_x.data(), cl,
+      mc_to_p_map.data(), NONE);
+  writeadd_single_thread_1(point_gradient_y.data(), packed_pg_y.data(), cl,
+      mc_to_p_map.data(), NONE);
+  writeadd_single_thread_1(point_gradient_z.data(), packed_pg_z.data(), cl,
+      mc_to_p_map.data(), NONE);
+#endif
   /* --------------------------- SCORIA ---------------------------- */
 
   for (size_t i = 0; i < point_gradient.size(); ++i) {
@@ -134,7 +162,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   mesh.points.scatter(point_gradient);
 }
 
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
 void gradzatz(struct client *client, Ume::SOA_Idx::Mesh &mesh,
     DBLV_T const &zone_field, VEC3V_T &zone_gradient, VEC3V_T &point_gradient) {
 #else
@@ -154,7 +182,7 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #endif
 
   // Get the field gradient at each mesh point.
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
   gradzatp(client, mesh, zone_field, point_gradient);
 #else
   gradzatp(mesh, zone_field, point_gradient);
@@ -171,10 +199,16 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     packed_zv[corner_idx] = corner_volume[corner_idx];
   }
 
+#ifdef USE_CLIENT
   struct request req1;
   scoria_writeadd(client, zone_volume.data(), num_local_corners,
       packed_zv.data(), mc_to_z_map.data(), NULL, 0, NONE, &req1);
   wait_request(client, &req1);
+#else
+  writeadd_single_thread_1(zone_volume.data(), packed_zv.data(),
+      num_local_corners, mc_to_z_map.data(), NONE);
+#endif
+
 #else
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
@@ -211,8 +245,9 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   DBLV_T zone_gradient_y(zone_gradient.size(), 0.0);
   DBLV_T zone_gradient_z(zone_gradient.size(), 0.0);
 
+  std::fill(packed_zv.begin(), packed_zv.end(), 0);
   /* --------------------------- SCORIA ---------------------------- */
-
+#ifdef USE_CLIENT
   struct request req2;
   scoria_read(client, point_gradient_x.data(), num_local_corners,
       packed_pg_x.data(), mc_to_p_map.data(), NULL, num_threads, NONE, &req2);
@@ -228,11 +263,20 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       packed_pg_z.data(), mc_to_p_map.data(), NULL, num_threads, NONE, &req4);
   wait_request(client, &req4);
 
-  std::fill(packed_zv.begin(), packed_zv.end(), 0);
   struct request req5;
   scoria_read(client, zone_volume.data(), num_local_corners, packed_zv.data(),
       mc_to_z_map.data(), NULL, num_threads, NONE, &req5);
   wait_request(client, &req5);
+#else
+  read_multi_thread_1(packed_pg_x.data(), point_gradient_x.data(),
+      num_local_corners, mc_to_p_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_pg_y.data(), point_gradient_y.data(),
+      num_local_corners, mc_to_p_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_pg_z.data(), point_gradient_z.data(),
+      num_local_corners, mc_to_p_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_zv.data(), zone_volume.data(), num_local_corners,
+      mc_to_z_map.data(), num_threads, NONE);
+#endif
 
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
@@ -245,6 +289,7 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
         corner_volume[corner_idx] / packed_zv[corner_idx];
   }
 
+#ifdef USE_CLIENT
   struct request req6;
   scoria_writeadd(client, zone_gradient_x.data(), num_local_corners,
       packed_zg_x.data(), mc_to_z_map.data(), NULL, 0, NONE, &req6);
@@ -259,7 +304,14 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   scoria_writeadd(client, zone_gradient_z.data(), num_local_corners,
       packed_zg_z.data(), mc_to_z_map.data(), NULL, 0, NONE, &req8);
   wait_request(client, &req8);
-
+#else
+  writeadd_single_thread_1(zone_gradient_x.data(), packed_zg_x.data(),
+      num_local_corners, mc_to_z_map.data(), NONE);
+  writeadd_single_thread_1(zone_gradient_y.data(), packed_zg_y.data(),
+      num_local_corners, mc_to_z_map.data(), NONE);
+  writeadd_single_thread_1(zone_gradient_z.data(), packed_zg_z.data(),
+      num_local_corners, mc_to_z_map.data(), NONE);
+#endif
   /* --------------------------- SCORIA ---------------------------- */
 
   for (size_t i = 0; i < zone_gradient.size(); ++i) {

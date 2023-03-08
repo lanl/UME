@@ -46,12 +46,12 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
   struct client client;
   client.chatty = 0;
 
   init(&client);
-#endif /* USE_SCORIA */
+#endif
 
   double txt_read_time;
   Mesh m;
@@ -118,13 +118,13 @@ int main(int argc, char *argv[]) {
     }
   }
 
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
   struct request req;
   scoria_quit(&client, &req);
   wait_request(&client, &req);
 
   cleanup(&client);
-#endif /* USE_SCORIA */
+#endif
 
   return 0;
 }

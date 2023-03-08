@@ -57,7 +57,7 @@ bool operator!=(const shm_allocator<T> &, const shm_allocator<U> &) {
 }
 #endif
 
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
 template <class T> using UmeVector = std::vector<T, shm_allocator<T>>;
 #else
 template <class T> using UmeVector = std::vector<T>;

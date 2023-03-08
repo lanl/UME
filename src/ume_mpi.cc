@@ -56,12 +56,12 @@ using VEC3V_T = typename Ume::DS_Types::VEC3V_T;
 using VEC3_T = typename Ume::DS_Types::VEC3_T;
 
 int main(int argc, char *argv[]) {
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
   struct client client;
   client.chatty = 0;
 
   init(&client);
-#endif /* USE_SCORIA */
+#endif
 
   Ume::SOA_Idx::Mesh mesh;
 
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Calculating gradient..." << std::endl;
   VEC3V_T pgrad, zgrad;
 
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
   Ume::gradzatz(&client, mesh, zfield, zgrad, pgrad);
 #else
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
@@ -163,13 +163,13 @@ int main(int argc, char *argv[]) {
     std::cout << "Done." << std::endl;
   comm.stop();
 
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
   struct request req;
   scoria_quit(&client, &req);
   wait_request(&client, &req);
 
   cleanup(&client);
-#endif /* USE_SCORIA */
+#endif
 
   return 0;
 }

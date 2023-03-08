@@ -37,7 +37,7 @@ namespace Ume {
   by the caller.
 */
 
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
 void gradzatp(struct client *client, Ume::SOA_Idx::Mesh &mesh,
     DS_Types::DBLV_T const &zone_field, DS_Types::VEC3V_T &point_gradient);
 #else
@@ -51,7 +51,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
   gradients.  Returns both the zone-centered gradient and the point-centered
   gradient.
  */
-#ifdef USE_SCORIA
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
 void gradzatz(struct client *client, Ume::SOA_Idx::Mesh &mesh,
     DS_Types::DBLV_T const &zone_field, DS_Types::VEC3V_T &zone_gradient,
     DS_Types::VEC3V_T &point_gradient);
