@@ -189,7 +189,7 @@ void read_points(std::istream &is, Points &pts, const int kkpl, const int kkpll,
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
-      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      std::cerr << "Ghost point " << i + 1 << " read error" << std::endl;
       exit(1);
     }
     is >> pts.cpy_idx[i] >> pts.ghost_mask[i] >> pts.src_idx[i] >>
@@ -219,7 +219,7 @@ void read_zones(std::istream &is, Zones &zones, const int kkzl, const int kkzll,
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
-      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      std::cerr << "Ghost zone " << i + 1 << " read error" << std::endl;
       exit(1);
     }
     is >> zones.cpy_idx[i] >> zones.ghost_mask[i] >> zones.src_idx[i] >>
@@ -284,7 +284,7 @@ void read_sides(std::istream &is, Sides &sides, const int kksl, const int kksll,
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
-      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      std::cerr << "Ghost side " << i + 1 << " read error" << std::endl;
       exit(1);
     }
     is >> sides.cpy_idx[i] >> sides.ghost_mask[i] >> sides.src_idx[i] >>
@@ -317,7 +317,7 @@ void read_edges(std::istream &is, Edges &edges, const int kkel, const int kkell,
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
-      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      std::cerr << "Ghost edge " << i + 1 << " read error" << std::endl;
       exit(1);
     }
     is >> edges.cpy_idx[i] >> edges.ghost_mask[i] >> edges.src_idx[i] >>
@@ -350,7 +350,7 @@ void read_faces(std::istream &is, Faces &faces, const int kkfl, const int kkfll,
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
-      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      std::cerr << "Ghost face " << i + 1 << " read error" << std::endl;
       exit(1);
     }
     is >> faces.cpy_idx[i] >> faces.ghost_mask[i] >> faces.src_idx[i] >>
@@ -383,7 +383,7 @@ void read_corners(std::istream &is, Corners &corners, const int kkcl,
     idx = -1;
     is >> idx;
     if (idx != i + 1) {
-      std::cerr << "Ghost " << i + 1 << " read error" << std::endl;
+      std::cerr << "Ghost corner " << i + 1 << " read error" << std::endl;
       exit(1);
     }
     is >> corners.cpy_idx[i] >> corners.ghost_mask[i] >> corners.src_idx[i] >>
