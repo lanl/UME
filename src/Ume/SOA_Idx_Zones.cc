@@ -87,10 +87,10 @@ bool Zones::VAR_zone_to_pt_zone::init_() const {
     int const p = c2p[c];
     int const z = c2z[c];
     if (p < pll && z < zll)
-      accum.at(z).insert(p2zs.begin(p), p2zs.end(p));
+      accum.at(z).insert(p2zs[p].begin(), p2zs[p].end());
   }
 
-  /* Fill the ragged-right arrays, eliminiting zone self-links */
+  /* Fill the ragged-right arrays, eliminating zone self-links */
   for (int z = 0; z < zll; ++z) {
     accum[z].erase(z);
     z2pz.assign(z, accum[z].begin(), accum[z].end());

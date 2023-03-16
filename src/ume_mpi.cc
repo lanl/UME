@@ -102,16 +102,14 @@ int main(int argc, char *argv[]) {
   std::sort(grad_zones.begin(), grad_zones.end());
   std::sort(grad_points.begin(), grad_points.end());
   std::vector<int> diff;
-  std::set_difference(grad_zones.begin(), grad_zones.end(), z2pz.begin(czi),
-      z2pz.end(czi), std::back_inserter(diff));
+  std::ranges::set_difference(grad_zones, z2pz[czi], std::back_inserter(diff));
   if (!diff.empty()) {
     std::cout << "PE" << mesh.mype << " zone diff " << diff.size() << " found "
               << grad_zones.size() << " expected " << z2pz.size(czi) << '\n';
   }
 
   diff.clear();
-  std::set_difference(grad_points.begin(), grad_points.end(), z2p.begin(czi),
-      z2p.end(czi), std::back_inserter(diff));
+  std::ranges::set_difference(grad_points, z2p[czi], std::back_inserter(diff));
   if (!diff.empty()) {
     std::cout << "PE" << mesh.mype << " pt diff " << diff.size() << " found "
               << grad_points.size() << " expected " << z2p.size(czi) << '\n';

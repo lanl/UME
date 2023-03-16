@@ -5,6 +5,7 @@
 #ifndef UME_RAGGEDRIGHT_HH
 #define UME_RAGGEDRIGHT_HH
 
+#include <span>
 #include <vector>
 
 namespace Ume {
@@ -25,13 +26,12 @@ template <class T> struct RaggedRight {
     return (bidx == rhs.bidx && eidx == rhs.eidx && data == rhs.data);
   }
 
-  T *begin(int n) { return data.data() + bidx[n]; }
-  T const *begin(int n) const { return data.data() + bidx[n]; }
-  T const *cbegin(int n) const { return data.data() + bidx[n]; }
-
-  T *end(int n) { return data.data() + eidx[n]; }
-  T const *end(int n) const { return data.data() + eidx[n]; }
-  T const *cend(int n) const { return data.data() + eidx[n]; }
+  std::span<T> operator[](int const n) {
+    return std::span(data.begin() + bidx[n], size(n));
+  }
+  std::span<T const> const operator[](int const n) const {
+    return std::span(data.cbegin() + bidx[n], size(n));
+  }
 
   //! Copy the contents of the range [`b`..`e`) to element `n`
   /*! Note that if `n` has already been assigned data, it will be abandonend in
