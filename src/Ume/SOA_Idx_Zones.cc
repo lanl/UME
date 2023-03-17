@@ -15,6 +15,7 @@ Zones::Zones(Mesh *mesh) : Entity{mesh} {
   ds().insert("zcoord", std::make_unique<VAR_zcoord>(*this));
   ds().insert("m:z>pz", std::make_unique<VAR_zone_to_pt_zone>(*this));
   ds().insert("m:z>p", std::make_unique<VAR_zone_to_points>(*this));
+  ds().insert("m:z>c", std::make_unique<VAR_zone_to_corners>(*this));
 }
 
 void Zones::write(std::ostream &os) const {
@@ -121,6 +122,33 @@ bool Zones::VAR_zone_to_points::init_() const {
   for (int z = 0; z < zll; ++z) {
     std::sort(accum[z].begin(), accum[z].end());
     z2p.assign(z, accum[z].begin(), accum[z].end());
+  }
+  VAR_INIT_EPILOGUE;
+}
+
+bool Zones::VAR_zone_to_corners::init_() const {
+  VAR_INIT_PREAMBLE("VAR_zone_to_corners");
+  int const zll = zones().size();
+  int const cll = corners().size();
+  auto const &c2z{caccess_intv("m:c>z")};
+  auto &z2c = mydata_intrr();
+  z2c.init(zll);
+  std::vector<std::vector<int>> accum(zll);
+
+  /* Iterate over corners, connect points to zones */
+  for (int c = 0; c < cll; ++c) {
+    int const z = c2z[c];
+    if (z < zll)
+      accum.at(z).push_back(c);
+  }
+
+  /* Fill the ragged-right arrays*/
+  for (int z = 0; z < zll; ++z) {
+    /* It is perhaps tempting to sort the corner indices accum[z] here to take
+       better advantage of cache reuse, but leaving them in the original order
+       replicates the summation pattern found when using a c->z loop. */
+    //    std::sort(accum[z].begin(), accum[z].end());
+    z2c.assign(z, accum[z].begin(), accum[z].end());
   }
   VAR_INIT_EPILOGUE;
 }
