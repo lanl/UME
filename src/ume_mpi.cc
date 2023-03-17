@@ -13,6 +13,7 @@
 
 #include "Ume/Comm_MPI.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/Timer.hh"
 #include "Ume/gradient.hh"
 #include "Ume/utils.hh"
 #include <cassert>
@@ -76,12 +77,44 @@ int main(int argc, char *argv[]) {
   // Do a zone-centered gradient calculation on that field (in parallel)
   if (comm.pe() == 0)
     std::cout << "Calculating gradient..." << std::endl;
+
   VEC3V_T pgrad, zgrad;
+  Ume::Timer orig_time;
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+  orig_time.start();
+  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+  orig_time.stop();
+
+  VEC3V_T pgrad_invert, zgrad_invert;
+  Ume::Timer invert_time;
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+  invert_time.start();
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+  invert_time.stop();
 
   // Double check that the gradients are non-zero where we expect
-  if (comm.pe() == 0)
+  if (comm.pe() == 0) {
+    std::cout << "Original algorithm took: " << orig_time.seconds() << "s\n";
+    std::cout << "Inverted algorithm took: " << invert_time.seconds() << "s\n";
     std::cout << "Checking result..." << std::endl;
+  }
+
+  if (zgrad != zgrad_invert) {
+    std::cout << "PE" << mesh.mype << " zgrad != zgrad_invert" << std::endl;
+    if (mesh.mype == 0) {
+      for (int z = 0; z < mesh.zones.size(); ++z) {
+        if (zgrad[z] != zgrad_invert[z]) {
+          std::cout << "Z" << z << " " << mesh.zones.mask[z] << ": " << zgrad[z]
+                    << " vs. " << zgrad_invert[z] << "\n";
+        }
+      }
+    }
+  }
+
+  if (pgrad != pgrad_invert) {
+    std::cout << "PE" << mesh.mype << " pgrad != pgrad_invert" << std::endl;
+  }
+
   auto const &z2pz = mesh.ds->caccess_intrr("m:z>pz");
   auto const &z2p = mesh.ds->caccess_intrr("m:z>p");
   auto const &kptyp = mesh.points.mask;
