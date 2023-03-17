@@ -71,8 +71,8 @@ bool Points::VAR_point_to_zones::init_() const {
 bool Points::VAR_point_norm::init_() const {
   VAR_INIT_PREAMBLE("VAR_point_norm");
   int const pll = points().size();
-  int const pl = points().lsize;
-  int const sl = sides().lsize;
+  int const pl = points().local_size();
+  int const sl = sides().local_size();
   auto const &s2s2{caccess_intv("m:s>s2")};
   auto const &s2p1{caccess_intv("m:s>p1")};
   auto const &s2p2{caccess_intv("m:s>p2")};

@@ -20,8 +20,8 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto const &point_type = mesh.points.mask;
 
   int const pll = mesh.points.size();
-  int const pl = mesh.points.lsize;
-  int const cl = mesh.corners.lsize;
+  int const pl = mesh.points.local_size();
+  int const cl = mesh.corners.local_size();
 
   DBLV_T point_volume(pll, 0.0);
   point_gradient.assign(pll, VEC3_T(0.0));
@@ -61,7 +61,7 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     VEC3V_T &zone_gradient, VEC3V_T &point_gradient) {
   auto const &c_to_z_map = mesh.ds->caccess_intv("m:c>z");
   auto const &c_to_p_map = mesh.ds->caccess_intv("m:c>p");
-  int const num_local_corners = mesh.corners.lsize;
+  int const num_local_corners = mesh.corners.local_size();
   auto const &corner_type = mesh.corners.mask;
   auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
 

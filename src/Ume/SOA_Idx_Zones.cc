@@ -41,9 +41,9 @@ void Zones::resize(int const local, int const total, int const ghost) {
 bool Zones::VAR_zcoord::init_() const {
   VAR_INIT_PREAMBLE("VAR_zcoord");
 
-  int const zl = zones().lsize;
+  int const zl = zones().local_size();
   int const zll = zones().size();
-  int const cl = corners().lsize;
+  int const cl = corners().local_size();
   auto const &c2z{caccess_intv("m:c>z")};
   auto const &c2p{caccess_intv("m:c>p")};
   auto const &pcoord{caccess_vec3v("pcoord")};

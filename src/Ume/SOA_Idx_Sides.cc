@@ -91,7 +91,7 @@ void Sides::resize(int const local, int const total, int const ghost) {
 
 bool Sides::VAR_side_surf::init_() const {
   VAR_INIT_PREAMBLE("VAR_side_surf");
-  int const sl = sides().lsize;
+  int const sl = sides().local_size();
   int const sll = sides().size();
 
   auto const &s2p1 = caccess_intv("m:s>p1");
@@ -134,7 +134,7 @@ bool Sides::VAR_side_surf::init_() const {
 
 bool Sides::VAR_side_surz::init_() const {
   VAR_INIT_PREAMBLE("VAR_side_surz");
-  int const sl = sides().lsize;
+  int const sl = sides().local_size();
   int const sll = sides().size();
 
   auto const &s2p1 = caccess_intv("m:s>p1");
@@ -165,7 +165,7 @@ bool Sides::VAR_side_surz::init_() const {
 
 bool Sides::VAR_side_vol::init_() const {
   VAR_INIT_PREAMBLE("VAR_side_vol");
-  int const sl = sides().lsize;
+  int const sl = sides().local_size();
   int const sll = sides().size();
   auto const &s2z = caccess_intv("m:s>z");
   auto const &s2p1 = caccess_intv("m:s>p1");

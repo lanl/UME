@@ -50,7 +50,7 @@ bool Corners::VAR_corner_vol::init_() const {
   VAR_INIT_PREAMBLE("VAR_corner_vol");
 
   int const cll = corners().size();
-  int const sl = sides().lsize;
+  int const sl = sides().local_size();
   auto const &s2c1{caccess_intv("m:s>c1")};
   auto const &s2c2{caccess_intv("m:s>c2")};
   auto const &side_vol{caccess_dblv("side_vol")};
@@ -73,7 +73,7 @@ bool Corners::VAR_corner_csurf::init_() const {
   VAR_INIT_PREAMBLE("VAR_corner_csurf");
 
   int const cll = corners().size();
-  int const sl = sides().lsize;
+  int const sl = sides().local_size();
   auto const &s2c1{caccess_intv("m:s>c1")};
   auto const &s2c2{caccess_intv("m:s>c2")};
   auto const &side_surf{caccess_vec3v("side_surf")};

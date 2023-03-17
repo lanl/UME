@@ -64,10 +64,10 @@ int main(int argc, char *argv[]) {
   auto const &kztyp = mesh.zones.mask;
 
   // Find a local zone to set a value in
-  int czi = mesh.zones.lsize / 2;
-  while (czi < mesh.zones.lsize && kztyp[czi] < 1)
+  int czi = mesh.zones.local_size() / 2;
+  while (czi < mesh.zones.local_size() && kztyp[czi] < 1)
     czi += 1;
-  assert(czi < mesh.zones.lsize);
+  assert(czi < mesh.zones.local_size());
 
   // Create a zone-field that is zero everywhere but in czi.
   DBLV_T zfield(mesh.zones.size(), 0.0);
@@ -173,7 +173,7 @@ bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh) {
   bool result = true;
 
   mesh.points.gathscat(Ume::Comm::Op::SUM, int_field);
-  for (int i = 0; i < mesh.points.lsize; ++i) {
+  for (int i = 0; i < mesh.points.local_size(); ++i) {
     if (mesh.points.comm_type[i] == Ume::SOA_Idx::Entity::INTERNAL) {
       if (int_field[i] != background_val) {
         std::cout << "Rank " << mype << " expecting int_field[" << i
