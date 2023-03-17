@@ -23,7 +23,9 @@ void debug_attach_point(int const mype) {
     std::cerr << "Execution is paused on rank " << stoppe << " PID " << getpid()
               << " because the environment variable\nUME_DEBUG_RANK is set. "
               << "If you are debugging a segfault, add the\n"
-              << "\"-mca orte_abort_on_non_zero_status 0\" option to mpirun."
+              << "\"-mca orte_abort_on_non_zero_status 0\" option to mpirun.\n"
+              << "In gdb, go 'up' to the the debug_attach_point frame, and do\n"
+              << "`setvar release = 1`\n"
               << std::endl;
 
     while (!release) {
