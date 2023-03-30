@@ -122,11 +122,11 @@ int main(int argc, char *argv[]) {
   orig_time.start();
 #if defined(USE_SCORIA) && defined(USE_CLIENT)
   Ume::gradzatz(&client, mesh, zfield, zgrad, pgrad);
- #else
+#else
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
 #endif
   orig_time.stop();
-  
+
   // Write out results to file for validation
   write_result("point_gradient", comm.pe(), pgrad);
   write_result("zone_gradient", comm.pe(), zgrad);
@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
   // Write out results to file for validation
   write_result("point_gradient_invert", comm.pe(), pgrad_invert);
   write_result("zone_gradient_invert", comm.pe(), zgrad_invert);
-  
+
   // Double check that the gradients are non-zero where we expect
 #ifndef USE_SCORIA
   if (comm.pe() == 0) {
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
 }
 
 bool read_mesh(
-  char const *const basename, int const mype, Ume::SOA_Idx::Mesh &mesh) {
+    char const *const basename, int const mype, Ume::SOA_Idx::Mesh &mesh) {
   char fname[80];
   sprintf(fname, "%s.%05d.ume", basename, mype);
   std::ifstream is(fname);

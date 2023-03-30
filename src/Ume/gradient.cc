@@ -348,10 +348,10 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
   mesh.zones.scatter(zone_gradient);
 }
- 
+
 #if defined(USE_SCORIA) && defined(USE_CLIENT)
-void gradzatp_invert(struct client *client, Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
-    VEC3V_T &point_gradient) {
+void gradzatp_invert(struct client *client, Ume::SOA_Idx::Mesh &mesh,
+    DBLV_T const &zone_field, VEC3V_T &point_gradient) {
 #else
 void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     VEC3V_T &point_gradient) {
@@ -362,6 +362,11 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto const &p_to_c_map = mesh.ds->caccess_intrr("m:p>rc");
   auto const &c_to_z_map = mesh.ds->caccess_intv("m:c>z");
   auto const &point_type = mesh.points.mask;
+
+#ifdef USE_SCORIA
+  const UmeVector<size_t> mp_to_c_map(begin(p_to_c_map), end(p_to_c_map));
+  const UmeVector<size_t> mc_to_z_map(begin(c_to_z_map), end(c_to_z_map));
+#endif
 
   int const num_points = mesh.points.size();
   int const num_local_points = mesh.points.local_size();
@@ -402,8 +407,9 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 }
 
 #if defined(USE_SCORIA) && defined(USE_CLIENT)
-void gradzatz_invert(struct client *client, Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
-    VEC3V_T &zone_gradient, VEC3V_T, &point_gradient) {
+void gradzatz_invert(struct client *client, Ume::SOA_Idx::Mesh &mesh,
+    DBLV_T const &zone_field, VEC3V_T &zone_gradient, VEC3V_T,
+    &point_gradient) {
 #else
 void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     VEC3V_T &zone_gradient, VEC3V_T &point_gradient) {
@@ -414,8 +420,17 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto const &zone_type = mesh.zones.mask;
   auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
 
+#ifdef USE_SCORIA
+  const UmeVector<size_t> mz_to_c_map(begin(z_to_c_map), end(z_to_c_map));
+  const UmeVector<size_t> mc_to_p_map(begin(c_to_p_map), end(c_to_p_map));
+#endif
+
   // Get the field gradient at each mesh point.
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  gradzatp_invert(client, mesh, zone_field, point_gradient);
+#else
   gradzatp_invert(mesh, zone_field, point_gradient);
+#endif
 
   zone_gradient.assign(mesh.zones.size(), VEC3_T(0.0));
   for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
