@@ -10,15 +10,7 @@
 */
 #if defined(USE_SCORIA) && defined(USE_CLIENT)
 extern "C" {
-#include "client.h"
-#include "config.h"
-
-#include "client_cleanup.h"
-#include "client_init.h"
-#include "client_memory.h"
-#include "client_wait_requests.h"
-
-#include "shm_malloc.h"
+#include "scoria.h"
 }
 #endif
 
@@ -40,7 +32,7 @@ int main(int argc, char *argv[]) {
   struct client client;
   client.chatty = 0;
 
-  init(&client);
+  scoria_init(&client);
 #endif
 
   UmeVector<Mesh> ranks{read_meshes(argc, argv)};
@@ -58,9 +50,9 @@ int main(int argc, char *argv[]) {
 #if defined(USE_SCORIA) && defined(USE_CLIENT)
   struct request req;
   scoria_quit(&client, &req);
-  wait_request(&client, &req);
+  scoria_wait_request(&client, &req);
 
-  cleanup(&client);
+  scoria_cleanup(&client);
 #endif
 
   return 0;

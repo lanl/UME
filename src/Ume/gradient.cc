@@ -3,8 +3,8 @@
 */
 
 /*
-** Scoria Includes
-*/
+ ** Scoria Includes
+ */
 #if defined(USE_SCORIA) && !defined(USE_CLIENT)
 extern "C" {
 #include "kernels.h"
@@ -76,7 +76,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   struct request req1;
   scoria_read(client, zone_field.data(), cl, packed_zf.data(),
       mc_to_z_map.data(), NULL, num_threads, NONE, &req1);
-  wait_request(client, &req1);
+  scoria_wait_request(client, &req1);
 #else
   read_multi_thread_1(packed_zf.data(), zone_field.data(), cl,
       mc_to_z_map.data(), num_threads, NONE);
@@ -96,22 +96,22 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   struct request req2;
   scoria_writeadd(client, point_volume.data(), cl, packed_pv.data(),
       mc_to_p_map.data(), NULL, 0, NONE, &req2);
-  wait_request(client, &req2);
+  scoria_wait_request(client, &req2);
 
   struct request req3;
   scoria_writeadd(client, point_gradient_x.data(), cl, packed_pg_x.data(),
       mc_to_p_map.data(), NULL, 0, NONE, &req3);
-  wait_request(client, &req3);
+  scoria_wait_request(client, &req3);
 
   struct request req4;
   scoria_writeadd(client, point_gradient_y.data(), cl, packed_pg_y.data(),
       mc_to_p_map.data(), NULL, 0, NONE, &req4);
-  wait_request(client, &req4);
+  scoria_wait_request(client, &req4);
 
   struct request req5;
   scoria_writeadd(client, point_gradient_z.data(), cl, packed_pg_z.data(),
       mc_to_p_map.data(), NULL, 0, NONE, &req5);
-  wait_request(client, &req5);
+  scoria_wait_request(client, &req5);
 #else
   writeadd_single_thread_1(
       point_volume.data(), packed_pv.data(), cl, mc_to_p_map.data(), NONE);
@@ -203,7 +203,7 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   struct request req1;
   scoria_writeadd(client, zone_volume.data(), num_local_corners,
       packed_zv.data(), mc_to_z_map.data(), NULL, 0, NONE, &req1);
-  wait_request(client, &req1);
+  scoria_wait_request(client, &req1);
 #else
   writeadd_single_thread_1(zone_volume.data(), packed_zv.data(),
       num_local_corners, mc_to_z_map.data(), NONE);
@@ -251,22 +251,22 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   struct request req2;
   scoria_read(client, point_gradient_x.data(), num_local_corners,
       packed_pg_x.data(), mc_to_p_map.data(), NULL, num_threads, NONE, &req2);
-  wait_request(client, &req2);
+  scoria_wait_request(client, &req2);
 
   struct request req3;
   scoria_read(client, point_gradient_y.data(), num_local_corners,
       packed_pg_y.data(), mc_to_p_map.data(), NULL, num_threads, NONE, &req3);
-  wait_request(client, &req3);
+  scoria_wait_request(client, &req3);
 
   struct request req4;
   scoria_read(client, point_gradient_z.data(), num_local_corners,
       packed_pg_z.data(), mc_to_p_map.data(), NULL, num_threads, NONE, &req4);
-  wait_request(client, &req4);
+  scoria_wait_request(client, &req4);
 
   struct request req5;
   scoria_read(client, zone_volume.data(), num_local_corners, packed_zv.data(),
       mc_to_z_map.data(), NULL, num_threads, NONE, &req5);
-  wait_request(client, &req5);
+  scoria_wait_request(client, &req5);
 #else
   read_multi_thread_1(packed_pg_x.data(), point_gradient_x.data(),
       num_local_corners, mc_to_p_map.data(), num_threads, NONE);
@@ -293,17 +293,17 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   struct request req6;
   scoria_writeadd(client, zone_gradient_x.data(), num_local_corners,
       packed_zg_x.data(), mc_to_z_map.data(), NULL, 0, NONE, &req6);
-  wait_request(client, &req6);
+  scoria_wait_request(client, &req6);
 
   struct request req7;
   scoria_writeadd(client, zone_gradient_y.data(), num_local_corners,
       packed_zg_y.data(), mc_to_z_map.data(), NULL, 0, NONE, &req7);
-  wait_request(client, &req7);
+  scoria_wait_request(client, &req7);
 
   struct request req8;
   scoria_writeadd(client, zone_gradient_z.data(), num_local_corners,
       packed_zg_z.data(), mc_to_z_map.data(), NULL, 0, NONE, &req8);
-  wait_request(client, &req8);
+  scoria_wait_request(client, &req8);
 #else
   writeadd_single_thread_1(zone_gradient_x.data(), packed_zg_x.data(),
       num_local_corners, mc_to_z_map.data(), NONE);

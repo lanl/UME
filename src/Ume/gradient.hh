@@ -7,19 +7,11 @@
 /*
 ** Scoria Includes
 */
-#ifdef USE_SCORIA
 extern "C" {
-#include "client.h"
-#include "config.h"
-
-#include "client_cleanup.h"
-#include "client_init.h"
-#include "client_memory.h"
-#include "client_wait_requests.h"
-
-#include "shm_malloc.h"
-}
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+#include "scoria.h"
 #endif /* USE_SCORIA */
+}
 
 /*
 ** Ume Includes
