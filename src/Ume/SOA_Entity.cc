@@ -1,3 +1,14 @@
+/*
+  Copyright (c) 2023, Triad National Security, LLC. All rights reserved.
+
+  This is open source software; you can redistribute it and/or modify it under
+  the terms of the BSD-3 License. If software is modified to produce derivative
+  works, such modified software should be clearly marked, so as not to confuse
+  it with the version available from LANL. Full text of the BSD-3 License can be
+  found in the LICENSE.md file, and the full assertion of copyright in the
+  NOTICE.md file.
+*/
+
 /*!
   \file Ume/SOA_Entity.cc
 */
@@ -53,7 +64,7 @@ namespace SOA_Idx {
 /* --------------------------------- Entity -------------------------------- */
 
 void Entity::write(std::ostream &os) const {
-  write_bin(os, lsize);
+  write_bin(os, lsize_);
   write_bin(os, mask);
   write_bin(os, comm_type);
   write_bin(os, cpy_idx);
@@ -67,7 +78,7 @@ void Entity::write(std::ostream &os) const {
 }
 
 void Entity::read(std::istream &is) {
-  read_bin(is, lsize);
+  read_bin(is, lsize_);
   read_bin(is, mask);
   read_bin(is, comm_type);
   read_bin(is, cpy_idx);
@@ -81,7 +92,7 @@ void Entity::read(std::istream &is) {
 }
 
 bool Entity::operator==(Entity const &rhs) const {
-  return (lsize == rhs.lsize && mask == rhs.mask &&
+  return (lsize_ == rhs.lsize_ && mask == rhs.mask &&
       comm_type == rhs.comm_type && cpy_idx == rhs.cpy_idx &&
       src_pe == rhs.src_pe && src_idx == rhs.src_idx &&
       ghost_mask == rhs.ghost_mask && myCpys == rhs.myCpys &&
@@ -95,7 +106,7 @@ void Entity::resize(int const local, int const total, int const ghost) {
   src_pe.resize(ghost);
   src_idx.resize(ghost);
   ghost_mask.resize(ghost);
-  lsize = local;
+  lsize_ = local;
 }
 
 template <typename FT> void Entity::gather(Comm::Op const op, FT &field) {

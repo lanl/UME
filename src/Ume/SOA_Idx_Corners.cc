@@ -1,3 +1,14 @@
+/*
+  Copyright (c) 2023, Triad National Security, LLC. All rights reserved.
+
+  This is open source software; you can redistribute it and/or modify it under
+  the terms of the BSD-3 License. If software is modified to produce derivative
+  works, such modified software should be clearly marked, so as not to confuse
+  it with the version available from LANL. Full text of the BSD-3 License can be
+  found in the LICENSE.md file, and the full assertion of copyright in the
+  NOTICE.md file.
+*/
+
 /*!
   \file Ume/SOA_Idx_Faces.cc
 */
@@ -51,7 +62,7 @@ bool Corners::VAR_corner_vol::init_() const {
   VAR_INIT_PREAMBLE("VAR_corner_vol");
 
   int const cll = corners().size();
-  int const sl = sides().lsize;
+  int const sl = sides().local_size();
   auto const &s2c1{caccess_intv("m:s>c1")};
   auto const &s2c2{caccess_intv("m:s>c2")};
   auto const &side_vol{caccess_dblv("side_vol")};
@@ -74,7 +85,7 @@ bool Corners::VAR_corner_csurf::init_() const {
   VAR_INIT_PREAMBLE("VAR_corner_csurf");
 
   int const cll = corners().size();
-  int const sl = sides().lsize;
+  int const sl = sides().local_size();
   auto const &s2c1{caccess_intv("m:s>c1")};
   auto const &s2c2{caccess_intv("m:s>c2")};
   auto const &side_surf{caccess_vec3v("side_surf")};

@@ -1,3 +1,14 @@
+/*
+  Copyright (c) 2023, Triad National Security, LLC. All rights reserved.
+
+  This is open source software; you can redistribute it and/or modify it under
+  the terms of the BSD-3 License. If software is modified to produce derivative
+  works, such modified software should be clearly marked, so as not to confuse
+  it with the version available from LANL. Full text of the BSD-3 License can be
+  found in the LICENSE.md file, and the full assertion of copyright in the
+  NOTICE.md file.
+*/
+
 /*!
   \file Ume/SOA_Entity.hh
 */
@@ -10,6 +21,7 @@
 #include "Ume/Mesh_Base.hh"
 #include "shm_allocator.hh"
 #include <iosfwd>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -113,16 +125,27 @@ struct Entity {
   //! The subsets defined on this Entity
   UmeVector<Subset> subsets;
 
-  //! The number of local (non-ghost) entities
-  int lsize = 0;
+  //! Return the number of elements in this Entity
+  constexpr int size() const { return static_cast<int>(mask.size()); }
+  constexpr int local_size() const { return lsize_; }
+
+  /* Have to wait until clang can support this
+
+  constexpr auto local_indices() const {
+    return std::ranges::iota_view{0, lsize_-1};
+  }
+  constexpr auto ghost_indices() const {
+    return std::ranges::iota_view{lsize_, size()};
+  }
+  constexpr auto all_indices() const {
+    return std::ranges::iota_view{0, size() - 1};
+  }
+  */
 
   virtual void write(std::ostream &os) const = 0;
   virtual void read(std::istream &is) = 0;
   virtual void resize(int const local, int const total, int const ghost);
   bool operator==(Entity const &rhs) const;
-
-  //! Return the number of elements in this Entity
-  int size() const { return static_cast<int>(mask.size()); }
 
   //! Return the Datastore of the mesh that this Entity belongs to
   Datastore &ds() { return *(((Mesh_Base *)mesh_)->ds); }
@@ -141,6 +164,8 @@ struct Entity {
 
 private:
   Mesh *mesh_;
+  //! The number of local (non-ghost) entities
+  int lsize_ = 0;
 };
 
 } // namespace SOA_Idx

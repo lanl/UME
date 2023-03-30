@@ -1,3 +1,14 @@
+/*
+  Copyright (c) 2023, Triad National Security, LLC. All rights reserved.
+
+  This is open source software; you can redistribute it and/or modify it under
+  the terms of the BSD-3 License. If software is modified to produce derivative
+  works, such modified software should be clearly marked, so as not to confuse
+  it with the version available from LANL. Full text of the BSD-3 License can be
+  found in the LICENSE.md file, and the full assertion of copyright in the
+  NOTICE.md file.
+*/
+
 /*!
   \file Ume/SOA_Idx_Sides.hh
 */
@@ -91,7 +102,7 @@ void Sides::resize(int const local, int const total, int const ghost) {
 
 bool Sides::VAR_side_surf::init_() const {
   VAR_INIT_PREAMBLE("VAR_side_surf");
-  int const sl = sides().lsize;
+  int const sl = sides().local_size();
   int const sll = sides().size();
 
   auto const &s2p1 = caccess_intv("m:s>p1");
@@ -134,7 +145,7 @@ bool Sides::VAR_side_surf::init_() const {
 
 bool Sides::VAR_side_surz::init_() const {
   VAR_INIT_PREAMBLE("VAR_side_surz");
-  int const sl = sides().lsize;
+  int const sl = sides().local_size();
   int const sll = sides().size();
 
   auto const &s2p1 = caccess_intv("m:s>p1");
@@ -165,7 +176,7 @@ bool Sides::VAR_side_surz::init_() const {
 
 bool Sides::VAR_side_vol::init_() const {
   VAR_INIT_PREAMBLE("VAR_side_vol");
-  int const sl = sides().lsize;
+  int const sl = sides().local_size();
   int const sll = sides().size();
   auto const &s2z = caccess_intv("m:s>z");
   auto const &s2p1 = caccess_intv("m:s>p1");

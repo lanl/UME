@@ -1,3 +1,14 @@
+/*
+  Copyright (c) 2023, Triad National Security, LLC. All rights reserved.
+
+  This is open source software; you can redistribute it and/or modify it under
+  the terms of the BSD-3 License. If software is modified to produce derivative
+  works, such modified software should be clearly marked, so as not to confuse
+  it with the version available from LANL. Full text of the BSD-3 License can be
+  found in the LICENSE.md file, and the full assertion of copyright in the
+  NOTICE.md file.
+*/
+
 /*!
   \file Ume/RaggedRight.hh
 */
@@ -6,6 +17,7 @@
 #define UME_RAGGEDRIGHT_HH
 
 #include "shm_allocator.hh"
+#include <span>
 #include <vector>
 
 namespace Ume {
@@ -26,13 +38,12 @@ template <class T> struct RaggedRight {
     return (bidx == rhs.bidx && eidx == rhs.eidx && data == rhs.data);
   }
 
-  T *begin(int n) { return data.data() + bidx[n]; }
-  T const *begin(int n) const { return data.data() + bidx[n]; }
-  T const *cbegin(int n) const { return data.data() + bidx[n]; }
-
-  T *end(int n) { return data.data() + eidx[n]; }
-  T const *end(int n) const { return data.data() + eidx[n]; }
-  T const *cend(int n) const { return data.data() + eidx[n]; }
+  std::span<T> operator[](int const n) {
+    return std::span(data.begin() + bidx[n], size(n));
+  }
+  std::span<T const> const operator[](int const n) const {
+    return std::span(data.cbegin() + bidx[n], size(n));
+  }
 
   //! Copy the contents of the range [`b`..`e`) to element `n`
   /*! Note that if `n` has already been assigned data, it will be abandonend in

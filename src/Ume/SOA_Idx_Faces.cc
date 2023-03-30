@@ -1,3 +1,14 @@
+/*
+  Copyright (c) 2023, Triad National Security, LLC. All rights reserved.
+
+  This is open source software; you can redistribute it and/or modify it under
+  the terms of the BSD-3 License. If software is modified to produce derivative
+  works, such modified software should be clearly marked, so as not to confuse
+  it with the version available from LANL. Full text of the BSD-3 License can be
+  found in the LICENSE.md file, and the full assertion of copyright in the
+  NOTICE.md file.
+*/
+
 /*!
   \file Ume/SOA_Idx_Faces.cc
 */
@@ -50,8 +61,8 @@ bool Faces::VAR_fcoord::init_() const {
   VAR_INIT_PREAMBLE("VAR_fcoord");
 
   int const fll{faces().size()};
-  int const fl{faces().lsize};
-  int const sl{sides().lsize};
+  int const fl{faces().local_size()};
+  int const sl{sides().local_size()};
   auto const &s2f{caccess_intv("m:s>f")};
   auto const &s2p1{caccess_intv("m:s>p1")};
   auto const &pcoord{caccess_vec3v("pcoord")};
