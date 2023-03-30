@@ -48,7 +48,7 @@ void Edges::resize(int const local, int const total, int const ghost) {
 bool Edges::VAR_ecoord::init_() const {
   VAR_INIT_PREAMBLE("VAR_ecoord");
 
-  int const el = edges().lsize;
+  int const el = edges().local_size();
   int const ell = edges().size();
   auto const &e2p1{caccess_intv("m:e>p1")};
   auto const &e2p2{caccess_intv("m:e>p2")};

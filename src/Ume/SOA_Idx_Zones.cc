@@ -15,6 +15,7 @@ Zones::Zones(Mesh *mesh) : Entity{mesh} {
   ds().insert("zcoord", std::make_unique<VAR_zcoord>(*this));
   ds().insert("m:z>pz", std::make_unique<VAR_zone_to_pt_zone>(*this));
   ds().insert("m:z>p", std::make_unique<VAR_zone_to_points>(*this));
+  ds().insert("m:z>c", std::make_unique<VAR_zone_to_corners>(*this));
 }
 
 void Zones::write(std::ostream &os) const {
@@ -40,9 +41,9 @@ void Zones::resize(int const local, int const total, int const ghost) {
 bool Zones::VAR_zcoord::init_() const {
   VAR_INIT_PREAMBLE("VAR_zcoord");
 
-  int const zl = zones().lsize;
+  int const zl = zones().local_size();
   int const zll = zones().size();
-  int const cl = corners().lsize;
+  int const cl = corners().local_size();
   auto const &c2z{caccess_intv("m:c>z")};
   auto const &c2p{caccess_intv("m:c>p")};
   auto const &pcoord{caccess_vec3v("pcoord")};
@@ -87,10 +88,10 @@ bool Zones::VAR_zone_to_pt_zone::init_() const {
     int const p = c2p[c];
     int const z = c2z[c];
     if (p < pll && z < zll)
-      accum.at(z).insert(p2zs.begin(p), p2zs.end(p));
+      accum.at(z).insert(p2zs[p].begin(), p2zs[p].end());
   }
 
-  /* Fill the ragged-right arrays, eliminiting zone self-links */
+  /* Fill the ragged-right arrays, eliminating zone self-links */
   for (int z = 0; z < zll; ++z) {
     accum[z].erase(z);
     z2pz.assign(z, accum[z].begin(), accum[z].end());
@@ -121,6 +122,33 @@ bool Zones::VAR_zone_to_points::init_() const {
   for (int z = 0; z < zll; ++z) {
     std::sort(accum[z].begin(), accum[z].end());
     z2p.assign(z, accum[z].begin(), accum[z].end());
+  }
+  VAR_INIT_EPILOGUE;
+}
+
+bool Zones::VAR_zone_to_corners::init_() const {
+  VAR_INIT_PREAMBLE("VAR_zone_to_corners");
+  int const zll = zones().size();
+  int const cll = corners().size();
+  auto const &c2z{caccess_intv("m:c>z")};
+  auto &z2c = mydata_intrr();
+  z2c.init(zll);
+  std::vector<std::vector<int>> accum(zll);
+
+  /* Iterate over corners, connect points to zones */
+  for (int c = 0; c < cll; ++c) {
+    int const z = c2z[c];
+    if (z < zll)
+      accum.at(z).push_back(c);
+  }
+
+  /* Fill the ragged-right arrays*/
+  for (int z = 0; z < zll; ++z) {
+    /* It is perhaps tempting to sort the corner indices accum[z] here to take
+       better advantage of cache reuse, but leaving them in the original order
+       replicates the summation pattern found when using a c->z loop. */
+    //    std::sort(accum[z].begin(), accum[z].end());
+    z2c.assign(z, accum[z].begin(), accum[z].end());
   }
   VAR_INIT_EPILOGUE;
 }

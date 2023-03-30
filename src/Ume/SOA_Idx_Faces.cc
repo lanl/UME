@@ -49,8 +49,8 @@ bool Faces::VAR_fcoord::init_() const {
   VAR_INIT_PREAMBLE("VAR_fcoord");
 
   int const fll{faces().size()};
-  int const fl{faces().lsize};
-  int const sl{sides().lsize};
+  int const fl{faces().local_size()};
+  int const sl{sides().local_size()};
   auto const &s2f{caccess_intv("m:s>f")};
   auto const &s2p1{caccess_intv("m:s>p1")};
   auto const &pcoord{caccess_vec3v("pcoord")};

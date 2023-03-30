@@ -17,6 +17,7 @@ Points::Points(Mesh *mesh) : Entity{mesh} {
   ds().insert("pcoord", std::make_unique<Ume::DS_Entry>(Types::VEC3V));
   ds().insert("point_norm", std::make_unique<VAR_point_norm>(*this));
   ds().insert("m:p>zs", std::make_unique<VAR_point_to_zones>(*this));
+  ds().insert("m:p>rc", std::make_unique<VAR_point_to_real_corners>(*this));
 }
 
 void Points::write(std::ostream &os) const {
@@ -71,8 +72,8 @@ bool Points::VAR_point_to_zones::init_() const {
 bool Points::VAR_point_norm::init_() const {
   VAR_INIT_PREAMBLE("VAR_point_norm");
   int const pll = points().size();
-  int const pl = points().lsize;
-  int const sl = sides().lsize;
+  int const pl = points().local_size();
+  int const sl = sides().local_size();
   auto const &s2s2{caccess_intv("m:s>s2")};
   auto const &s2p1{caccess_intv("m:s>p1")};
   auto const &s2p2{caccess_intv("m:s>p2")};
@@ -100,6 +101,28 @@ bool Points::VAR_point_norm::init_() const {
     if (pmask[p] < 0) {
       normalize(point_norm[p]);
     }
+  }
+  VAR_INIT_EPILOGUE;
+}
+
+bool Points::VAR_point_to_real_corners::init_() const {
+  VAR_INIT_PREAMBLE("VAR_point_to_zones");
+  int const pll = points().size();
+  int const cl = corners().local_size();
+  auto const &c2p{caccess_intv("m:c>p")};
+  auto const &cmask{corners().mask};
+  auto &p2rc = mydata_intrr();
+
+  p2rc.init(pll);
+  std::vector<std::vector<int>> accum(pll);
+  for (int c = 0; c < cl; ++c) {
+    if (cmask[c] < 1)
+      continue; // only take non-ghost/non-boundary corners
+    int const p = c2p[c];
+    accum.at(p).push_back(c);
+  }
+  for (int p = 0; p < pll; ++p) {
+    p2rc.assign(p, accum[p].begin(), accum[p].end());
   }
   VAR_INIT_EPILOGUE;
 }

@@ -30,6 +30,16 @@ struct Points : public Entity {
     bool init_() const override;
   };
 
+  //! Point field variable: point-to-real corners inverse connectivity map
+  class VAR_point_to_real_corners : public Entity_Field<Points> {
+  public:
+    explicit VAR_point_to_real_corners(Points &p)
+        : Entity_Field(Types::INTRR, p) {}
+
+  protected:
+    bool init_() const override;
+  };
+
   //! Point field variable: sum of adjacent VAR_side_surz
   class VAR_point_norm : public Entity_Field<Points> {
   public:

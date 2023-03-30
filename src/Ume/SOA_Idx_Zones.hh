@@ -45,6 +45,15 @@ struct Zones : public Entity {
   protected:
     bool init_() const override;
   };
+
+  // Zone field variable: zone-to-corners inverse connectivity
+  class VAR_zone_to_corners : public Entity_Field<Zones> {
+  public:
+    explicit VAR_zone_to_corners(Zones &z) : Entity_Field(Types::INTRR, z) {}
+
+  protected:
+    bool init_() const override;
+  };
 };
 
 } // namespace SOA_Idx

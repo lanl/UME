@@ -66,12 +66,12 @@ void Mesh::print_stats(std::ostream &os) const {
      << '\n';
   os << "\tPoint dimensions: " << ndims() << '\n';
   os << "\tCoordinate system: " << geo << '\n';
-  os << "\tPoints: " << points.lsize << '\n';
-  os << "\tZones: " << zones.lsize << ' ' << zones.size() << '\n';
-  os << "\tSides: " << sides.lsize << ' ' << sides.size() << '\n';
-  os << "\tEdges: " << edges.lsize << '\n';
-  os << "\tFaces: " << faces.lsize << '\n';
-  os << "\tCorners: " << corners.lsize << ' ' << corners.size() << '\n';
+  os << "\tPoints: " << points.local_size() << '\n';
+  os << "\tZones: " << zones.local_size() << ' ' << zones.size() << '\n';
+  os << "\tSides: " << sides.local_size() << ' ' << sides.size() << '\n';
+  os << "\tEdges: " << edges.local_size() << '\n';
+  os << "\tFaces: " << faces.local_size() << '\n';
+  os << "\tCorners: " << corners.local_size() << ' ' << corners.size() << '\n';
 }
 
 } // namespace SOA_Idx

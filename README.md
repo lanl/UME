@@ -14,7 +14,7 @@ fluid dynamics simulation packages.
 ## Installation
 
 UME is a (CMake)[https://cmake.org]-based package written in
-C++17. The basic steps for building UME are:
+C++20. The basic steps for building UME are:
   1. Install external packages; 
   2. Do a cmake configuration step; 
   3. Build the libraries and executables.
@@ -35,7 +35,7 @@ spack:
 	- doxygen
 	- git
     - graphviz
-	- kokkos+openmp std=17
+	- kokkos+openmp std=20
 	- openmpi
   packages:
     catch2:

@@ -13,6 +13,7 @@
 
 #include "Ume/Comm_MPI.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/Timer.hh"
 #include "Ume/gradient.hh"
 #include "Ume/utils.hh"
 #include <cassert>
@@ -64,10 +65,10 @@ int main(int argc, char *argv[]) {
   auto const &kztyp = mesh.zones.mask;
 
   // Find a local zone to set a value in
-  int czi = mesh.zones.lsize / 2;
-  while (czi < mesh.zones.lsize && kztyp[czi] < 1)
+  int czi = mesh.zones.local_size() / 2;
+  while (czi < mesh.zones.local_size() && kztyp[czi] < 1)
     czi += 1;
-  assert(czi < mesh.zones.lsize);
+  assert(czi < mesh.zones.local_size());
 
   // Create a zone-field that is zero everywhere but in czi.
   DBLV_T zfield(mesh.zones.size(), 0.0);
@@ -76,12 +77,44 @@ int main(int argc, char *argv[]) {
   // Do a zone-centered gradient calculation on that field (in parallel)
   if (comm.pe() == 0)
     std::cout << "Calculating gradient..." << std::endl;
+
   VEC3V_T pgrad, zgrad;
+  Ume::Timer orig_time;
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+  orig_time.start();
+  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+  orig_time.stop();
+
+  VEC3V_T pgrad_invert, zgrad_invert;
+  Ume::Timer invert_time;
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+  invert_time.start();
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+  invert_time.stop();
 
   // Double check that the gradients are non-zero where we expect
-  if (comm.pe() == 0)
+  if (comm.pe() == 0) {
+    std::cout << "Original algorithm took: " << orig_time.seconds() << "s\n";
+    std::cout << "Inverted algorithm took: " << invert_time.seconds() << "s\n";
     std::cout << "Checking result..." << std::endl;
+  }
+
+  if (zgrad != zgrad_invert) {
+    std::cout << "PE" << mesh.mype << " zgrad != zgrad_invert" << std::endl;
+    if (mesh.mype == 0) {
+      for (int z = 0; z < mesh.zones.size(); ++z) {
+        if (zgrad[z] != zgrad_invert[z]) {
+          std::cout << "Z" << z << " " << mesh.zones.mask[z] << ": " << zgrad[z]
+                    << " vs. " << zgrad_invert[z] << "\n";
+        }
+      }
+    }
+  }
+
+  if (pgrad != pgrad_invert) {
+    std::cout << "PE" << mesh.mype << " pgrad != pgrad_invert" << std::endl;
+  }
+
   auto const &z2pz = mesh.ds->caccess_intrr("m:z>pz");
   auto const &z2p = mesh.ds->caccess_intrr("m:z>p");
   auto const &kptyp = mesh.points.mask;
@@ -102,16 +135,14 @@ int main(int argc, char *argv[]) {
   std::sort(grad_zones.begin(), grad_zones.end());
   std::sort(grad_points.begin(), grad_points.end());
   std::vector<int> diff;
-  std::set_difference(grad_zones.begin(), grad_zones.end(), z2pz.begin(czi),
-      z2pz.end(czi), std::back_inserter(diff));
+  std::ranges::set_difference(grad_zones, z2pz[czi], std::back_inserter(diff));
   if (!diff.empty()) {
     std::cout << "PE" << mesh.mype << " zone diff " << diff.size() << " found "
               << grad_zones.size() << " expected " << z2pz.size(czi) << '\n';
   }
 
   diff.clear();
-  std::set_difference(grad_points.begin(), grad_points.end(), z2p.begin(czi),
-      z2p.end(czi), std::back_inserter(diff));
+  std::ranges::set_difference(grad_points, z2p[czi], std::back_inserter(diff));
   if (!diff.empty()) {
     std::cout << "PE" << mesh.mype << " pt diff " << diff.size() << " found "
               << grad_points.size() << " expected " << z2p.size(czi) << '\n';
@@ -175,7 +206,7 @@ bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh) {
   bool result = true;
 
   mesh.points.gathscat(Ume::Comm::Op::SUM, int_field);
-  for (int i = 0; i < mesh.points.lsize; ++i) {
+  for (int i = 0; i < mesh.points.local_size(); ++i) {
     if (mesh.points.comm_type[i] == Ume::SOA_Idx::Entity::INTERNAL) {
       if (int_field[i] != background_val) {
         std::cout << "Rank " << mype << " expecting int_field[" << i
