@@ -1,5 +1,9 @@
 # UME: Unstructured Mesh Explorations
 
+*NOTE* this `scoria` branch is used as a client for the
+[ScorIA](https://github.com/lanl/scoria) project: it will not work as
+a standalone code!
+
 [![Contributor
 Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
 
