@@ -73,7 +73,7 @@ void gradzatp_invert(struct client *client, SOA_Idx::Mesh &mesh,
     DS_Types::DBLV_T const &zone_field, DS_Types::VEC3V_T &point_gradient);
 #else
 void gradzatp_invert(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
-    DS_Types::VECT3V_T &point_gradient);
+    DS_Types::VEC3V_T &point_gradient);
 #endif
 
 //! Calculate the gradient of a zone-centered field at the zone centers.
@@ -87,7 +87,7 @@ void gradzatz_invert(struct client *client, SOA_Idx::Mesh &mesh,
     DS_Types::DBLV_T const &zone_field, DS_Types::VEC3V_T &zone_gradient,
     DS_Types::VEC3V_T &point_gradient);
 #else
-void gradzatz_invert(SOA_IDX::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
+void gradzatz_invert(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
     DS_Types::VEC3V_T &zone_gradient, DS_Types::VEC3V_T &point_gradient);
 #endif
 } // namespace Ume

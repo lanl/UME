@@ -364,7 +364,7 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto const &point_type = mesh.points.mask;
 
 #ifdef USE_SCORIA
-  const UmeVector<size_t> mp_to_c_map(begin(p_to_c_map), end(p_to_c_map));
+//  const UmeVector<size_t> mp_to_c_map(begin(p_to_c_map), end(p_to_c_map));
   const UmeVector<size_t> mc_to_z_map(begin(c_to_z_map), end(c_to_z_map));
 #endif
 
@@ -408,8 +408,7 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
 #if defined(USE_SCORIA) && defined(USE_CLIENT)
 void gradzatz_invert(struct client *client, Ume::SOA_Idx::Mesh &mesh,
-    DBLV_T const &zone_field, VEC3V_T &zone_gradient, VEC3V_T,
-    &point_gradient) {
+    DBLV_T const &zone_field, VEC3V_T &zone_gradient, VEC3V_T &point_gradient) {
 #else
 void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     VEC3V_T &zone_gradient, VEC3V_T &point_gradient) {
@@ -421,7 +420,7 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
 
 #ifdef USE_SCORIA
-  const UmeVector<size_t> mz_to_c_map(begin(z_to_c_map), end(z_to_c_map));
+  //const UmeVector<size_t> mz_to_c_map(begin(z_to_c_map), end(z_to_c_map));
   const UmeVector<size_t> mc_to_p_map(begin(c_to_p_map), end(c_to_p_map));
 #endif
 
