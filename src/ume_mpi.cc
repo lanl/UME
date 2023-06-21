@@ -42,8 +42,6 @@ extern "C" {
 #include "shm_allocator.hh"
 #include <cassert>
 #include <cstdio>
-#include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -51,9 +49,6 @@ extern "C" {
 bool read_mesh(
     char const *const basename, int const mype, Ume::SOA_Idx::Mesh &mesh);
 bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh);
-
-template <class T>
-void write_result(char const *const varname, int const mype, T &data);
 
 using DBLV_T = typename Ume::DS_Types::DBLV_T;
 using VEC3V_T = typename Ume::DS_Types::VEC3V_T;
@@ -113,48 +108,91 @@ int main(int argc, char *argv[]) {
     std::cout << "Calculating gradient..." << std::endl;
 
   VEC3V_T pgrad, zgrad;
+#ifdef UME_PROFILING
   Ume::Timer orig_time;
-#if defined(USE_SCORIA) && defined(USE_CLIENT)
-  Ume::gradzatz(&client, mesh, zfield, zgrad, pgrad);
-#else
-  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
-#endif
   orig_time.start();
+#endif /* UME_PROFILING */
 #if defined(USE_SCORIA) && defined(USE_CLIENT)
   Ume::gradzatz(&client, mesh, zfield, zgrad, pgrad);
 #else
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
-#endif
+#endif /* USE_SCORIA && USE_CLIENT */
+#ifdef UME_PROFILING
+  orig_time.stop();
+  mesh.levels.push_back(1);
+  mesh.timelabels.push_back("gradzatz");
+  mesh.times.push_back(orig_time.seconds());
+  orig_time.clear();
+
+  orig_time.start();
+#endif /* UME_PROFILING */
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  Ume::gradzatz(&client, mesh, zfield, zgrad, pgrad);
+#else
+  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+#endif /* USE_SCORIA && USE_CLIENT */
+#ifdef UME_PROFILING
   orig_time.stop();
 
+  mesh.levels.push_back(1);
+  mesh.timelabels.push_back("gradzatz");
+  mesh.times.push_back(orig_time.seconds());
+#endif /* UME_PROFILING */
+
   // Write out results to file for validation
-  write_result("point_gradient", comm.pe(), pgrad);
-  write_result("zone_gradient", comm.pe(), zgrad);
+  Ume::write_result("point_gradient", comm.pe(), pgrad);
+  Ume::write_result("zone_gradient", comm.pe(), zgrad);
 
   VEC3V_T pgrad_invert, zgrad_invert;
+#ifdef UME_PROFILING
   Ume::Timer invert_time;
-#if defined(USE_SCORIA) && defined(USE_CLIENT)
-  Ume::gradzatz_invert(&client, mesh, zfield, zgrad_invert, pgrad_invert);
-#else
-  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
-#endif
   invert_time.start();
+#endif /* UME_PROFILING */
 #if defined(USE_SCORIA) && defined(USE_CLIENT)
   Ume::gradzatz_invert(&client, mesh, zfield, zgrad_invert, pgrad_invert);
 #else
   Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
-#endif
+#endif /* USE_SCORIA && USE_CLIENT */
+#ifdef UME_PROFILING
   invert_time.stop();
 
-  // Write out results to file for validation
-  write_result("point_gradient_invert", comm.pe(), pgrad_invert);
-  write_result("zone_gradient_invert", comm.pe(), zgrad_invert);
+  mesh.levels.push_back(1);
+  mesh.timelabels.push_back("gradzatz_invert");
+  mesh.times.push_back(invert_time.seconds());
+  invert_time.clear();
 
-  // Double check that the gradients are non-zero where we expect
-#ifndef USE_SCORIA
+  invert_time.start();
+#endif /* UME_PROFILING */
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  Ume::gradzatz_invert(&client, mesh, zfield, zgrad_invert, pgrad_invert);
+#else
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+#endif /* USE_SCORIA && USE_CLIENT */
+#ifdef UME_PROFILING
+  invert_time.stop();
+
+  mesh.levels.push_back(1);
+  mesh.timelabels.push_back("gradzatz_invert");
+  mesh.times.push_back(invert_time.seconds());
+#endif /* UME_PROFILING */
+
+  // Write out results to file for validation
+  Ume::write_result("point_gradient_invert", comm.pe(), pgrad_invert);
+  Ume::write_result("zone_gradient_invert", comm.pe(), zgrad_invert);
+#ifdef UME_PROFILING
+  Ume::write_timings("ume_times", comm.pe(), mesh.timelabels, mesh.times, mesh.levels);
+#endif /* UME_PROFILING */
+
+#ifdef UME_PROFILING
   if (comm.pe() == 0) {
     std::cout << "Original algorithm took: " << orig_time.seconds() << "s\n";
     std::cout << "Inverted algorithm took: " << invert_time.seconds() << "s\n";
+  }
+#endif /* UME_PROFILING */
+   
+  // Double check that the gradients are non-zero where we expect
+#ifndef USE_SCORIA
+  if (comm.pe() == 0) {
     std::cout << "Checking result..." << std::endl;
   }
 
@@ -194,9 +232,7 @@ int main(int argc, char *argv[]) {
   std::sort(grad_zones.begin(), grad_zones.end());
   std::sort(grad_points.begin(), grad_points.end());
   UmeVector<int> diff;
-  std::ranges::set_difference(grad_zines, z2pz[czi], std::back_inserter(diff));
-  std::set_difference(grad_zones.begin(), grad_zones.end(), z2pz.begin(czi),
-      z2pz.end(czi), 
+  std::ranges::set_difference(grad_zones, z2pz[czi], std::back_inserter(diff));
   if (!diff.empty()) {
     std::cout << "PE" << mesh.mype << " zone diff " << diff.size() << " found "
               << grad_zones.size() << " expected " << z2pz.size(czi) << '\n';
@@ -298,15 +334,4 @@ bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh) {
   return result;
 }
 
-template <class T>
-void write_result(char const *const varname, int const mype, T &data) {
-  char fname[80];
-  sprintf(fname, "%s.%05d.out", varname, mype);
-  std::ofstream os(fname);
 
-  os << std::setprecision(10);
-
-  for (auto const &val : data)
-    os << val << '\n';
-  os.close();
-}

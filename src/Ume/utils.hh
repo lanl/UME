@@ -21,11 +21,48 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 
 #ifndef UME_UTILS_HH
 #define UME_UTILS_HH 1
 
 namespace Ume {
+#ifdef UME_PROFILING
+//! Write timing file
+template <class T, class V, class W>
+void write_timings(char const *const varname, int const mype, T label, V data, W levels) {
+  char fname[80];
+  sprintf(fname, "%s.%05d.out", varname, mype);
+  std::ofstream os(fname);
+
+  os << std::setprecision(10);
+
+  for (unsigned i = 0; i < data.size(); ++i) {
+    for (unsigned j = 1; j < levels[i]; ++j) {
+      os << '\t';
+     }
+    os << std::setw(25) << std::left << label[i] << ": " << std::fixed << data[i] << '\n';
+  }
+  os.close();
+}
+#endif
+
+//! Write result text file
+template <class T>
+void write_result(char const *const varname, int const mype, T &data) {
+  char fname[80];
+  sprintf(fname, "%s.%05d.out", varname, mype);
+  std::ofstream os(fname);
+
+  os << std::setprecision(10);
+
+  for (auto const &val : data)
+    os << std::fixed << val << '\n';
+  os.close();
+}
+
 inline void skip_line(std::istream &S) {
   S.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }

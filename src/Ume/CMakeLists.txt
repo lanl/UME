@@ -102,6 +102,10 @@ set_target_properties(Ume PROPERTIES
   OUTPUT_NAME "ume"
   )
 
+if (UME_PROFILING)
+  target_compile_definitions(Ume PUBLIC UME_PROFILING)
+endif()
+
 if (Scoria_REQUIRE_CLIENTS)
   target_compile_definitions(Ume PUBLIC USE_SCORIA)
 
@@ -111,7 +115,11 @@ if (Scoria_REQUIRE_CLIENTS)
     OUTPUT_NAME "umeclient"
     )
 
-  target_compile_definitions(UmeClient PUBLIC USE_SCORIA USE_CLIENT)
+  if (UME_PROFILING)
+    target_compile_definitions(UmeClient PUBLIC USE_SCORIA USE_CLIENT UME_PROFILING)
+  else()
+    target_compile_definitions(UmeClient PUBLIC USE_SCORIA USE_CLIENT)
+  endif()
 
   target_include_directories(UmeClient
     PUBLIC

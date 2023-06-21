@@ -9,13 +9,23 @@ if(Scoria_REQUIRE_CLIENTS)
   target_compile_definitions(txt2bin PUBLIC USE_SCORIA)
 
   add_executable(ume_serial ume_serial.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
-  target_compile_definitions(ume_serial PUBLIC USE_SCORIA)
+  
+  if(UME_PROFILING)
+    target_compile_definitions(ume_serial PUBLIC USE_SCORIA UME_PROFILING)
+  else()
+    target_compile_definitions(ume_serial PUBLIC USE_SCORIA)
+  endif()
 
   add_executable(txt2bin_client txt2bin.cc ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
   target_compile_definitions(txt2bin_client PUBLIC USE_SCORIA USE_CLIENT)
 
   add_executable(ume_serial_client ume_serial.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
-  target_compile_definitions(ume_serial_client PUBLIC USE_SCORIA USE_CLIENT)
+  
+  if(UME_PROFILING)
+    target_compile_definitions(ume_serial_client PUBLIC USE_SCORIA USE_CLIENT UME_PROFILING)
+  else()
+    target_compile_definitions(ume_serial_client PUBLIC USE_SCORIA USE_CLIENT)
+  endif()
 
   if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(txt2bin Ume shm pthread)
@@ -51,6 +61,11 @@ else()
     ${COMMON_COMPILE_OPTIONS})
 
   add_executable(ume_serial ume_serial.cc shm_allocator.hh)
+  
+  if(UME_PROFILING)
+    target_compile_definitions(ume_serial PUBLIC UME_PROFILING)
+  endif()
+
   target_link_libraries(ume_serial Ume)
   set_target_properties(ume_serial PROPERTIES
     COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
@@ -67,10 +82,20 @@ if(USE_MPI)
     message(STATUS "Building Ume MPI with Scoria")
 
     add_executable(ume_mpi ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
-    target_compile_definitions(ume_mpi PUBLIC USE_SCORIA)
+
+    if(UME_PROFILING)
+      target_compile_definitions(ume_mpi PUBLIC USE_SCORIA UME_PROFILING)
+    else()
+      target_compile_definitions(ume_mpi PUBLIC USE_SCORIA)
+    endif()
 
     add_executable(ume_mpi_client ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
-    target_compile_definitions(ume_mpi_client PUBLIC USE_SCORIA USE_CLIENT)
+    
+    if(UME_PROFILING)
+      target_compile_definitions(ume_mpi_client PUBLIC USE_SCORIA USE_CLIENT UME_PROFILING)
+    else()
+      target_compile_definitions(ume_mpi_client PUBLIC USE_SCORIA USE_CLIENT)
+    endif()
 
     if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       target_link_libraries(ume_mpi Ume shm pthread)
@@ -92,7 +117,13 @@ if(USE_MPI)
 
   else()
     add_executable(ume_mpi ume_mpi.cc shm_allocator.hh)
+
+    if(UME_PROFILING)
+      target_compile_definitions(ume_mpi PUBLIC UME_PROFILING)
+    endif()
+
     target_link_libraries(ume_mpi Ume)
+
     set_target_properties(ume_mpi PROPERTIES
       COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
       COMPILE_OPTIONS "${WARNING_FLAGS}"
