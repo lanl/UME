@@ -121,6 +121,7 @@ if (Scoria_REQUIRE_CLIENTS)
 
   if (USE_CALIPER)
     target_include_directories(UmeClient PUBLIC ${caliper_INCLUDE_DIR})
+    target_compile_definitions(UmeClient PUBLIC USE_CALI)
     target_link_libraries(UmeClient PUBLIC caliper)
   endif()
 
@@ -142,6 +143,7 @@ target_include_directories(Ume
 
 if (USE_CALIPER)
   target_include_directories(Ume PUBLIC ${caliper_INCLUDE_DIR})
+  target_compile_definitions(Ume PUBLIC USE_CALI)
   target_link_libraries(Ume PUBLIC caliper)
 endif()
 
