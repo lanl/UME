@@ -102,10 +102,6 @@ set_target_properties(Ume PROPERTIES
   OUTPUT_NAME "ume"
   )
 
-if (UME_PROFILING)
-  target_compile_definitions(Ume PUBLIC UME_PROFILING)
-endif()
-
 if (Scoria_REQUIRE_CLIENTS)
   target_compile_definitions(Ume PUBLIC USE_SCORIA)
 
@@ -115,17 +111,18 @@ if (Scoria_REQUIRE_CLIENTS)
     OUTPUT_NAME "umeclient"
     )
 
-  if (UME_PROFILING)
-    target_compile_definitions(UmeClient PUBLIC USE_SCORIA USE_CLIENT UME_PROFILING)
-  else()
-    target_compile_definitions(UmeClient PUBLIC USE_SCORIA USE_CLIENT)
-  endif()
+  target_compile_definitions(UmeClient PUBLIC USE_SCORIA USE_CLIENT )
 
   target_include_directories(UmeClient
     PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:include/Ume>
     )
+
+  if (USE_CALIPER)
+    target_include_directories(UmeClient PUBLIC ${caliper_INCLUDE_DIR})
+    target_link_libraries(UmeClient PUBLIC caliper)
+  endif()
 
   target_link_libraries(UmeClient
     PUBLIC
@@ -142,6 +139,11 @@ target_include_directories(Ume
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:include/Ume>
   )
+
+if (USE_CALIPER)
+  target_include_directories(Ume PUBLIC ${caliper_INCLUDE_DIR})
+  target_link_libraries(Ume PUBLIC caliper)
+endif()
 
 target_link_libraries(Ume
   PUBLIC

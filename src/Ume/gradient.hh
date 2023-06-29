@@ -28,9 +28,6 @@ extern "C" {
 ** Ume Includes
 */
 #include "Ume/SOA_Idx_Mesh.hh"
-#include "Ume/Comm_MPI.hh"
-#include "Ume/Timer.hh"
-#include "Ume/utils.hh"
 #include "shm_allocator.hh"
 
 namespace Ume {
