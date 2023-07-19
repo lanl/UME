@@ -63,77 +63,79 @@ endif()
 # Things that depend on MPI
 #############################################################################
 if(USE_MPI)
-	if(Scoria_REQUIRE_CLIENTS AND USE_CALIPER)
-		message(STATUS "Building Ume MPI with Scoria and Caliper Profiling")
-		add_executable(ume_mpi ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
-		target_include_directories(ume_mpi PUBLIC ${caliper_INCLUDE_DIR})
-		target_compile_definitions(ume_mpi PUBLIC USE_SCORIA USE_CALI )
+  if(Scoria_REQUIRE_CLIENTS AND USE_CALIPER)
+    message(STATUS "Building Ume MPI with Scoria and Caliper Profiling")
+    add_executable(ume_mpi ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
+    target_include_directories(ume_mpi PUBLIC ${caliper_INCLUDE_DIR})
+    target_compile_definitions(ume_mpi PUBLIC USE_SCORIA USE_CALI )
 
-		add_executable(ume_mpi_client ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
-		target_include_directories(ume_mpi_client PUBLIC ${caliper_INCLUDE_DIR})
-		target_compile_definitions(ume_mpi_client PUBLIC USE_SCORIA USE_CALI USE_CLIENT)
+    add_executable(ume_mpi_client ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
+    target_include_directories(ume_mpi_client PUBLIC ${caliper_INCLUDE_DIR})
+    target_compile_definitions(ume_mpi_client PUBLIC USE_SCORIA USE_CALI USE_CLIENT)
 
-		if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-			target_link_libraries(ume_mpi Ume shm pthread caliper)
-			target_link_libraries(ume_mpi UmeClient shm pthread caliper)
-		else()
-			target_link_libraries(ume_mpi Ume shm pthread rt caliper)
-			target_link_libraries(ume_mpi_client UmeClient shm pthread rt caliper)
-		endif()
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+      target_link_libraries(ume_mpi Ume shm pthread caliper)
+      target_link_libraries(ume_mpi UmeClient shm pthread caliper)
+    else()
+      target_link_libraries(ume_mpi Ume shm pthread rt caliper)
+      target_link_libraries(ume_mpi_client UmeClient shm pthread rt caliper)
+    endif()
 
-		set_target_properties(ume_mpi PROPERTIES
-			COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
-			COMPILE_OPTIONS "${WARNING_FLAGS}"
-			)
+    set_target_properties(ume_mpi PROPERTIES
+            COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
+	    COMPILE_OPTIONS "${WARNING_FLAGS}"
+            )
 
-		set_target_properties(ume_mpi_client PROPERTIES
-			COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
-			COMPILE_OPTIONS "${WARNING_FLAGS}"
-			)
-	elseif(USE_CALIPER)
-		message(STATUS "Building Baseline Ume MPI with Caliper Profiling")
-		add_executable(ume_mpi ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
-		target_include_directories(ume_mpi PUBLIC ${caliper_INCLUDE_DIR})
-		target_compile_definitions(ume_mpi PUBLIC USE_CALI)
+    set_target_properties(ume_mpi_client PROPERTIES
+            COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
+	    COMPILE_OPTIONS "${WARNING_FLAGS}"
+            )
 
-		if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-			target_link_libraries(ume_mpi Ume pthread caliper)
-			target_link_libraries(ume_mpi UmeClient pthread caliper)
-		else()
-			target_link_libraries(ume_mpi Ume pthread rt caliper)
-		endif()
+  elseif(USE_CALIPER)
+    message(STATUS "Building Baseline Ume MPI with Caliper Profiling")
+    add_executable(ume_mpi ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
+    target_include_directories(ume_mpi PUBLIC ${caliper_INCLUDE_DIR})
+    target_compile_definitions(ume_mpi PUBLIC USE_CALI)
 
-		set_target_properties(ume_mpi PROPERTIES
-			COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
-			COMPILE_OPTIONS "${WARNING_FLAGS}"
-			)
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+      target_link_libraries(ume_mpi Ume pthread caliper)
+      target_link_libraries(ume_mpi UmeClient pthread caliper)
+    else()
+      target_link_libraries(ume_mpi Ume pthread rt caliper)
+    endif()
 
-	elseif(Scoria_REQUIRE_CLIENTS)
-		message(STATUS "Building Ume MPI with Scoria")
+    set_target_properties(ume_mpi PROPERTIES
+            COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
+            COMPILE_OPTIONS "${WARNING_FLAGS}"
+            )
 
-		add_executable(ume_mpi ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
-		target_compile_definitions(ume_mpi PUBLIC USE_SCORIA)
+  elseif(Scoria_REQUIRE_CLIENTS)
+    message(STATUS "Building Ume MPI with Scoria")
 
-		add_executable(ume_mpi_client ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
-		target_compile_definitions(ume_mpi_client PUBLIC USE_SCORIA USE_CLIENT)
+    add_executable(ume_mpi ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
+    target_compile_definitions(ume_mpi PUBLIC USE_SCORIA)
 
-		if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-			target_link_libraries(ume_mpi Ume shm pthread)
-			target_link_libraries(ume_mpi UmeClient shm pthread)
-		else()
-			target_link_libraries(ume_mpi Ume shm pthread rt)
-			target_link_libraries(ume_mpi_client UmeClient shm pthread rt)
-		endif()
+    add_executable(ume_mpi_client ume_mpi.cc shm_allocator.hh ${CLIENT_SOURCE_FILES} ${SHARED_SOURCE_FILES})
+    target_compile_definitions(ume_mpi_client PUBLIC USE_SCORIA USE_CLIENT)
 
-		set_target_properties(ume_mpi PROPERTIES
-			COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
-			COMPILE_OPTIONS "${WARNING_FLAGS}"
-			)
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+      target_link_libraries(ume_mpi Ume shm pthread)
+      target_link_libraries(ume_mpi UmeClient shm pthread)
+    else()
+      target_link_libraries(ume_mpi Ume shm pthread rt)
+      target_link_libraries(ume_mpi_client UmeClient shm pthread rt)
+    endif()
 
-		set_target_properties(ume_mpi_client PROPERTIES
-			COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
-			COMPILE_OPTIONS "${WARNING_FLAGS}"
-			)
+    set_target_properties(ume_mpi PROPERTIES
+            COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
+            COMPILE_OPTIONS "${WARNING_FLAGS}"
+            )
+
+    set_target_properties(ume_mpi_client PROPERTIES
+            COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
+            COMPILE_OPTIONS "${WARNING_FLAGS}"
+            )
+	    
   else()
     add_executable(ume_mpi ume_mpi.cc shm_allocator.hh)
     target_link_libraries(ume_mpi Ume)
