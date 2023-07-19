@@ -35,7 +35,7 @@ set(UME_INCLUDE_FILES
   )
 
 if (Scoria_REQUIRE_CLIENTS)
-add_library(Ume
+  add_library(Ume
     ${UME_INCLUDE_FILES}
     ${CLIENT_SOURCE_FILES}
     ${SHARED_SOURCE_FILES}
@@ -55,7 +55,7 @@ add_library(Ume
     gradient.cc
     utils.cc
     )
-add_library(UmeClient
+  add_library(UmeClient
     ${UME_INCLUDE_FILES}
     ${CLIENT_SOURCE_FILES}
     ${SHARED_SOURCE_FILES}
