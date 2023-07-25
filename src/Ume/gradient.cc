@@ -514,8 +514,9 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   int const num_local_points = mesh.points.local_size();
 
 #ifdef USE_SCORIA
-  const UmeVector<size_t> mp_to_c_map();
-  const UmeVector<size_t> mp_to_c_count(num_local_points + 1);  
+  std::cout << "gradzatp_invert USE_SCORIA" << std::endl;
+  UmeVector<size_t> mp_to_c_map;
+  UmeVector<size_t> mp_to_c_count(num_local_points + 1);  
 
   int corner_count = 0;
   mp_to_c_count[0] = 0;
@@ -599,7 +600,7 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #endif
 
   for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
-    for (int c = mp_to_c_count[point_idx]; c < mp_to_c_count[point_idx + 1]; ++c) {
+    for (size_t c = mp_to_c_count[point_idx]; c < mp_to_c_count[point_idx + 1]; ++c) {
       point_volume[point_idx] += packed_cv[c];
 
       point_gradient_x[point_idx] += packed_csurf_x[c] * packed_zf[c];
@@ -666,13 +667,13 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
 
 #ifdef USE_SCORIA
-  const UmeVector<size_t> mz_to_c_map();
-  const UmeVector<size_t> mz_to_c_count(num_local_zones + 1);  
+  UmeVector<size_t> mz_to_c_map;
+  UmeVector<size_t> mz_to_c_count(num_local_zones + 1);  
 
   int corner_count = 0;
   mz_to_c_count[0] = 0;
   for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
-    for (int const &corner_idx : z_to_c_map[zone_idx]) {
+    for (int corner_idx : z_to_c_map[zone_idx]) {
       mz_to_c_map.push_back(corner_idx);
       corner_count++;
     }
@@ -748,11 +749,11 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       continue;
 
     double zone_volume{0.0};
-    for (int c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1]; ++c) {
+    for (size_t c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1]; ++c) {
       zone_volume += packed_cv[c];
     }
 
-    for (int c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1]; ++c) {
+    for (size_t c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1]; ++c) {
       double const c_z_vol_ratio = packed_cv[c] / zone_volume;
       zone_gradient_x[zone_idx] += packed_pg_x[c] * c_z_vol_ratio;
       zone_gradient_y[zone_idx] += packed_pg_y[c] * c_z_vol_ratio;
