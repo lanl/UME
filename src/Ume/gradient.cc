@@ -514,7 +514,6 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   int const num_local_points = mesh.points.local_size();
 
 #ifdef USE_SCORIA
-  std::cout << "gradzatp_invert USE_SCORIA" << std::endl;
   UmeVector<size_t> mp_to_c_map;
   UmeVector<size_t> mp_to_c_count(num_local_points + 1);  
 
@@ -690,6 +689,8 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   gradzatp_invert(mesh, zone_field, point_gradient);
 #endif
 
+  zone_gradient.assign(mesh.zones.size(), VEC3_T(0.0));
+
 #ifdef USE_SCORIA
   int num_threads = 22;
 
@@ -767,7 +768,6 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     zone_gradient[i][2] = zone_gradient_z[i];
   }
 #else 
-  zone_gradient.assign(mesh.zones.size(), VEC3_T(0.0));
   for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
     if (zone_type[zone_idx] < 1)
       continue; // Only operate on local interior zones
