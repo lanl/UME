@@ -510,17 +510,110 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto const &c_to_z_map = mesh.ds->caccess_intv("m:c>z");
   auto const &point_type = mesh.points.mask;
 
-#ifdef USE_SCORIA
-//  const UmeVector<size_t> mp_to_c_map(begin(p_to_c_map), end(p_to_c_map));
-  const UmeVector<size_t> mc_to_z_map(begin(c_to_z_map), end(c_to_z_map));
-#endif
-
   int const num_points = mesh.points.size();
   int const num_local_points = mesh.points.local_size();
+
+#ifdef USE_SCORIA
+  const UmeVector<size_t> mp_to_c_map();
+  const UmeVector<size_t> mp_to_c_count(num_local_points + 1);  
+
+  int corner_count = 0;
+  mp_to_c_count[0] = 0;
+  for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
+    for (int const &corner_idx : p_to_c_map[point_idx]) {
+      mp_to_c_map.push_back(corner_idx);
+      corner_count++;
+    }
+    mp_to_c_count[point_idx + 1] = corner_count;
+  }
+  
+  const UmeVector<size_t> mc_to_z_map(begin(c_to_z_map), end(c_to_z_map));
+#endif
 
   DBLV_T point_volume(num_points, 0.0);
   point_gradient.assign(num_points, VEC3_T(0.0));
 
+#ifdef USE_SCORIA
+  int num_threads = 22;
+
+  DBLV_T packed_cv(corner_count, 0.0);
+  DBLV_T packed_zf(corner_count, 0.0);
+  DBLV_T packed_csurf_x(corner_count, 0.0);
+  DBLV_T packed_csurf_y(corner_count, 0.0);
+  DBLV_T packed_csurf_z(corner_count, 0.0);
+
+  DBLV_T point_gradient_x(point_gradient.size(), 0.0);
+  DBLV_T point_gradient_y(point_gradient.size(), 0.0);
+  DBLV_T point_gradient_z(point_gradient.size(), 0.0);
+
+// Already initialized as all 0.0
+/*
+  for (size_t i = 0; i < point_gradient.size(); ++i) {
+    point_gradient_x[i] = point_gradient[i][0];
+    point_gradient_y[i] = point_gradient[i][1];
+    point_gradient_z[i] = point_gradient[i][2];
+  }
+*/
+
+  DBLV_T csurf_x(csurf.size(), 0.0);
+  DBLV_T csurf_y(csurf.size(), 0.0);
+  DBLV_T csurf_z(csurf.size(), 0.0);
+
+  for (size_t i = 0; i < csurf.size(); ++i) {
+    csurf_x[i] = csurf[i][0];
+    csurf_y[i] = csurf[i][1];
+    csurf_z[i] = csurf[i][2];
+  }
+
+#ifdef USE_CLIENT
+  struct request req1;
+  scoria_read(client, corner_volume.data(), corner_count, packed_cv.data(),
+      mp_to_c_map.data(), NULL, num_threads, NONE, &req1);
+  scoria_wait_request(client, &req1);
+
+  struct request req2;
+  scoria_read(client, zone_field.data(), corner_count, packed_zf.data(),
+      mp_to_c_map.data(), mc_to_z_map.data(), num_threads, NONE, &req2);
+  scoria_wait_request(client, &req2);
+
+  struct request req3;
+  scoria_read(client, csurf_x.data(), corner_count, packed_csurf_x.data(),
+      mp_to_c_map.data(), NULL, num_threads, NONE, &req3);
+  scoria_wait_request(client, &req3);
+
+  struct request req4;
+  scoria_read(client, csurf_y.data(), corner_count, packed_csurf_y.data(),
+      mp_to_c_map.data(), NULL, num_threads, NONE, &req4);
+  scoria_wait_request(client, &req4);
+
+  struct request req5;
+  scoria_read(client, csurf_z.data(), corner_count, packed_csurf_z.data(),
+      mp_to_c_map.data(), NULL, num_threads, NONE, &req5);
+  scoria_wait_request(client, &req5);
+#else
+  read_multi_thread_1(packed_cv.data(), corner_volume.data(), corner_count, mp_to_c_map.data(), num_threads, NONE);
+  read_multi_thread_2(packed_zf.data(), zone_field.data(), corner_count, mp_to_c_map.data(), mc_to_z_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_csurf_x.data(), csurf_x.data(), corner_count, mp_to_c_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_csurf_y.data(), csurf_y.data(), corner_count, mp_to_c_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_csurf_z.data(), csurf_z.data(), corner_count, mp_to_c_map.data(), num_threads, NONE);
+#endif
+
+  for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
+    for (int c = mp_to_c_count[point_idx]; c < mp_to_c_count[point_idx + 1]; ++c) {
+      point_volume[point_idx] += packed_cv[c];
+
+      point_gradient_x[point_idx] += packed_csurf_x[c] * packed_zf[c];
+      point_gradient_y[point_idx] += packed_csurf_y[c] * packed_zf[c];
+      point_gradient_z[point_idx] += packed_csurf_z[c] * packed_zf[c];
+    }
+  }
+
+  for (size_t i = 0; i < point_gradient.size(); ++i) {
+    point_gradient[i][0] = point_gradient_x[i];
+    point_gradient[i][1] = point_gradient_y[i];
+    point_gradient[i][2] = point_gradient_z[i];
+  }
+#else
   for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
     for (int const &corner_idx : p_to_c_map[point_idx]) {
       int const zone_idx = c_to_z_map[corner_idx];
@@ -528,6 +621,7 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       point_gradient[point_idx] += csurf[corner_idx] * zone_field[zone_idx];
     }
   }
+#endif
 
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_volume);
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_gradient);
