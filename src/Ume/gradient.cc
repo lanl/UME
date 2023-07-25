@@ -572,7 +572,19 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
 
 #ifdef USE_SCORIA
-  //const UmeVector<size_t> mz_to_c_map(begin(z_to_c_map), end(z_to_c_map));
+  const UmeVector<size_t> mz_to_c_map();
+  const UmeVector<size_t> mz_to_c_count(num_local_zones + 1);  
+
+  int corner_count = 0;
+  mz_to_c_count[0] = 0;
+  for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
+    for (int const &corner_idx : z_to_c_map[zone_idx]) {
+      mz_to_c_map.push_back(corner_idx);
+      corner_count++;
+    }
+    mz_to_c_count[zone_idx + 1] = corner_count;
+  }
+
   const UmeVector<size_t> mc_to_p_map(begin(c_to_p_map), end(c_to_p_map));
 #endif
 
@@ -583,6 +595,83 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   gradzatp_invert(mesh, zone_field, point_gradient);
 #endif
 
+#ifdef USE_SCORIA
+  int num_threads = 22;
+
+  DBLV_T packed_cv(corner_count, 0.0);
+  DBLV_T packed_pg_x(corner_count, 0.0);
+  DBLV_T packed_pg_y(corner_count, 0.0);
+  DBLV_T packed_pg_z(corner_count, 0.0);
+
+  DBLV_T point_gradient_x(point_gradient.size(), 0.0);
+  DBLV_T point_gradient_y(point_gradient.size(), 0.0);
+  DBLV_T point_gradient_z(point_gradient.size(), 0.0);
+
+  for (size_t i = 0; i < point_gradient.size(); ++i) {
+    point_gradient_x[i] = point_gradient[i][0];
+    point_gradient_y[i] = point_gradient[i][1];
+    point_gradient_z[i] = point_gradient[i][2];
+  }
+
+  DBLV_T zone_gradient_x(zone_gradient.size(), 0.0);
+  DBLV_T zone_gradient_y(zone_gradient.size(), 0.0);
+  DBLV_T zone_gradient_z(zone_gradient.size(), 0.0);
+
+  for (size_t i = 0; i < zone_gradient.size(); ++i) {
+    zone_gradient_x[i] = zone_gradient[i][0];
+    zone_gradient_y[i] = zone_gradient[i][1];
+    zone_gradient_z[i] = zone_gradient[i][2];
+  }
+
+#ifdef USE_CLIENT
+  struct request req1;
+  scoria_read(client, corner_volume.data(), corner_count, packed_cv.data(),
+      mz_to_c_map.data(), NULL, num_threads, NONE, &req1);
+  scoria_wait_request(client, &req1);
+
+  struct request req2;
+  scoria_read(client, point_gradient_x.data(), corner_count, packed_pg_x.data(),
+      mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE, &req2);
+  scoria_wait_request(client, &req2);
+
+  struct request req3;
+  scoria_read(client, point_gradient_y.data(), corner_count, packed_pg_y.data(),
+      mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE, &req2);
+  scoria_wait_request(client, &req3);
+
+  struct request req4;
+  scoria_read(client, point_gradient_z.data(), corner_count, packed_pg_z.data(),
+      mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE, &req2);
+  scoria_wait_request(client, &req4);
+#else
+  read_multi_thread_1(packed_cv.data(), corner_volume.data(), corner_count, mz_to_c_map.data(), num_threads, NONE);
+  read_multi_thread_2(packed_pg_x.data(), point_gradient_x.data(), corner_count, mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE);
+  read_multi_thread_2(packed_pg_y.data(), point_gradient_y.data(), corner_count, mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE);
+  read_multi_thread_2(packed_pg_z.data(), point_gradient_z.data(), corner_count, mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE);
+#endif
+  for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
+    if (zone_type[zone_idx] < 1)
+      continue;
+
+    double zone_volume{0.0};
+    for (int c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1]; ++c) {
+      zone_volume += packed_cv[c];
+    }
+
+    for (int c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1]; ++c) {
+      double const c_z_vol_ratio = packed_cv[c] / zone_volume;
+      zone_gradient_x[zone_idx] += packed_pg_x[c] * c_z_vol_ratio;
+      zone_gradient_y[zone_idx] += packed_pg_y[c] * c_z_vol_ratio;
+      zone_gradient_z[zone_idx] += packed_pg_z[c] * c_z_vol_ratio;
+    }
+  }
+
+  for (size_t i = 0; i < zone_gradient.size(); ++i) {
+    zone_gradient[i][0] = zone_gradient_x[i];
+    zone_gradient[i][1] = zone_gradient_y[i];
+    zone_gradient[i][2] = zone_gradient_z[i];
+  }
+#else 
   zone_gradient.assign(mesh.zones.size(), VEC3_T(0.0));
   for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
     if (zone_type[zone_idx] < 1)
@@ -600,6 +689,7 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       zone_gradient[zone_idx] += point_gradient[point_idx] * c_z_vol_ratio;
     }
   }
+#endif
 
   mesh.zones.scatter(zone_gradient);
 }
