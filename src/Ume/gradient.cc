@@ -23,8 +23,8 @@ extern "C" {
 #endif
 
 #ifdef USE_CALI
-#include <caliper/cali.h>
 #include <caliper/cali-manager.h>
+#include <caliper/cali.h>
 #endif
 
 /*
@@ -121,7 +121,8 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   CALI_MARK_END("Gradzatp_Point_Volume_Scoria_Read");
 #endif
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatp_point_volume_scoria_loop_id, "Gradzatp_Point_Volume_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(
+      gradzatp_point_volume_scoria_loop_id, "Gradzatp_Point_Volume_Loop");
 #endif
   for (int c = 0; c < cl; ++c) {
     if (corner_type[c] < 1)
@@ -187,7 +188,8 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #endif
 #else
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatp_point_volume_base_loop_id, "Gradzatp_Point_Volume_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(
+      gradzatp_point_volume_base_loop_id, "Gradzatp_Point_Volume_Loop");
 #endif
   for (int c = 0; c < cl; ++c) {
     if (corner_type[c] < 1)
@@ -217,7 +219,8 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     of the gradient using the point normals.
    */
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatp_point_gradient_base_loop_id, "Gradzatp_Point_Gradient_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(
+      gradzatp_point_gradient_base_loop_id, "Gradzatp_Point_Gradient_Loop");
 #endif
   for (int p = 0; p < pl; ++p) {
     if (point_type[p] > 0) {
@@ -285,7 +288,8 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #ifdef USE_SCORIA
 
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatz_zone_volume_scoria_loop_id, "Gradzatz_Zone_Volume_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(
+      gradzatz_zone_volume_scoria_loop_id, "Gradzatz_Zone_Volume_Loop");
 #endif
   DBLV_T packed_zv(num_local_corners, 0.0);
 
@@ -316,7 +320,8 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
 #else
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatz_zone_volume_base_loop_id, "Gradzatz_Zone_Volume_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(
+      gradzatz_zone_volume_base_loop_id, "Gradzatz_Zone_Volume_Loop");
 #endif
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
@@ -405,7 +410,8 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #endif
 
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatz_zone_gradient_scoria_loop_id, "Gradzatz_Zone_Gradient_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(
+      gradzatz_zone_gradient_scoria_loop_id, "Gradzatz_Zone_Gradient_Loop");
 #endif
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
@@ -466,7 +472,8 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
 #else
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatz_zone_gradient_base_loop_id, "Gradzatz_Zone_Gradient_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(
+      gradzatz_zone_gradient_base_loop_id, "Gradzatz_Zone_Gradient_Loop");
 #endif
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
@@ -501,7 +508,7 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
 #ifdef USE_CALI
   CALI_CXX_MARK_FUNCTION;
-#endif 
+#endif
 
   auto const &csurf = mesh.ds->caccess_vec3v("corner_csurf");
   auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
@@ -518,7 +525,7 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   CALI_MARK_BEGIN("Gradzatp_Invert_Scoria_Map");
 #endif
   UmeVector<size_t> mp_to_c_map;
-  UmeVector<size_t> mp_to_c_count(num_local_points + 1);  
+  UmeVector<size_t> mp_to_c_count(num_local_points + 1);
 
   int corner_count = 0;
   mp_to_c_count[0] = 0;
@@ -529,7 +536,7 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     }
     mp_to_c_count[point_idx + 1] = corner_count;
   }
-  
+
   const UmeVector<size_t> mc_to_z_map(begin(c_to_z_map), end(c_to_z_map));
 #ifdef USE_CALI
   CALI_MARK_END("Gradzatp_Invert_Scoria_Map");
@@ -556,14 +563,14 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   DBLV_T point_gradient_y(point_gradient.size(), 0.0);
   DBLV_T point_gradient_z(point_gradient.size(), 0.0);
 
-// Already initialized as all 0.0
-/*
-  for (size_t i = 0; i < point_gradient.size(); ++i) {
-    point_gradient_x[i] = point_gradient[i][0];
-    point_gradient_y[i] = point_gradient[i][1];
-    point_gradient_z[i] = point_gradient[i][2];
-  }
-*/
+  // Already initialized as all 0.0
+  /*
+    for (size_t i = 0; i < point_gradient.size(); ++i) {
+      point_gradient_x[i] = point_gradient[i][0];
+      point_gradient_y[i] = point_gradient[i][1];
+      point_gradient_z[i] = point_gradient[i][2];
+    }
+  */
 
   DBLV_T csurf_x(csurf.size(), 0.0);
   DBLV_T csurf_y(csurf.size(), 0.0);
@@ -607,21 +614,28 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       mp_to_c_map.data(), NULL, num_threads, NONE, &req5);
   scoria_wait_request(client, &req5);
 #else
-  read_multi_thread_1(packed_cv.data(), corner_volume.data(), corner_count, mp_to_c_map.data(), num_threads, NONE);
-  read_multi_thread_2(packed_zf.data(), zone_field.data(), corner_count, mp_to_c_map.data(), mc_to_z_map.data(), num_threads, NONE);
-  read_multi_thread_1(packed_csurf_x.data(), csurf_x.data(), corner_count, mp_to_c_map.data(), num_threads, NONE);
-  read_multi_thread_1(packed_csurf_y.data(), csurf_y.data(), corner_count, mp_to_c_map.data(), num_threads, NONE);
-  read_multi_thread_1(packed_csurf_z.data(), csurf_z.data(), corner_count, mp_to_c_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_cv.data(), corner_volume.data(), corner_count,
+      mp_to_c_map.data(), num_threads, NONE);
+  read_multi_thread_2(packed_zf.data(), zone_field.data(), corner_count,
+      mp_to_c_map.data(), mc_to_z_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_csurf_x.data(), csurf_x.data(), corner_count,
+      mp_to_c_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_csurf_y.data(), csurf_y.data(), corner_count,
+      mp_to_c_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_csurf_z.data(), csurf_z.data(), corner_count,
+      mp_to_c_map.data(), num_threads, NONE);
 #endif
 #ifdef USE_CALI
   CALI_MARK_END("Gradzatp_Invert_Point_Volume_Scoria_Read");
 #endif
 
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatp_invert_point_volume_scoria_loop_id, "Gradzatp_Invert_Point_Volume_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(gradzatp_invert_point_volume_scoria_loop_id,
+      "Gradzatp_Invert_Point_Volume_Loop");
 #endif
   for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
-    for (size_t c = mp_to_c_count[point_idx]; c < mp_to_c_count[point_idx + 1]; ++c) {
+    for (size_t c = mp_to_c_count[point_idx]; c < mp_to_c_count[point_idx + 1];
+         ++c) {
       point_volume[point_idx] += packed_cv[c];
 
       point_gradient_x[point_idx] += packed_csurf_x[c] * packed_zf[c];
@@ -646,7 +660,8 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #endif
 #else
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatp_invert_point_volume_base_loop_id, "Gradzatp_Invert_Point_Volume_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(gradzatp_invert_point_volume_base_loop_id,
+      "Gradzatp_Invert_Point_Volume_Loop");
 #endif
   for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
     for (int const &corner_idx : p_to_c_map[point_idx]) {
@@ -675,7 +690,8 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     of the gradient using the point normals.
    */
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatp_invert_point_gradient_base_loop_id, "Gradzatp_Invert_Point_Gradient_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(gradzatp_invert_point_gradient_base_loop_id,
+      "Gradzatp_Invert_Point_Gradient_Loop");
 #endif
   for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
     if (point_type[point_idx] > 0) {
@@ -714,7 +730,7 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #ifdef USE_CALI
   CALI_CXX_MARK_FUNCTION;
 #endif
-  
+
   auto const &z_to_c_map = mesh.ds->caccess_intrr("m:z>c");
   auto const &c_to_p_map = mesh.ds->caccess_intv("m:c>p");
   int const num_local_zones = mesh.zones.local_size();
@@ -726,7 +742,7 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   CALI_MARK_BEGIN("Gradzatz_Invert_Scoria_Map");
 #endif
   UmeVector<size_t> mz_to_c_map;
-  UmeVector<size_t> mz_to_c_count(num_local_zones + 1);  
+  UmeVector<size_t> mz_to_c_count(num_local_zones + 1);
 
   int corner_count = 0;
   mz_to_c_count[0] = 0;
@@ -812,28 +828,35 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE, &req2);
   scoria_wait_request(client, &req4);
 #else
-  read_multi_thread_1(packed_cv.data(), corner_volume.data(), corner_count, mz_to_c_map.data(), num_threads, NONE);
-  read_multi_thread_2(packed_pg_x.data(), point_gradient_x.data(), corner_count, mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE);
-  read_multi_thread_2(packed_pg_y.data(), point_gradient_y.data(), corner_count, mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE);
-  read_multi_thread_2(packed_pg_z.data(), point_gradient_z.data(), corner_count, mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE);
+  read_multi_thread_1(packed_cv.data(), corner_volume.data(), corner_count,
+      mz_to_c_map.data(), num_threads, NONE);
+  read_multi_thread_2(packed_pg_x.data(), point_gradient_x.data(), corner_count,
+      mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE);
+  read_multi_thread_2(packed_pg_y.data(), point_gradient_y.data(), corner_count,
+      mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE);
+  read_multi_thread_2(packed_pg_z.data(), point_gradient_z.data(), corner_count,
+      mz_to_c_map.data(), mc_to_p_map.data(), num_threads, NONE);
 #endif
 #ifdef USE_CALI
   CALI_MARK_END("Gradzatz_Invert_Zone_Gradient_Scoria_Read");
 #endif
 
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatz_invert_zone_gradient_scoria_loop_id, "Gradzatz_Invert_Zone_Gradient_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(gradzatz_invert_zone_gradient_scoria_loop_id,
+      "Gradzatz_Invert_Zone_Gradient_Loop");
 #endif
   for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
     if (zone_type[zone_idx] < 1)
       continue;
 
     double zone_volume{0.0};
-    for (size_t c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1]; ++c) {
+    for (size_t c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1];
+         ++c) {
       zone_volume += packed_cv[c];
     }
 
-    for (size_t c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1]; ++c) {
+    for (size_t c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1];
+         ++c) {
       double const c_z_vol_ratio = packed_cv[c] / zone_volume;
       zone_gradient_x[zone_idx] += packed_pg_x[c] * c_z_vol_ratio;
       zone_gradient_y[zone_idx] += packed_pg_y[c] * c_z_vol_ratio;
@@ -855,9 +878,10 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #ifdef USE_CALI
   CALI_MARK_END("Gradzatz_Invert_Zone_Gradient_Scoria_Unpack");
 #endif
-#else 
+#else
 #ifdef USE_CALI
-  CALI_CXX_MARK_LOOP_BEGIN(gradzatz_invert_zone_gradient_base_loop_id, "Gradzatz_Invert_Zone_Gradient_Loop");
+  CALI_CXX_MARK_LOOP_BEGIN(gradzatz_invert_zone_gradient_base_loop_id,
+      "Gradzatz_Invert_Zone_Gradient_Loop");
 #endif
   for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
     if (zone_type[zone_idx] < 1)
