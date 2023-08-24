@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Double check that the gradients are non-zero where we expect
-#ifndef USE_SCORIA
+#ifndef USE_CLIENT
   if (comm.pe() == 0) {
     std::cout << "Checking result..." << std::endl;
   }
