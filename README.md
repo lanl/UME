@@ -56,6 +56,10 @@ flag. Package-specific CMake options for UME include:
 * `USE_OPENACC=YES` will enable OpenACC support, and requires the
   C++ compiler to support it (UME does not currently use OpenACC).
 
+If `USE_KOKKOS=YES`, the test program `src/kokkos_hello.cc` will be
+compiled to test that the Kokkos package is installed. Similarly,
+`USE_OPENACC=YES` will activate the test program
+`src/openacc_hello.cc`.
 
 ### Generated Executables
 
@@ -77,6 +81,21 @@ Where there is expected to be a set of files named as if generated
 with `sprintf(filename, '%s.%05d.ume', prefix, rank)` for 0 <= rank <
 n. 
 
+## Current State of Implementation
+
+In the current state of implementation, UME offers a
+structure-of-arrays (SOA) mesh representation, using array indices as
+the references to other objects.
+
+For studying memory access patterns, please look at the
+`src/ume_mpi.cc` application, particularly the call to
+`Ume::gradzatz`, which is defined in `src/Ume/gradient.cc`.  This
+function is called very frequently in an unstructured mesh
+calculation. It computes the gradient of a zone-centered field at the
+zone-centers. As an intermediate step, it also calculates the field
+gradient at mesh points (`Ume::gradzatp`, also in the same
+file). These implementations feature multi-level indirection, which
+often challenges memory systems.
 
 ## Project Name
 
