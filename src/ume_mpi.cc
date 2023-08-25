@@ -51,6 +51,13 @@ int main(int argc, char *argv[]) {
   Ume::Comm::MPI comm(&argc, &argv);
   mesh.comm = &comm; // Attach the communicator to the mesh
 
+  if (argc != 2) {
+    std::cerr << "usage: ume_mpi <basename>\n"
+              << "\twill read data from files named \"<basename>.<pe>.ume\""
+              << std::endl;
+    return 1;
+  }
+
   if (comm.pe() == 0)
     std::cout << "Initializing mesh..." << std::endl;
   /* Read the data file */
