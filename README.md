@@ -35,11 +35,13 @@ spack:
     - doxygen
     - git
     - graphviz
-    - kokkos+openmp std=20
+    - kokkos+openmp cxxstd=20
     - openmpi
   packages:
     catch2:
       require: '@3:'
+	kokkos:
+	  require: `@4:`
 ```
 
 ### CMake Configuration Options
