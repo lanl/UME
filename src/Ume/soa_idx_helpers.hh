@@ -19,7 +19,7 @@
 #ifndef UME_SOA_IDX_HELPERS_HH
 #define UME_SOA_IDX_HELPERS_HH 1
 
-#define TRACE_INIT 0
+#define TRACE_INIT 1
 
 #include "Ume/utils.hh"
 #include <cassert>

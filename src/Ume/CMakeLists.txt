@@ -26,6 +26,7 @@ set(UME_INCLUDE_FILES
   SOA_Idx_Points.hh
   SOA_Idx_Sides.hh
   SOA_Idx_Zones.hh
+  SOA_Idx_shuffle.hh
   Timer.hh
   VecN.hh
   gradient.hh

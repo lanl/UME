@@ -73,6 +73,11 @@ protected:
     init_state_ = Init_State::INITIALIZED;
     return false;
   }
+  //! Release data and become uninitialized
+  virtual bool release_() const {
+    init_state_ = Init_State::UNINITIALIZED;
+    return false;
+  }
 };
 
 //! A hierarchical key-value data storage class
@@ -147,6 +152,10 @@ public:
   MAKE_ACCESS(vec3rr, VEC3RR_T);
 
 #undef MAKE_ACCESS
+
+  inline void release(char const *const name) {
+    find_or_die(name)->release_();
+  }
 
   //! Recursively delete this tree and its children.
   ~Datastore();

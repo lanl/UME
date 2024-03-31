@@ -50,6 +50,10 @@ struct DS_Types {
   using VEC3RR_T = RaggedRight<VEC3_T>; //!< RaggedRight<Vec3> type
 };
 
+template <typename T>
+concept is_field_type = std::is_same_v<T, DS_Types::INTV_T> ||
+    std::is_same_v<T, DS_Types::DBLV_T> || std::is_same_v<T, DS_Types::VEC3V_T>;
+
 //! A way of providing type information
 /*! There is a template specialization provided below for each of the DS_Types
  */

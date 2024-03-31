@@ -17,6 +17,7 @@
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/SOA_Idx_shuffle.hh"
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -29,6 +30,11 @@ int main(int argc, char *argv[]) {
   std::vector<Mesh> ranks{read_meshes(argc, argv)};
   if (ranks.empty())
     return 1;
+
+  unsigned int rand_seed = std::random_device{}();
+  std::cout << "rand_seed = " << rand_seed << std::endl;
+  std::mt19937 rng{rand_seed};
+  shuffle_corners(ranks[0], 0.5, rng);
 
   Ume::Comm::Dummy_Transport comm;
   ranks[0].comm = &comm;

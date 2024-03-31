@@ -31,6 +31,8 @@ struct Mesh;
 
 //! Record information common to all SOA_Idx::Mesh entities
 struct Entity {
+  using mask_array = std::vector<short>;
+
   Entity() = delete;
   explicit Entity(Mesh *mesh) : mesh_{mesh} {}
   enum CommTypes {
@@ -41,7 +43,7 @@ struct Entity {
   };
 
   //! Mask flag
-  std::vector<short> mask;
+  mask_array mask;
 
   //! The communication type for this entity
   std::vector<int> comm_type;
