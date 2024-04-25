@@ -34,6 +34,43 @@
 #include <map>
 #include <vector>
 
+void process_mem_usage(double& vm_usage, double& resident_set)
+{
+   using std::ios_base;
+   using std::ifstream;
+   using std::string;
+
+   vm_usage     = 0.0;
+   resident_set = 0.0;
+
+   // 'file' stat seems to give the most reliable results
+   //
+   ifstream stat_stream("/proc/self/stat",ios_base::in);
+
+   // dummy vars for leading entries in stat that we don't care about
+   //
+   string pid, comm, state, ppid, pgrp, session, tty_nr;
+   string tpgid, flags, minflt, cminflt, majflt, cmajflt;
+   string utime, stime, cutime, cstime, priority, nice;
+   string O, itrealvalue, starttime;
+
+   // the two fields we want
+   //
+   unsigned long vsize;
+   long rss;
+
+   stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
+               >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
+               >> utime >> stime >> cutime >> cstime >> priority >> nice
+               >> O >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
+
+   stat_stream.close();
+
+   long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
+   vm_usage     = vsize / 1024.0;
+   resident_set = rss * page_size_kb;
+}
+
 bool read_mesh(
     char const *const basename, int const mype, Ume::SOA_Idx::Mesh &mesh);
 bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh);
@@ -91,16 +128,20 @@ int main(int argc, char *argv[]) {
 
   VEC3V_T pgrad, zgrad;
   Ume::Timer orig_time;
-  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+  Ume::gradzatz(mesh, zfield, zgrad, pgrad, 0);
   orig_time.start();
-  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+  Ume::gradzatz(mesh, zfield, zgrad, pgrad, 1);
   orig_time.stop();
+
+  double vm, rss;
+  process_mem_usage(vm, rss);
+  std::cout << "VM: " << vm << "; RSS: " << rss << std::endl;
 
   VEC3V_T pgrad_invert, zgrad_invert;
   Ume::Timer invert_time;
-  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert, 0);
   invert_time.start();
-  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert, 1);
   invert_time.stop();
 
   // Double check that the gradients are non-zero where we expect

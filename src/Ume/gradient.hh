@@ -26,7 +26,7 @@ namespace Ume {
   volume.
 */
 void gradzatp(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
-    DS_Types::VEC3V_T &point_gradient);
+    DS_Types::VEC3V_T &point_gradient, int cali_record);
 
 //! Calculate the gradient of a zone-centered field at the zone centers.
 /*!
@@ -35,7 +35,7 @@ void gradzatp(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
   gradient.
  */
 void gradzatz(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
-    DS_Types::VEC3V_T &zone_gradient, DS_Types::VEC3V_T &point_gradient);
+    DS_Types::VEC3V_T &zone_gradient, DS_Types::VEC3V_T &point_gradient, int cali_record);
 
 //! Calculate the gradient of a zone-centered field at mesh points.
 /*!
@@ -44,7 +44,7 @@ void gradzatz(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
   volume. This version uses a thread-safe connectivity.
 */
 void gradzatp_invert(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
-    DS_Types::VEC3V_T &point_gradient);
+    DS_Types::VEC3V_T &point_gradient, int cali_record);
 
 //! Calculate the gradient of a zone-centered field at the zone centers.
 /*!
@@ -53,7 +53,7 @@ void gradzatp_invert(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
   gradient. This version uses a thread-safe connectivity.
  */
 void gradzatz_invert(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
-    DS_Types::VEC3V_T &zone_gradient, DS_Types::VEC3V_T &point_gradient);
+    DS_Types::VEC3V_T &zone_gradient, DS_Types::VEC3V_T &point_gradient, int cali_record);
 
 } // namespace Ume
 

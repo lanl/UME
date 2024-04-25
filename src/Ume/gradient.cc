@@ -12,6 +12,12 @@
 /*!
   \file Ume/gradient.cc
 */
+
+#ifdef USE_CALI
+#include <caliper/cali-manager.h>
+#include <caliper/cali.h>
+#endif
+
 #include "Ume/gradient.hh"
 
 namespace Ume {
@@ -21,7 +27,7 @@ using VEC3V_T = DS_Types::VEC3V_T;
 using VEC3_T = DS_Types::VEC3_T;
 
 void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
-    VEC3V_T &point_gradient) {
+    VEC3V_T &point_gradient, int cali_record) {
   auto const &csurf = mesh.ds->caccess_vec3v("corner_csurf");
   auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
   auto const &point_normal = mesh.ds->caccess_vec3v("point_norm");
@@ -37,6 +43,10 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   DBLV_T point_volume(pll, 0.0);
   point_gradient.assign(pll, VEC3_T(0.0));
 
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_BEGIN("Gradzatp_Point_Volume_Loop");
+#endif
   for (int c = 0; c < cl; ++c) {
     if (corner_type[c] < 1)
       continue; // Only operate on interior corners
@@ -45,6 +55,10 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     point_volume[p] += corner_volume[c];
     point_gradient[p] += csurf[c] * zone_field[z];
   }
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_END("Gradzatp_Point_Volume_Loop");
+#endif  
 
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_volume);
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_gradient);
@@ -54,6 +68,10 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     perimeter of the mesh (POINT_TYPE=-1), subtract the outward normal component
     of the gradient using the point normals.
    */
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_BEGIN("Gradzatp_Point_Gradient_Loop");
+#endif  
   for (int p = 0; p < pl; ++p) {
     if (point_type[p] > 0) {
       // Internal point
@@ -65,11 +83,15 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
           (point_gradient[p] - point_normal[p] * ppdot) / point_volume[p];
     }
   }
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_END("Gradzatp_Point_Gradient_Loop");
+#endif  
   mesh.points.scatter(point_gradient);
 }
 
 void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
-    VEC3V_T &zone_gradient, VEC3V_T &point_gradient) {
+    VEC3V_T &zone_gradient, VEC3V_T &point_gradient, int cali_record) {
   auto const &c_to_z_map = mesh.ds->caccess_intv("m:c>z");
   auto const &c_to_p_map = mesh.ds->caccess_intv("m:c>p");
   int const num_local_corners = mesh.corners.local_size();
@@ -77,11 +99,15 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
 
   // Get the field gradient at each mesh point.
-  gradzatp(mesh, zone_field, point_gradient);
+  gradzatp(mesh, zone_field, point_gradient, cali_record);
 
   /* Accumulate the zone volume.  Note that we need to allocate a zone field for
      volume, as we are accumulating from corners */
   DBLV_T zone_volume(mesh.zones.size(), 0.0);
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_BEGIN("Gradzatp_Zone_Volume_Loop");
+#endif  
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
       continue; // Only operate on interior corners
@@ -90,9 +116,17 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
        write to the same zone. */
     zone_volume[zone_idx] += corner_volume[corner_idx];
   }
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_END("Gradzatp_Zone_Volume_Loop");
+#endif  
 
   // Accumulate the zone-centered gradient
   zone_gradient.assign(mesh.zones.size(), VEC3_T(0.0));
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_BEGIN("Gradzatp_Zone_Gradient_Loop");
+#endif  
   for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
     if (corner_type[corner_idx] < 1)
       continue; // Only operate on interior corners
@@ -102,12 +136,15 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
         corner_volume[corner_idx] / zone_volume[zone_idx];
     zone_gradient[zone_idx] += point_gradient[point_idx] * c_z_vol_ratio;
   }
-
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_END("Gradzatp_Zone_Gradient_Loop");
+#endif  
   mesh.zones.scatter(zone_gradient);
 }
 
 void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
-    VEC3V_T &point_gradient) {
+    VEC3V_T &point_gradient, int cali_record) {
   auto const &csurf = mesh.ds->caccess_vec3v("corner_csurf");
   auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
   auto const &point_normal = mesh.ds->caccess_vec3v("point_norm");
@@ -121,6 +158,10 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   DBLV_T point_volume(num_points, 0.0);
   point_gradient.assign(num_points, VEC3_T(0.0));
 
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_BEGIN("Gradzatp_Invert_Point_Volume_Loop");
+#endif  
   for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
     for (int const &corner_idx : p_to_c_map[point_idx]) {
       int const zone_idx = c_to_z_map[corner_idx];
@@ -128,6 +169,10 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       point_gradient[point_idx] += csurf[corner_idx] * zone_field[zone_idx];
     }
   }
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_END("Gradzatp_Invert_Point_Volume_Loop");
+#endif  
 
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_volume);
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_gradient);
@@ -137,6 +182,10 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     perimeter of the mesh (POINT_TYPE=-1), subtract the outward normal component
     of the gradient using the point normals.
    */
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_BEGIN("Gradzatp_Invert_Point_Gradient_Loop");
+#endif  
   for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
     if (point_type[point_idx] > 0) {
       // Internal point
@@ -150,11 +199,15 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
           point_volume[point_idx];
     }
   }
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_END("Gradzatp_Invert_Point_Gradient_Loop");
+#endif  
   mesh.points.scatter(point_gradient);
 }
 
 void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
-    VEC3V_T &zone_gradient, VEC3V_T &point_gradient) {
+    VEC3V_T &zone_gradient, VEC3V_T &point_gradient, int cali_record) {
   auto const &z_to_c_map = mesh.ds->caccess_intrr("m:z>c");
   auto const &c_to_p_map = mesh.ds->caccess_intv("m:c>p");
   int const num_local_zones = mesh.zones.local_size();
@@ -162,9 +215,13 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto const &corner_volume = mesh.ds->caccess_dblv("corner_vol");
 
   // Get the field gradient at each mesh point.
-  gradzatp_invert(mesh, zone_field, point_gradient);
+  gradzatp_invert(mesh, zone_field, point_gradient, cali_record);
 
   zone_gradient.assign(mesh.zones.size(), VEC3_T(0.0));
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_BEGIN("Gradzatz_Invert_Zone_Gradient_Loop");
+#endif  
   for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
     if (zone_type[zone_idx] < 1)
       continue; // Only operate on local interior zones
@@ -181,7 +238,10 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       zone_gradient[zone_idx] += point_gradient[point_idx] * c_z_vol_ratio;
     }
   }
-
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_END("Gradzatz_Invert_Zone_Gradient_Loop");
+#endif  
   mesh.zones.scatter(zone_gradient);
 }
 
