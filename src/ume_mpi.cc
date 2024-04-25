@@ -24,6 +24,7 @@
 
 #include "Ume/Comm_MPI.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/SOA_Idx_shuffle.hh"
 #include "Ume/Timer.hh"
 #include "Ume/gradient.hh"
 #include "Ume/utils.hh"
@@ -32,6 +33,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <mpi.h>
 #include <vector>
 
 bool read_mesh(
@@ -66,6 +68,10 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  unsigned int rand_seed = std::random_device{}();
+  std::mt19937 rng{rand_seed};
+  Ume::SOA_Idx::shuffle_corners(mesh, 0.5, rng);
+
   /* This allows us to attach a debugger to a single rank specified in the
      UME_DEBUG_RANK environment variable. */
   Ume::debug_attach_point(comm.pe());
@@ -96,19 +102,31 @@ int main(int argc, char *argv[]) {
   if (comm.pe() == 0)
     std::cout << "Calculating gradient..." << std::endl;
 
+  MPI_Barrier(MPI_COMM_WORLD);
+
   VEC3V_T pgrad, zgrad;
   Ume::Timer orig_time;
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
   orig_time.start();
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
   orig_time.stop();
 
+  MPI_Barrier(MPI_COMM_WORLD);
+
   VEC3V_T pgrad_invert, zgrad_invert;
   Ume::Timer invert_time;
   Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
   invert_time.start();
   Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
   invert_time.stop();
+
+  MPI_Barrier(MPI_COMM_WORLD);
 
   // Double check that the gradients are non-zero where we expect
   if (comm.pe() == 0) {
