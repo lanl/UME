@@ -30,6 +30,7 @@
 #include "Ume/utils.hh"
 #include <cassert>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -53,8 +54,8 @@ int main(int argc, char *argv[]) {
   Ume::Comm::MPI comm(&argc, &argv);
   mesh.comm = &comm; // Attach the communicator to the mesh
 
-  if (argc != 2) {
-    std::cerr << "usage: ume_mpi <basename>\n"
+  if (argc != 3) {
+    std::cerr << "usage: ume_mpi <basename> <shuffle>\n"
               << "\twill read data from files named \"<basename>.<pe>.ume\""
               << std::endl;
     return 1;
@@ -68,9 +69,15 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  unsigned int rand_seed = std::random_device{}();
-  std::mt19937 rng{rand_seed};
-  Ume::SOA_Idx::shuffle_corners(mesh, 0.5, rng);
+  int shuffle = atoi(argv[2]);
+  if (shuffle) {
+    if (comm.pe() == 0)
+      std::cout << "Shuffling corners..." << std::endl;
+
+    unsigned int rand_seed = std::random_device{}();
+    std::mt19937 rng{rand_seed};
+    Ume::SOA_Idx::shuffle_corners(mesh, 0.5, rng);
+  }
 
   /* This allows us to attach a debugger to a single rank specified in the
      UME_DEBUG_RANK environment variable. */
@@ -106,24 +113,35 @@ int main(int argc, char *argv[]) {
 
   VEC3V_T pgrad, zgrad;
   Ume::Timer orig_time;
-  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+  Ume::gradzatz(mesh, zfield, zgrad, pgrad, 0);
+
+  if (comm.pe() == 0)
+    std::cout << "Calculating gradient..." << std::endl;
 
   MPI_Barrier(MPI_COMM_WORLD);
 
   orig_time.start();
-  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+  Ume::gradzatz(mesh, zfield, zgrad, pgrad, 1);
   orig_time.stop();
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if (comm.pe() == 0)
+    std::cout << "Calculating inverted gradient..." << std::endl;
 
   MPI_Barrier(MPI_COMM_WORLD);
 
   VEC3V_T pgrad_invert, zgrad_invert;
   Ume::Timer invert_time;
-  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert, 0);
+
+  if (comm.pe() == 0)
+    std::cout << "Calculating inverted gradient..." << std::endl;
 
   MPI_Barrier(MPI_COMM_WORLD);
 
   invert_time.start();
-  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert, 1);
   invert_time.stop();
 
   MPI_Barrier(MPI_COMM_WORLD);

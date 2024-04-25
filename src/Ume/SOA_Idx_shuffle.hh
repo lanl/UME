@@ -68,8 +68,7 @@ std::vector<int> shuffle_indices(
 }
 
 template <class FT>
-void shuffle_field(FT &field,
-    std::vector<int> const &old_new_map) requires
+void shuffle_field(FT &field, std::vector<int> const &old_new_map) requires
     is_field_type<FT> || std::is_same_v<FT, typename Entity::mask_array> {
   assert(old_new_map.size() == field.size());
   FT new_data(field.size());
@@ -79,34 +78,32 @@ void shuffle_field(FT &field,
   field.swap(new_data);
 }
 
-template <class Cont> constexpr
-void remap(Cont& cont, std::vector<int> const &old_new_map) {
+template <class Cont>
+constexpr void remap(Cont &cont, std::vector<int> const &old_new_map) {
   std::transform(cont.begin(), cont.end(), cont.begin(),
-                 [&](int old) { return old_new_map[old]; });
+      [&](int old) { return old_new_map[old]; });
 }
 
 template <class RNG>
 void shuffle_corners(Mesh &mesh, float const move_fraction, RNG &rng) {
   int const num_local = mesh.corners.local_size();
-  std::cout << "Making old_new_map" << std::endl;
-  std::vector<int> old_new_map{shuffle_indices(mesh.corners.size(),
-                                               num_local, move_fraction, rng)};
+
+  std::vector<int> old_new_map{
+      shuffle_indices(mesh.corners.size(), num_local, move_fraction, rng)};
   assert(static_cast<int>(old_new_map.size()) == mesh.corners.size());
-  std::cout << "Shuffle_field mask" << std::endl;
+
   shuffle_field(mesh.corners.mask, old_new_map);
-  std::cout << "Shuffle_field c>z" << std::endl;
   shuffle_field(mesh.ds->access_intv("m:c>z"), old_new_map);
-  std::cout << "Shuffle_field c>p" << std::endl;
   shuffle_field(mesh.ds->access_intv("m:c>p"), old_new_map);
-  std::cout << "Remap" << std::endl;
+
   remap(mesh.ds->access_intv("m:s>c1"), old_new_map);
   remap(mesh.ds->access_intv("m:s>c2"), old_new_map);
-  std::cout << "Release" << std::endl;
+
   mesh.ds->release("corner_vol");
   mesh.ds->release("corner_csurf");
   mesh.ds->release("m:c>ss");
-  std::cout << "caccess" << std::endl;
-  auto const & cv =  mesh.ds->caccess_dblv("corner_vol");
+
+  auto const &cv = mesh.ds->caccess_dblv("corner_vol");
 }
 
 } // namespace SOA_Idx

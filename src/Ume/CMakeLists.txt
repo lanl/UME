@@ -65,6 +65,12 @@ target_include_directories(Ume
   $<INSTALL_INTERFACE:include/Ume>
   )
 
+if (USE_CALIPER)
+  target_include_directories(Ume PUBLIC ${caliper_INCLUDE_DIR})
+  target_compile_definitions(Ume PUBLIC USE_CALI)
+  target_link_libraries(Ume PUBLIC caliper)
+endif()
+
 target_link_libraries(Ume
   PUBLIC
   ${COMMON_LINK_LIBRARIES}

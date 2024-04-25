@@ -30,6 +30,7 @@ manager. The spack specs for all packages are:
 ```yaml
 spack:
   specs:
+    - caliper+mpi
     - catch2
     - cmake
     - doxygen
@@ -49,6 +50,8 @@ spack:
 CMake options can be specified either with the interactive `ccmake`
 tool, or on the command line of `cmake`, preceded by the `-D`
 flag. Package-specific CMake options for UME include:
+* `USE_CALIPER=YES` will enable Caliper profiling, and requires
+   Caliper to be found in the environment.
 * `USE_CATCH2=NO` will disable Ctest testing that relies on version 3 
   of the Catch2 testing framework.
 * `USE_KOKKOS=YES` will enable Kokkos support, and requires Kokkos
