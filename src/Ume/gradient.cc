@@ -813,40 +813,39 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       if (point_type[j] > 0) {
         // Internal point
         point_gradient[j] /= point_volume[j];
+      } else if (point_type[j] == -1) {
+        // Mesh boundary point
+        double const ppdot = dotprod(point_gradient[j], point_normal[j]);
+        point_gradient[j] =
+            (point_gradient[j] - point_normal[j] * ppdot) / point_volume[j];
+      }
     }
-    else if (point_type[j] == -1) {
+  }
+
+  /*for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
+    if (point_type[point_idx] > 0) {
+      // Internal point
+      point_gradient[point_idx] /= point_volume[point_idx];
+    } else if (point_type[point_idx] == -1) {
       // Mesh boundary point
-      double const ppdot = dotprod(point_gradient[j], point_normal[j]);
-      point_gradient[j] =
-          (point_gradient[j] - point_normal[j] * ppdot) / point_volume[j];
+      double const ppdot =
+          dotprod(point_gradient[point_idx], point_normal[point_idx]);
+      point_gradient[point_idx] =
+          (point_gradient[point_idx] - point_normal[point_idx] * ppdot) /
+          point_volume[point_idx];
     }
-  }
-}
-
-/*for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
-  if (point_type[point_idx] > 0) {
-    // Internal point
-    point_gradient[point_idx] /= point_volume[point_idx];
-  } else if (point_type[point_idx] == -1) {
-    // Mesh boundary point
-    double const ppdot =
-        dotprod(point_gradient[point_idx], point_normal[point_idx]);
-    point_gradient[point_idx] =
-        (point_gradient[point_idx] - point_normal[point_idx] * ppdot) /
-        point_volume[point_idx];
-  }
-}*/
+  }*/
 
 #ifdef USE_CALI
-CALI_CXX_MARK_LOOP_END(gradzatp_invert_point_gradient_base_loop_id);
+  CALI_CXX_MARK_LOOP_END(gradzatp_invert_point_gradient_base_loop_id);
 #endif
 
 #ifdef USE_CALI
-CALI_MARK_BEGIN("Gradzatp_Invert_Scatter");
+  CALI_MARK_BEGIN("Gradzatp_Invert_Scatter");
 #endif
-mesh.points.scatter(point_gradient);
+  mesh.points.scatter(point_gradient);
 #ifdef USE_CALI
-CALI_MARK_END("Gradzatp_Invert_Scatter");
+  CALI_MARK_END("Gradzatp_Invert_Scatter");
 #endif
 }
 
@@ -879,20 +878,18 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
   int corner_count = 0;
   mz_to_c_count[0] = 0;
-  for (int zone_idx = 0; zone_idx < num_local_zones;
-       zone_idx += TILE_SIZE) {
-  for (int j = zone_idx;
-         j < std::min(zone_idx + TILE_SIZE, num_local_zones); j++) {
+  for (int zone_idx = 0; zone_idx < num_local_zones; zone_idx += TILE_SIZE) {
+    for (int j = zone_idx; j < std::min(zone_idx + TILE_SIZE, num_local_zones);
+         j++) {
       for (int corner_idx : z_to_c_map[j]) {
-      mz_to_c_map.push_back(corner_idx);
-      corner_count++;
+        mz_to_c_map.push_back(corner_idx);
+        corner_count++;
+      }
+
+      mz_to_c_count[j + 1] = corner_count;
     }
-     
-    mz_to_c_count[j + 1] = corner_count;
-         }
   }
 
-  
   /*for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
     for (int corner_idx : z_to_c_map[zone_idx]) {
       mz_to_c_map.push_back(corner_idx);
@@ -900,7 +897,7 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     }
     mz_to_c_count[zone_idx + 1] = corner_count;
   }*/
-  //std::cout<<"mztocmap size: "<<mz_to_c_map.size()<<std::endl;
+  // std::cout<<"mztocmap size: "<<mz_to_c_map.size()<<std::endl;
 
   const UmeVector<size_t> mc_to_p_map(begin(c_to_p_map), end(c_to_p_map));
 #ifdef USE_CALI
@@ -992,27 +989,36 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #endif
   // std::cout<<"Local zones is: "<<num_local_zones <<std::endl;
 
-// Need to split the loop if tiling is needed then. 
+  // Need to split the loop if tiling is needed then.
 
-std::vector<double> zone_volume(num_local_zones,0);
+  std::vector<double> zone_volume(num_local_zones, 0);
+
   for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
     if (zone_type[zone_idx] < 1)
       continue;
 
-    //double zone_volume{0.0};
+    // double zone_volume{0.0};
     for (size_t c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1];
          ++c) {
       zone_volume[zone_idx] += packed_cv[c];
     }
-    //std::cout<<zone_volume<<std::endl;
-    for (size_t c = mz_to_c_count[zone_idx]; c < mz_to_c_count[zone_idx + 1];
-         ++c) {
-      double const c_z_vol_ratio = packed_cv[c] / zone_volume[zone_idx];
-      zone_gradient_x[zone_idx] += packed_pg_x[c] * c_z_vol_ratio;
-      zone_gradient_y[zone_idx] += packed_pg_y[c] * c_z_vol_ratio;
-      zone_gradient_z[zone_idx] += packed_pg_z[c] * c_z_vol_ratio;
+  }
+
+  for (int zone_idx = 0; zone_idx < num_local_zones; zone_idx += TILE_SIZE) {
+    for (int j = zone_idx; j < std::min(TILE_SIZE + zone_idx, num_local_zones);
+         j++) {
+      if (zone_type[j] < 1)
+        continue;
+
+      for (size_t c = mz_to_c_count[j]; c < mz_to_c_count[j + 1]; ++c) {
+        double const c_z_vol_ratio = packed_cv[c] / zone_volume[j];
+        zone_gradient_x[j] += packed_pg_x[c] * c_z_vol_ratio;
+        zone_gradient_y[j] += packed_pg_y[c] * c_z_vol_ratio;
+        zone_gradient_z[j] += packed_pg_z[c] * c_z_vol_ratio;
+      }
     }
   }
+
 #ifdef USE_CALI
   CALI_CXX_MARK_LOOP_END(gradzatz_invert_zone_gradient_scoria_loop_id);
 #endif
@@ -1033,23 +1039,29 @@ std::vector<double> zone_volume(num_local_zones,0);
   CALI_CXX_MARK_LOOP_BEGIN(gradzatz_invert_zone_gradient_base_loop_id,
       "Gradzatz_Invert_Zone_Gradient_Loop");
 #endif
-// Same here, need to split the loop. Make zone_volume a vector and store the values if
-// needed to be split.
-std::vector<double> zone_volume(num_local_zones,0);
+
+  std::vector<double> zone_volume(num_local_zones, 0);
   for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
     if (zone_type[zone_idx] < 1)
       continue; // Only operate on local interior zones
 
     // Accumulate the (local) zone volume
-    //double zone_volume{0.0}; // Only need a local volume
+    // double zone_volume{0.0}; // Only need a local volume
     for (int const &corner_idx : z_to_c_map[zone_idx]) {
       zone_volume[zone_idx] += corner_volume[corner_idx];
     }
+  }
 
-    for (int const &corner_idx : z_to_c_map[zone_idx]) {
-      int const point_idx = c_to_p_map[corner_idx];
-      double const c_z_vol_ratio = corner_volume[corner_idx] / zone_volume[zone_idx];
-      zone_gradient[zone_idx] += point_gradient[point_idx] * c_z_vol_ratio;
+  for (int zone_idx = 0; zone_idx < num_local_zones; zone_idx += TILE_SIZE) {
+    for (int j = zone_idx; j < std::min(TILE_SIZE + zone_idx, num_local_zones);
+         j++) {
+      if (zone_type[j] < 1)
+        continue;
+      for (int const &corner_idx : z_to_c_map[j]) {
+        int const point_idx = c_to_p_map[corner_idx];
+        double const c_z_vol_ratio = corner_volume[corner_idx] / zone_volume[j];
+        zone_gradient[j] += point_gradient[point_idx] * c_z_vol_ratio;
+      }
     }
   }
 #ifdef USE_CALI
