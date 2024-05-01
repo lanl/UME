@@ -18,10 +18,10 @@
 
 namespace Ume {
 
-//! Binary write for std::vector<Entity::Subset>
+//! Binary write for UmeVector<Entity::Subset>
 template <>
 void write_bin<Ume::SOA_Idx::Entity::Subset>(
-    std::ostream &os, std::vector<Ume::SOA_Idx::Entity::Subset> const &data) {
+    std::ostream &os, UmeVector<Ume::SOA_Idx::Entity::Subset> const &data) {
   write_bin(os, data.size());
   if (!data.empty()) {
     for (auto const &c : data) {
@@ -35,10 +35,10 @@ void write_bin<Ume::SOA_Idx::Entity::Subset>(
   os << '\n';
 }
 
-//! Binary read for std::vector<Entity::Subset>
+//! Binary read for UmeVector<Entity::Subset>
 template <>
 void read_bin<Ume::SOA_Idx::Entity::Subset>(
-    std::istream &is, std::vector<Ume::SOA_Idx::Entity::Subset> &data) {
+    std::istream &is, UmeVector<Ume::SOA_Idx::Entity::Subset> &data) {
   size_t len;
   read_bin(is, len);
   if (len == 0) {

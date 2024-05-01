@@ -15,7 +15,20 @@
 #ifndef UME_GRADIENT_HH
 #define UME_GRADIENT_HH 1
 
+/*
+** Scoria Includes
+*/
+extern "C" {
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+#include "scoria.h"
+#endif /* USE_SCORIA */
+}
+
+/*
+** Ume Includes
+*/
 #include "Ume/SOA_Idx_Mesh.hh"
+#include "shm_allocator.hh"
 
 namespace Ume {
 
@@ -25,8 +38,14 @@ namespace Ume {
   computing the piecewise-constant contour integral around the point control
   volume.
 */
-void gradzatp(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
+
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+void gradzatp(struct client *client, Ume::SOA_Idx::Mesh &mesh,
+    DS_Types::DBLV_T const &zone_field, DS_Types::VEC3V_T &point_gradient);
+#else
+void gradzatp(Ume::SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
     DS_Types::VEC3V_T &point_gradient);
+#endif
 
 //! Calculate the gradient of a zone-centered field at the zone centers.
 /*!
@@ -34,8 +53,14 @@ void gradzatp(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
   gradients.  Returns both the zone-centered gradient and the point-centered
   gradient.
  */
-void gradzatz(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+void gradzatz(struct client *client, Ume::SOA_Idx::Mesh &mesh,
+    DS_Types::DBLV_T const &zone_field, DS_Types::VEC3V_T &zone_gradient,
+    DS_Types::VEC3V_T &point_gradient);
+#else
+void gradzatz(Ume::SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
     DS_Types::VEC3V_T &zone_gradient, DS_Types::VEC3V_T &point_gradient);
+#endif
 
 //! Calculate the gradient of a zone-centered field at mesh points.
 /*!
@@ -43,8 +68,13 @@ void gradzatz(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
   computing the piecewise-constant contour integral around the point control
   volume. This version uses a thread-safe connectivity.
 */
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+void gradzatp_invert(struct client *client, SOA_Idx::Mesh &mesh,
+    DS_Types::DBLV_T const &zone_field, DS_Types::VEC3V_T &point_gradient);
+#else
 void gradzatp_invert(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
     DS_Types::VEC3V_T &point_gradient);
+#endif
 
 //! Calculate the gradient of a zone-centered field at the zone centers.
 /*!
@@ -52,9 +82,14 @@ void gradzatp_invert(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
   gradients.  Returns both the zone-centered gradient and the point-centered
   gradient. This version uses a thread-safe connectivity.
  */
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+void gradzatz_invert(struct client *client, SOA_Idx::Mesh &mesh,
+    DS_Types::DBLV_T const &zone_field, DS_Types::VEC3V_T &zone_gradient,
+    DS_Types::VEC3V_T &point_gradient);
+#else
 void gradzatz_invert(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T const &zone_field,
     DS_Types::VEC3V_T &zone_gradient, DS_Types::VEC3V_T &point_gradient);
-
+#endif
 } // namespace Ume
 
 #endif

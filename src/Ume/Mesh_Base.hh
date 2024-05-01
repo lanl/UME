@@ -15,6 +15,9 @@
 #ifndef UME_MESH_BASE_HH
 #define UME_MESH_BASE_HH 1
 
+#include <vector>
+#include <string>
+
 #include "Ume/Comm_Transport.hh"
 #include "Ume/Datastore.hh"
 
@@ -27,6 +30,12 @@ struct Mesh_Base {
   Mesh_Base() : ds{Datastore::create_root()} {}
   Datastore::dsptr ds;
   Ume::Comm::Transport *comm = nullptr;
+
+#ifdef UME_PROFILING
+  std::vector<unsigned int> levels;
+  std::vector<std::string> timelabels;
+  std::vector<double> times;
+#endif /* UME_PROFILING */
 };
 
 } // namespace Ume

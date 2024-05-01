@@ -17,6 +17,7 @@
 #define UME_COMM_NEIGHBORS_HH 1
 
 #include "Ume/utils.hh"
+#include "shm_allocator.hh"
 #include <vector>
 
 namespace Ume {
@@ -30,13 +31,13 @@ namespace Comm {
     pattern from the buffer into the entity. */
 struct Neighbor {
   int pe;
-  std::vector<int> elements;
+  UmeVector<int> elements;
   constexpr bool operator==(Neighbor const &rhs) const {
     return (pe == rhs.pe && elements == rhs.elements);
   }
 };
 
-using Neighbors = std::vector<Neighbor>;
+using Neighbors = UmeVector<Neighbor>;
 
 } // namespace Comm
 

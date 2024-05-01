@@ -1,5 +1,8 @@
 # UME: Unstructured Mesh Explorations
 
+*NOTE* this `scoria` branch is used as a client for the
+[ScorIA](https://github.com/lanl/scoria) project. However, it can still be built as a standalone code.
+
 [![Contributor
 Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
 
@@ -37,6 +40,7 @@ spack:
     - graphviz
     - kokkos+openmp std=20
     - openmpi
+    - caliper
   packages:
     catch2:
       require: '@3:'
@@ -55,6 +59,9 @@ flag. Package-specific CMake options for UME include:
   to be available on the search path.
 * `USE_OPENACC=YES` will enable OpenACC support, and requires the
   C++ compiler to support it (UME does not currently use OpenACC).
+* `USE_CALIPER=YES` will enable Caliper profiling where supported
+   and reqiures Caliper to be found. inthe environment (ume_mpi is
+   the only executable currently supported).
 
 
 ### Generated Executables

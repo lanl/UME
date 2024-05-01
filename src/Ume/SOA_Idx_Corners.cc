@@ -15,6 +15,7 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
+#include "shm_allocator.hh"
 
 namespace Ume {
 namespace SOA_Idx {
@@ -111,7 +112,7 @@ bool Corners::VAR_corner_to_sides::init_() const {
   auto &corner_to_sides = mydata_intrr();
   corner_to_sides.init(cll);
 
-  std::vector<std::vector<int>> accum(cll);
+  UmeVector<UmeVector<int>> accum(cll);
   for (int s = 0; s < sll; ++s) {
     accum.at(s2c1[s]).push_back(s);
     accum.at(s2c2[s]).push_back(s);

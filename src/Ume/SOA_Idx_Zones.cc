@@ -15,6 +15,7 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
+#include "shm_allocator.hh"
 #include <set>
 
 namespace Ume {
@@ -63,7 +64,7 @@ bool Zones::VAR_zcoord::init_() const {
   auto &zcoord = mydata_vec3v();
   zcoord.resize(zll, Vec3(0.0));
 
-  std::vector<int> num_zone_pts(zl, 0);
+  UmeVector<int> num_zone_pts(zl, 0);
   for (int c = 0; c < cl; ++c) {
     if (cmask[c]) {
       int const z = c2z[c];
@@ -92,7 +93,7 @@ bool Zones::VAR_zone_to_pt_zone::init_() const {
   auto const &c2z{caccess_intv("m:c>z")};
   auto &z2pz = mydata_intrr();
   z2pz.init(zll);
-  std::vector<std::set<int>> accum(zll);
+  UmeVector<std::set<int>> accum(zll);
 
   /* Iterate over corners, add all zones attached to c2p[c] to c2z[z]; */
   for (int c = 0; c < cll; ++c) {
@@ -119,7 +120,7 @@ bool Zones::VAR_zone_to_points::init_() const {
   auto const &c2z{caccess_intv("m:c>z")};
   auto &z2p = mydata_intrr();
   z2p.init(zll);
-  std::vector<std::vector<int>> accum(zll);
+  UmeVector<UmeVector<int>> accum(zll);
 
   /* Iterate over corners, connect points to zones */
   for (int c = 0; c < cll; ++c) {

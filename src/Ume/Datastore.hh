@@ -17,6 +17,7 @@
 #define UME_DATASTORE_HH 1
 
 #include "Ume/DS_Types.hh"
+#include "shm_allocator.hh"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -169,7 +170,7 @@ private:
 
 public: /* These are public for testing purposes */
   Datastore *parent_; //!< The parent of this datastore (null if root)
-  std::vector<dsptr> children_; //!< The list of subtrees
+  UmeVector<dsptr> children_; //!< The list of subtrees
 };
 
 } // namespace Ume

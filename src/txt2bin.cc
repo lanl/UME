@@ -17,9 +17,22 @@
   `Ume/SOA_Idx_Mesh.hh`.  Note that this only reads 3-D meshes.
 */
 
+/*
+** Scoria Includes
+*/
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+extern "C" {
+#include "scoria.h"
+}
+#endif
+
+/*
+** Ume Includes
+*/
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/Timer.hh"
 #include "Ume/utils.hh"
+#include "shm_allocator.hh"
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -35,6 +48,13 @@ int main(int argc, char *argv[]) {
     std::cerr << "Usage: txt2bin <infile> <outfile>" << std::endl;
     return 1;
   }
+
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  struct client client;
+  client.chatty = 0;
+
+  scoria_init(&client);
+#endif
 
   double txt_read_time;
   Mesh m;
@@ -100,6 +120,14 @@ int main(int argc, char *argv[]) {
       std::cout << std::endl;
     }
   }
+
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  struct request req;
+  scoria_quit(&client, &req);
+  scoria_wait_request(&client, &req);
+
+  scoria_cleanup(&client);
+#endif
 
   return 0;
 }

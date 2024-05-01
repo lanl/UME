@@ -15,6 +15,7 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
+#include "shm_allocator.hh"
 #include <cassert>
 
 namespace Ume {
@@ -69,7 +70,7 @@ bool Faces::VAR_fcoord::init_() const {
   auto &fcoord = mydata_vec3v();
   fcoord.resize(fll, Vec3(0.0));
 
-  std::vector<int> num_face_pts(fl, 0);
+  UmeVector<int> num_face_pts(fl, 0);
   for (int s = 0; s < sl; ++s) {
     if (smask[s]) {
       int const f = s2f[s];

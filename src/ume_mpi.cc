@@ -22,27 +22,60 @@
   with a printf format of "%05d" (zero-filled, five digits)
 */
 
+/*
+** Scoria Includes
+*/
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+extern "C" {
+#include "scoria.h"
+}
+#endif
+
+
+/*
+** Ume Includes
+*/
 #include "Ume/Comm_MPI.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/Timer.hh"
 #include "Ume/gradient.hh"
 #include "Ume/utils.hh"
+#include "shm_allocator.hh"
 #include <cassert>
 #include <cstdio>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <vector>
 
+#ifdef USE_CALI
+#include <caliper/cali.h>
+#include <caliper/cali-manager.h>
+#endif
+
 bool read_mesh(
     char const *const basename, int const mype, Ume::SOA_Idx::Mesh &mesh);
 bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh);
+
+template <class T>
+void write_result(char const *const varname, int const mype, T &data);
 
 using DBLV_T = typename Ume::DS_Types::DBLV_T;
 using VEC3V_T = typename Ume::DS_Types::VEC3V_T;
 using VEC3_T = typename Ume::DS_Types::VEC3_T;
 
 int main(int argc, char *argv[]) {
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  struct client client;
+  client.chatty = 0;
+
+  scoria_init(&client);
+#endif
+
+#ifdef USE_CALI
+    CALI_CXX_MARK_FUNCTION;
+#endif
 
   Ume::SOA_Idx::Mesh mesh;
 
@@ -91,22 +124,76 @@ int main(int argc, char *argv[]) {
 
   VEC3V_T pgrad, zgrad;
   Ume::Timer orig_time;
+#ifdef USE_CALI
+  if (comm.pe() == 0)
+    std::cout << "Cali Profiling Begin..." << std::endl;
+  CALI_MARK_BEGIN("Gradzatz1");
+#endif
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  Ume::gradzatz(&client, mesh, zfield, zgrad, pgrad);
+#else
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+#endif
+#ifdef USE_CALI
+  CALI_MARK_END("Gradzatz1");
+#endif
   orig_time.start();
+#ifdef USE_CALI
+  CALI_MARK_BEGIN("Gradzatz2");
+#endif
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  Ume::gradzatz(&client, mesh, zfield, zgrad, pgrad);
+#else
   Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+#endif
+#ifdef USE_CALI
+  CALI_MARK_END("Gradzatz2");
+#endif
   orig_time.stop();
+
+  // Write out results to file for validation
+  write_result("point_gradient", comm.pe(), pgrad);
+  write_result("zone_gradient", comm.pe(), zgrad);
 
   VEC3V_T pgrad_invert, zgrad_invert;
   Ume::Timer invert_time;
+#ifdef USE_CALI
+  CALI_MARK_BEGIN("Gradzatz_Invert1");
+#endif
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  Ume::gradzatz_invert(&client, mesh, zfield, zgrad_invert, pgrad_invert);
+#else
   Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+#endif
+#ifdef USE_CALI
+  CALI_MARK_END("Gradzatz_Invert1");
+#endif
   invert_time.start();
+#ifdef USE_CALI
+  CALI_MARK_BEGIN("Gradzatz_Invert2");
+#endif
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  Ume::gradzatz_invert(&client, mesh, zfield, zgrad_invert, pgrad_invert);
+#else
   Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+#endif
+#ifdef USE_CALI
+  CALI_MARK_END("Gradzatz_Invert2");
+#endif
   invert_time.stop();
 
-  // Double check that the gradients are non-zero where we expect
+  // Write out results to file for validation
+  write_result("point_gradient_invert", comm.pe(), pgrad_invert);
+  write_result("zone_gradient_invert", comm.pe(), zgrad_invert);
+
   if (comm.pe() == 0) {
     std::cout << "Original algorithm took: " << orig_time.seconds() << "s\n";
     std::cout << "Inverted algorithm took: " << invert_time.seconds() << "s\n";
+  }
+
+  // Double check that the gradients are non-zero where we expect
+#ifndef USE_CLIENT
+  if (comm.pe() == 0) {
     std::cout << "Checking result..." << std::endl;
   }
 
@@ -129,7 +216,7 @@ int main(int argc, char *argv[]) {
   auto const &z2pz = mesh.ds->caccess_intrr("m:z>pz");
   auto const &z2p = mesh.ds->caccess_intrr("m:z>p");
   auto const &kptyp = mesh.points.mask;
-  std::vector<int> grad_zones;
+  UmeVector<int> grad_zones;
   for (int z = 0; z < mesh.zones.size(); ++z) {
     if (z == czi || kztyp[z] < 1)
       continue;
@@ -137,7 +224,7 @@ int main(int argc, char *argv[]) {
       grad_zones.push_back(z);
   }
 
-  std::vector<int> grad_points;
+  UmeVector<int> grad_points;
   for (int p = 0; p < mesh.points.size(); ++p) {
     if (kptyp[p] > 0 && pgrad[p] != 0.0)
       grad_points.push_back(p);
@@ -145,7 +232,7 @@ int main(int argc, char *argv[]) {
 
   std::sort(grad_zones.begin(), grad_zones.end());
   std::sort(grad_points.begin(), grad_points.end());
-  std::vector<int> diff;
+  UmeVector<int> diff;
   std::ranges::set_difference(grad_zones, z2pz[czi], std::back_inserter(diff));
   if (!diff.empty()) {
     std::cout << "PE" << mesh.mype << " zone diff " << diff.size() << " found "
@@ -158,10 +245,20 @@ int main(int argc, char *argv[]) {
     std::cout << "PE" << mesh.mype << " pt diff " << diff.size() << " found "
               << grad_points.size() << " expected " << z2p.size(czi) << '\n';
   }
+#endif
 
   if (comm.pe() == 0)
     std::cout << "Done." << std::endl;
   comm.stop();
+
+#if defined(USE_SCORIA) && defined(USE_CLIENT)
+  struct request req;
+  scoria_quit(&client, &req);
+  scoria_wait_request(&client, &req);
+
+  scoria_cleanup(&client);
+#endif
+
   return 0;
 }
 
@@ -236,4 +333,17 @@ bool test_point_gathscat(Ume::SOA_Idx::Mesh &mesh) {
   }
 
   return result;
+}
+
+template <class T>
+void write_result(char const *const varname, int const mype, T &data) {
+  char fname[80];
+  sprintf(fname, "%s.%05d.out", varname, mype);
+  std::ofstream os(fname);
+
+  os << std::setprecision(10);
+
+  for (auto const &val : data)
+    os << val << '\n';
+  os.close();
 }

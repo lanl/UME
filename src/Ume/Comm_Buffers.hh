@@ -18,6 +18,7 @@
 
 #include "Ume/Comm_Neighbors.hh"
 #include "Ume/DS_Types.hh"
+#include "shm_allocator.hh"
 #include <iterator>
 #include <type_traits>
 
@@ -92,16 +93,16 @@ public:
   };
 
   //! The list of remotes
-  std::vector<Remote> remotes;
+  UmeVector<Remote> remotes;
 
   //! A map from buffer indices to entity indices
   /*! ei = b2e_m[bi] means that the data in buf[bi] corresponds to the data in
       entity[ei]. The buffer indices come from Remote::buf_offset and
       Remove::buf_len. */
-  std::vector<size_t> b2e_m;
+  UmeVector<size_t> b2e_m;
 
   //! The actual communication buffer, used for all Remotes.
-  std::vector<base_type> buf;
+  UmeVector<base_type> buf;
 };
 
 } // namespace Comm

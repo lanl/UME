@@ -16,6 +16,7 @@
 #ifdef HAVE_MPI
 
 #include "Ume/Comm_MPI.hh"
+#include "shm_allocator.hh"
 #include <cassert>
 #include <iostream>
 #include <mpi.h>
@@ -40,7 +41,7 @@ MPI::MPI(int *argc, char ***argv) : use_virtual_ranks_{false}, v2r_rank_{} {
 
 void MPI::set_virtual_rank(int const virtual_rank) {
   use_virtual_ranks_ = true;
-  std::vector<int> r2v(numpe_, -1);
+  UmeVector<int> r2v(numpe_, -1);
   r2v[rank_] = virtual_rank;
   MPI_Allgather(MPI_IN_PLACE, numpe_, MPI_INT, r2v.data(), numpe_, MPI_INT,
       MPI_COMM_WORLD);
@@ -74,7 +75,7 @@ int exchange_impl(MPI &comm_mpi, Buffers<T> const &sends, Buffers<T> &recvs) {
 
   size_t const nrecvs = recvs.remotes.size();
   size_t const nsends = sends.remotes.size();
-  std::vector<MPI_Request> reqs(nrecvs + nsends);
+  UmeVector<MPI_Request> reqs(nrecvs + nsends);
 
   /* Post the non-blocking receives */
   for (size_t i = 0; i < nrecvs; ++i) {
@@ -95,7 +96,7 @@ int exchange_impl(MPI &comm_mpi, Buffers<T> const &sends, Buffers<T> &recvs) {
   }
 
   /* Wait for MPI to work through all of that */
-  std::vector<MPI_Status> stats(nrecvs + nsends);
+  UmeVector<MPI_Status> stats(nrecvs + nsends);
   MPI_Waitall(static_cast<int>(nrecvs + nsends), reqs.data(), stats.data());
 
   return 0;
