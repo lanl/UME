@@ -126,9 +126,9 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       gradzatp_point_volume_scoria_loop_id, "Gradzatp_Point_Volume_Loop_2D");
 #endif
   // std::cout<<"cl is: "<<cl<<std::endl; 2D loop, need to check it.
-  /* for(int c=0;c<cl;c+=TILE_SIZE)
+for(int c=0;c<cl;c+=TILE_SIZE)
  {
-   for(int j=c;j<std::min(TILE_SIZE+cl,cl);j++)
+   for(int j=c;j<std::min(TILE_SIZE+c,cl);j++)
    {
     if (corner_type[j] < 1)
       continue; // Only operate on interior corners
@@ -138,9 +138,9 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     packed_pg_y[j] = csurf[j][1] * packed_zf[j];
     packed_pg_z[j] = csurf[j][2] * packed_zf[j];
    }
- }*/
+ }
   
-  for (int c = 0; c < cl; ++c) {
+/*for (int c = 0; c < cl; ++c) {
     if (corner_type[c] < 1)
       continue; // Only operate on interior corners
     packed_pv[c] = corner_volume[c];
@@ -148,7 +148,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     packed_pg_x[c] = csurf[c][0] * packed_zf[c];
     packed_pg_y[c] = csurf[c][1] * packed_zf[c];
     packed_pg_z[c] = csurf[c][2] * packed_zf[c];
-  }
+  }*/
   
 #ifdef USE_CALI
   CALI_CXX_MARK_LOOP_END(gradzatp_point_volume_scoria_loop_id);
