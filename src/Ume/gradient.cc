@@ -126,6 +126,20 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
       gradzatp_point_volume_scoria_loop_id, "Gradzatp_Point_Volume_Loop_2D");
 #endif
   // std::cout<<"cl is: "<<cl<<std::endl; 2D loop, need to check it.
+  /* for(int c=0;c<cl;c+=TILE_SIZE)
+ {
+   for(int j=c;j<std::min(TILE_SIZE+cl,cl);j++)
+   {
+    if (corner_type[j] < 1)
+      continue; // Only operate on interior corners
+    packed_pv[j] = corner_volume[j];
+
+    packed_pg_x[j] = csurf[j][0] * packed_zf[j];
+    packed_pg_y[j] = csurf[j][1] * packed_zf[j];
+    packed_pg_z[j] = csurf[j][2] * packed_zf[j];
+   }
+ }*/
+  
   for (int c = 0; c < cl; ++c) {
     if (corner_type[c] < 1)
       continue; // Only operate on interior corners
@@ -135,6 +149,7 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     packed_pg_y[c] = csurf[c][1] * packed_zf[c];
     packed_pg_z[c] = csurf[c][2] * packed_zf[c];
   }
+  
 #ifdef USE_CALI
   CALI_CXX_MARK_LOOP_END(gradzatp_point_volume_scoria_loop_id);
 #endif
@@ -195,11 +210,19 @@ void gradzatp(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #endif
   // std::cout<<"Point gradient is: "<<point_gradient.size()<<std::endl; 1D to
   // 2D
-  for (size_t i = 0; i < point_gradient.size(); ++i) {
+ for (size_t i = 0; i < point_gradient.size(); i += TILE_SIZE) {
+    for (size_t j = i; j < std::min(TILE_SIZE+i,point_gradient.size()); j++) {
+    point_gradient[j][0] = point_gradient_x[j];
+    point_gradient[j][1] = point_gradient_y[j];
+    point_gradient[j][2] = point_gradient_z[j];
+    }
+  }
+
+  /*for (size_t i = 0; i < point_gradient.size(); ++i) {
     point_gradient[i][0] = point_gradient_x[i];
     point_gradient[i][1] = point_gradient_y[i];
     point_gradient[i][2] = point_gradient_z[i];
-  }
+  }*/
 #ifdef USE_CALI
   CALI_MARK_END("Gradzatp_Point_Volume_Scoria_Unpack");
 #endif
@@ -418,11 +441,19 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   DBLV_T point_gradient_y(point_gradient.size(), 0.0);
   DBLV_T point_gradient_z(point_gradient.size(), 0.0);
 
-  for (size_t i = 0; i < point_gradient.size(); ++i) {
+  for (size_t i = 0; i < point_gradient.size(); i += TILE_SIZE) {
+    for (size_t j = i; j < std::min(TILE_SIZE+i,point_gradient.size()); j++) {
+    point_gradient_x[j] = point_gradient[j][0];
+    point_gradient_y[j] = point_gradient[j][1];
+    point_gradient_z[j] = point_gradient[j][2];
+    }
+  }
+
+ /*for (size_t i = 0; i < point_gradient.size(); ++i) {
     point_gradient_x[i] = point_gradient[i][0];
     point_gradient_y[i] = point_gradient[i][1];
     point_gradient_z[i] = point_gradient[i][2];
-  }
+  }*/
 
   std::fill(packed_zv.begin(), packed_zv.end(), 0);
 #ifdef USE_CALI
@@ -558,11 +589,19 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   CALI_MARK_BEGIN("Gradzatz_Zone_Gradient_Scoria_Unpack");
 #endif
   // 2D loop
-  for (size_t i = 0; i < zone_gradient.size(); ++i) {
+  for (size_t i = 0; i < zone_gradient.size(); i += TILE_SIZE) {
+    for (size_t j = i; j < std::min(TILE_SIZE+i,zone_gradient.size()); j++) {
+      //int idx = i + j;
+    zone_gradient[j][0] = zone_gradient_x[j];
+    zone_gradient[j][1] = zone_gradient_y[j];
+    zone_gradient[j][2] = zone_gradient_z[j];
+    }
+  }
+  /*for (size_t i = 0; i < zone_gradient.size(); ++i) {
     zone_gradient[i][0] = zone_gradient_x[i];
     zone_gradient[i][1] = zone_gradient_y[i];
     zone_gradient[i][2] = zone_gradient_z[i];
-  }
+  }*/
 #ifdef USE_CALI
   CALI_MARK_END("Gradzatz_Zone_Gradient_Scoria_Unpack");
 #endif
@@ -670,11 +709,19 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   DBLV_T csurf_y(csurf.size(), 0.0);
   DBLV_T csurf_z(csurf.size(), 0.0);
 
-  for (size_t i = 0; i < csurf.size(); ++i) {
+for (size_t i = 0; i < csurf.size(); i += TILE_SIZE) {
+    for (size_t j = i; j < std::min(TILE_SIZE+i,csurf.size()); j++) {
+    csurf_x[j] = csurf[j][0];
+    csurf_y[j] = csurf[j][1];
+    csurf_z[j] = csurf[j][2];
+    }
+  }
+
+  /*for (size_t i = 0; i < csurf.size(); ++i) {
     csurf_x[i] = csurf[i][0];
     csurf_y[i] = csurf[i][1];
     csurf_z[i] = csurf[i][2];
-  }
+  }*/
 #ifdef USE_CALI
   CALI_MARK_END("Gradzatp_Invert_Point_Volume_Scoria_Pack");
 #endif
@@ -761,11 +808,20 @@ void gradzatp_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #ifdef USE_CALI
   CALI_MARK_BEGIN("Gradzatp_Invert_Point_Volume_Scoria_Unpack");
 #endif
-  for (size_t i = 0; i < point_gradient.size(); ++i) {
+
+  for (size_t i = 0; i < point_gradient.size(); i += TILE_SIZE) {
+    for (size_t j = i; j < std::min(TILE_SIZE+i,point_gradient.size()); j++) {
+    point_gradient[j][0] = point_gradient_x[j];
+    point_gradient[j][1] = point_gradient_y[j];
+    point_gradient[j][2] = point_gradient_z[j];
+    }
+  }
+
+  /*for (size_t i = 0; i < point_gradient.size(); ++i) {
     point_gradient[i][0] = point_gradient_x[i];
     point_gradient[i][1] = point_gradient_y[i];
     point_gradient[i][2] = point_gradient_z[i];
-  }
+  }*/
 #ifdef USE_CALI
   CALI_MARK_END("Gradzatp_Invert_Point_Volume_Scoria_Unpack");
 #endif
@@ -926,12 +982,22 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   DBLV_T point_gradient_x(point_gradient.size(), 0.0);
   DBLV_T point_gradient_y(point_gradient.size(), 0.0);
   DBLV_T point_gradient_z(point_gradient.size(), 0.0);
+  
+  
+  for (size_t i = 0; i < point_gradient.size(); i += TILE_SIZE) {
+    for (size_t j = i; j < std::min(TILE_SIZE+i,point_gradient.size()); j++) {
+    point_gradient_x[j] = point_gradient[j][0];
+    point_gradient_y[j] = point_gradient[j][1];
+    point_gradient_z[j] = point_gradient[j][2];
+    }
+  }
 
-  for (size_t i = 0; i < point_gradient.size(); ++i) {
+  /*for (size_t i = 0; i < point_gradient.size(); ++i) {
     point_gradient_x[i] = point_gradient[i][0];
     point_gradient_y[i] = point_gradient[i][1];
     point_gradient_z[i] = point_gradient[i][2];
-  }
+  }*/
+
 #ifdef USE_CALI
   CALI_MARK_END("Gradzatz_Invert_Zone_Gradient_Scoria_Pack");
 #endif
@@ -1026,11 +1092,22 @@ void gradzatz_invert(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #ifdef USE_CALI
   CALI_MARK_BEGIN("Gradzatz_Invert_Zone_Gradient_Scoria_Unpack");
 #endif
+
+  for (size_t i = 0; i < zone_gradient.size(); i += TILE_SIZE) {
+    for (size_t j = i; j < std::min(TILE_SIZE+i,zone_gradient.size()); j++) {
+    zone_gradient[j][0] = zone_gradient_x[j];
+    zone_gradient[j][1] = zone_gradient_y[j];
+    zone_gradient[j][2] = zone_gradient_z[j];
+    }
+  }
+
+  /*
   for (size_t i = 0; i < zone_gradient.size(); ++i) {
     zone_gradient[i][0] = zone_gradient_x[i];
     zone_gradient[i][1] = zone_gradient_y[i];
     zone_gradient[i][2] = zone_gradient_z[i];
   }
+  */
 #ifdef USE_CALI
   CALI_MARK_END("Gradzatz_Invert_Zone_Gradient_Scoria_Unpack");
 #endif
