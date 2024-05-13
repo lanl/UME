@@ -33,7 +33,7 @@ extern "C" {
 #include "Ume/gradient.hh"
 #include <stdlib.h>
 
-#define TILE_SIZE 128
+#define TILE_SIZE 512
 namespace Ume {
 
 using DBLV_T = DS_Types::DBLV_T; // vector double
