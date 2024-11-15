@@ -85,6 +85,57 @@ int main(int argc, char *argv[]) {
   DBLV_T zfield(mesh.zones.size(), 0.0);
   zfield[czi] = 100000.0;
 
+  auto const &c_to_z_map = mesh.ds->caccess_intv("m:c>z");
+  auto const &c_to_p_map = mesh.ds->caccess_intv("m:c>p");
+  auto const &p_to_c_map = mesh.ds->caccess_intrr("m:p>rc");
+  auto const &z_to_c_map = mesh.ds->caccess_intrr("m:z>c");
+ 
+  int const num_local_corners = mesh.corners.local_size();
+  int const num_local_zones = mesh.zones.local_size();
+  int const num_local_points = mesh.points.local_size();
+  int const num_points = mesh.points.size();
+
+  long long int dist_c_z_map = 0;
+  for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
+    dist_c_z_map += (long long int)abs(corner_idx - c_to_z_map[corner_idx]);
+  }
+  dist_c_z_map /= (long long int) num_local_corners;
+
+
+  long long int dist_z_c_map = 0;
+  for (int zone_idx = 0; zone_idx < num_local_zones; ++zone_idx) {
+    long long int temp_dist_z_c_map = 0;
+    long long int num_corners_this_zone = 0;
+    for (int const &corner_idx : z_to_c_map[zone_idx]) {
+      num_corners_this_zone++;
+      temp_dist_z_c_map += (long long int)abs(zone_idx - corner_idx);
+    }
+    dist_z_c_map += temp_dist_z_c_map / num_corners_this_zone;
+  }
+  dist_z_c_map /= (long long int)num_local_zones;
+
+
+  long long int dist_c_p_map = 0;
+  for (int corner_idx = 0; corner_idx < num_local_corners; ++corner_idx) {
+    dist_c_p_map += (long long int)abs(corner_idx - c_to_p_map[corner_idx]);
+  }
+  dist_c_p_map /= (long long int) num_local_corners;
+
+  long long int dist_p_c_map = 0;
+  for (int point_idx = 0; point_idx < num_local_points; ++point_idx) {
+    long long int temp_dist_p_c_map = 0;
+    long long int num_corners_this_point = 0;
+    for (int const & corner_idx : p_to_c_map[point_idx]) {
+      num_corners_this_point++;
+      temp_dist_p_c_map += (long long int)abs(point_idx - corner_idx);
+    }
+    dist_p_c_map += temp_dist_p_c_map / num_corners_this_point;
+  }
+  dist_p_c_map /= (long long int)num_local_points;
+
+  std::cout << "Rank: " << comm.pe() << "\tNum Local Points: " << num_local_points << "\tNum Local Zones: " << num_local_zones << "\tNum Local Corners: " << num_local_corners << "\tAvg. Dist C2Z Map: " << dist_c_z_map << "\tAvg. Dist C2P Map: " << dist_c_p_map << "\tAvg. Dist Z2C Map: " << dist_z_c_map << "\tAvg. Dist P22C Map: " << dist_p_c_map << std::endl;
+
+
   // Do a zone-centered gradient calculation on that field (in parallel)
   if (comm.pe() == 0)
     std::cout << "Calculating gradient..." << std::endl;
