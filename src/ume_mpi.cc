@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
   }
   dist_p_c_map /= (long long int)num_local_points;
 
-  std::cout << "Rank: " << comm.pe() << "\tNum Local Points: " << num_local_points << "\tNum Local Zones: " << num_local_zones << "\tNum Local Corners: " << num_local_corners << "\tAvg. Dist C2Z Map: " << dist_c_z_map << "\tAvg. Dist C2P Map: " << dist_c_p_map << "\tAvg. Dist Z2C Map: " << dist_z_c_map << "\tAvg. Dist P22C Map: " << dist_p_c_map << std::endl;
+  std::cout << "Rank: " << comm.pe() << "\tNum Local Points: " << num_local_points << "\tNum Local Zones: " << num_local_zones << "\tNum Local Corners: " << num_local_corners << "\tAvg. Dist C2Z Map: " << dist_c_z_map << "\tAvg. Dist C2P Map: " << dist_c_p_map << "\tAvg. Dist Z2C Map: " << dist_z_c_map << "\tAvg. Dist P2C Map: " << dist_p_c_map << std::endl;
 
 
   // Do a zone-centered gradient calculation on that field (in parallel)
