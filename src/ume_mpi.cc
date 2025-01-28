@@ -25,6 +25,7 @@
 #include "Ume/Comm_MPI.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/Timer.hh"
+#include "Ume/face_area.hh"
 #include "Ume/gradient.hh"
 #include "Ume/utils.hh"
 #include <cassert>
@@ -107,7 +108,7 @@ int main(int argc, char *argv[]) {
   if (comm.pe() == 0) {
     std::cout << "Original algorithm took: " << orig_time.seconds() << "s\n";
     std::cout << "Inverted algorithm took: " << invert_time.seconds() << "s\n";
-    std::cout << "Checking result..." << std::endl;
+    std::cout << "Checking gradient result..." << std::endl;
   }
 
   if (zgrad != zgrad_invert) {
@@ -158,6 +159,20 @@ int main(int argc, char *argv[]) {
     std::cout << "PE" << mesh.mype << " pt diff " << diff.size() << " found "
               << grad_points.size() << " expected " << z2p.size(czi) << '\n';
   }
+
+  // Do a face area calculation
+  if (comm.pe() == 0)
+    std::cout << "Calculating face areas..." << std::endl;
+
+  // Create a result vector and initialize to impossible value
+  DBLV_T face_area(mesh.faces.size(), -100000.0);
+
+  orig_time.start();
+  Ume::calc_face_area(mesh, face_area);
+  orig_time.stop();
+
+  if (comm.pe() == 0)
+    std::cout << "Face area calculation took: " << orig_time.seconds() << "s\n";
 
   if (comm.pe() == 0)
     std::cout << "Done." << std::endl;
