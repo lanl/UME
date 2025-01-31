@@ -167,6 +167,9 @@ int main(int argc, char *argv[]) {
   // Create a result vector and initialize to impossible value
   DBLV_T face_area(mesh.faces.size(), -100000.0);
 
+  Ume::calc_face_area(mesh, face_area);
+  
+  orig_time.clear();
   orig_time.start();
   Ume::calc_face_area(mesh, face_area);
   orig_time.stop();
