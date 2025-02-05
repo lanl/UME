@@ -165,5 +165,10 @@ inline void normalize(Vec3 &a) {
   a /= std::sqrt(mag);
 }
 
+constexpr double vectormag(Vec3 const &a) {
+  double const mag = std::sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+  return mag;
+}
+
 } // namespace Ume
 #endif
