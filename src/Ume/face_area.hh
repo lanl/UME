@@ -24,7 +24,7 @@ namespace Ume {
  * accumulating side surface area vector magnitudes of internal sides
  * corresponding to internal or master faces in the MPI comm stencil,
  * making sure not to double count sides. */
-void calc_face_area(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T &face_area);
+void calc_face_area(SOA_Idx::Mesh &mesh, DS_Types::DBLV_T &face_area, int cali_record);
 
 } // namespace Ume
 

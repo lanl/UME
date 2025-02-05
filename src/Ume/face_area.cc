@@ -12,6 +12,12 @@
 /*!
   \file Ume/face_area.cc
 */
+
+#ifdef USE_CALI
+#include <caliper/cali-manager.h>
+#include <caliper/cali.h>
+#endif
+
 #include "Ume/face_area.hh"
 
 namespace Ume {
@@ -21,7 +27,7 @@ using DBLV_T = DS_Types::DBLV_T;
 using INTV_T = DS_Types::INTV_T;
 using VEC3V_T = DS_Types::VEC3V_T;
 
-void calc_face_area(Mesh &mesh, DBLV_T &face_area) {
+void calc_face_area(Mesh &mesh, DBLV_T &face_area, int cali_record) {
   auto const &side_type = mesh.sides.mask;
   auto const &face_comm_type = mesh.faces.comm_type;
   auto const &s_to_f_map = mesh.ds->caccess_intv("m:s>f");
@@ -34,6 +40,10 @@ void calc_face_area(Mesh &mesh, DBLV_T &face_area) {
   std::fill(face_area.begin(), face_area.end(), 0.0);
   INTV_T side_tag(sll, 0);
 
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_BEGIN("Calc_Face_Area_Loop");
+#endif
   for (int s = 0; s < sl; ++s) {
     if (side_type[s] < 1)
       continue; // We want internal sides only
@@ -49,7 +59,10 @@ void calc_face_area(Mesh &mesh, DBLV_T &face_area) {
       side_tag[s2] = 1;
     }
   }
-
+#ifdef USE_CALI
+  if(cali_record)
+    CALI_MARK_END("Calc_Face_Area_Loop");
+#endif
   mesh.faces.scatter(face_area);
 }
 
