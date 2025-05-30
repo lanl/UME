@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.20)
 # Add our cmake include directory to the search path
 set(LAP_CMAKE_DIR "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_MODULE_PATH ${LAP_CMAKE_DIR} ${CMAKE_MODULE_PATH})
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(DisableIntree)
 
