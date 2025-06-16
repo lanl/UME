@@ -30,6 +30,7 @@ set(UME_INCLUDE_FILES
   VecN.hh
   face_area.hh
   gradient.hh
+  renumbering.hh
   soa_idx_helpers.hh
   utils.hh
   )
@@ -51,6 +52,7 @@ add_library(Ume
   SOA_Idx_Zones.cc
   face_area.cc
   gradient.cc
+  renumbering.cc
   utils.cc
   )
 
