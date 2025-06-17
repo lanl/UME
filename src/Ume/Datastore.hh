@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#include <iostream>
 
 namespace Ume {
 
@@ -170,6 +171,11 @@ private:
 public: /* These are public for testing purposes */
   Datastore *parent_; //!< The parent of this datastore (null if root)
   std::vector<dsptr> children_; //!< The list of subtrees
+  void print_entries() { //!Print the datastore entries.
+    for (auto const &pair: entries_) {
+      std::cout << "{" << pair.first << ": " << pair.second << "}\n";
+    }
+  }
 };
 
 } // namespace Ume
