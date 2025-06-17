@@ -27,6 +27,7 @@
 #include "Ume/Timer.hh"
 #include "Ume/face_area.hh"
 #include "Ume/gradient.hh"
+#include "Ume/renumbering.hh"
 #include "Ume/utils.hh"
 #include <cassert>
 #include <cstdio>
@@ -140,6 +141,18 @@ int main(int argc, char *argv[]) {
 
   if (comm.pe() == 0)
     std::cout << "Face area computation took: " << face_time.seconds() << "s\n";
+
+  if (comm.pe() == 0)
+    std::cout << "Renumbering mesh entities..." << std::endl;
+
+  Ume::Timer renumber_time;
+  Ume::renumber_mesh(mesh);
+  renumber_time.start();
+  Ume::renumber_mesh(mesh);
+  renumber_time.stop();
+
+  if (comm.pe() == 0)
+    std::cout << "Renumbering algorithm took: " << renumber_time.seconds() << "s\n";
 
   if (comm.pe() == 0)
     std::cout << "Done." << std::endl;
