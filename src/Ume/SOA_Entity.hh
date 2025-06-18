@@ -124,22 +124,34 @@ struct Entity {
   //! The subsets defined on this Entity
   std::vector<Subset> subsets;
 
-  //! Return the number of elements in this Entity
+  /* Element size queries. */
+  //! Return the number of elements in this Entity.
   constexpr int size() const { return static_cast<int>(mask.size()); }
+  //! Return the number of non-ghost elements in this Entity.
   constexpr int local_size() const { return lsize_; }
+  //! Return the number of ghost elements in this Entity.
+  constexpr int ghost_local_size() const { return size() - lsize_; }
+  //! Return the maximum number of ghost elements in this Entity.
+  constexpr int ghost_size() const { return std::max(1, ghost_local_size()); }
 
-  /* Have to wait until clang can support this
-
-  constexpr auto local_indices() const {
-    return std::ranges::iota_view{0, lsize_-1};
-  }
-  constexpr auto ghost_indices() const {
-    return std::ranges::iota_view{lsize_, size()};
-  }
+  /* Element sequences for iterating over. */
+  //! Return a sequence over all indices.
   constexpr auto all_indices() const {
     return std::ranges::iota_view{0, size() - 1};
   }
-  */
+  //! Return a sequence over non-ghost indices.
+  constexpr auto local_indices() const {
+    return std::ranges::iota_view{0, lsize_ - 1};
+  }
+  //! Return a sequence over ghost indices.
+  //! This requires at least one ghost to make sense.
+  constexpr auto ghost_indices() const {
+    return std::ranges::iota_view{lsize_, size() - 1};
+  }
+  //! Return a sequence over ghost indices offset to 0.
+  constexpr auto ghost_indices_offset() const {
+    return std::ranges::iota_view{0, ghost_size() - 1};
+  }
 
   virtual void write(std::ostream &os) const = 0;
   virtual void read(std::istream &is) = 0;
