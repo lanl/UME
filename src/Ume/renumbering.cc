@@ -33,11 +33,9 @@ void renumber_mesh(Mesh &mesh) {
 
 void renumber_s_maps(Mesh &mesh) {
   /* Get sizes for general use. */
-  int const sl = mesh.sides.local_size();
   int const sll = mesh.sides.size();
   int const sgl = mesh.sides.ghost_local_size();
   int const sgll = mesh.sides.ghost_size();
-  int const pl = mesh.points.local_size();
 
   /* Initialize new indices to current indices. */
   INTV_T s_to_snew_map(sll, 0);
@@ -77,8 +75,8 @@ void renumber_s_maps(Mesh &mesh) {
 
     int s_max = 0;
     INTV_T snew_to_snew2_map(sll, 0);
-    new_numbering(sl, side_type,
-                  pl, s_to_p_map_new,
+    new_numbering(mesh.sides, mesh.points,
+                  s_to_p_map_new,
                   s_max, snew_to_snew2_map);
 
     for (int s : mesh.sides.all_indices()) { // Set new indices
@@ -103,34 +101,6 @@ void renumber_s_maps(Mesh &mesh) {
 
     op += 1;
   } while(op <= MAX);
-}
-
-void new_numbering(int const xl, auto const &x_type,
-                   int const yl, INTV_T const &x_to_y_map,
-                   int &x_max, INTV_T &x_to_xnew_map) {
-  int const yl1 = yl + 1;
-  INTV_T storage_locations(yl1, 0);
-
-  for (int x = 0; x < xl; ++x) { // Count x attached to each y
-    if (x_type[x] == 0)
-      continue;
-
-    int const y = x_to_y_map[x];
-    storage_locations[y + 1] += 1;
-  }
-
-  for (int y = 1; y < yl1; ++y) { // Sum storage locations
-    storage_locations[y] += storage_locations[y - 1];
-  }
-
-  for (int x = 0; x < xl; ++x) { // Set new numbers
-    if (x_type[x] == 0)
-      continue;
-
-    int const y = x_to_y_map[x];
-    x_to_xnew_map[x] = storage_locations[y];
-    x_max = std::max(x_max, storage_locations[y]);
-  }
 }
 
 } // namespace Ume

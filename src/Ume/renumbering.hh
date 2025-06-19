@@ -22,6 +22,7 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/DS_Types.hh"
+#include <cassert>
 
 namespace Ume {
 
@@ -64,9 +65,41 @@ void renumber_w_maps(SOA_Idx::Mesh &mesh);
 //! Renumber entity X based on Y.
 /*! Assumes that Y is already renumbered smoothly, so that ordering X
  * based on Y will produce a smooth ordering of X. */
-void new_numbering(int const xl, auto const &x_type, int const yl,
-                   DS_Types::INTV_T const &x_to_y_map,
-                   int &x_max, DS_Types::INTV_T &x_to_xnew_map);
+template <typename MeshEntity1, typename MeshEntity2>
+void new_numbering(MeshEntity1 const &x, MeshEntity2 const &y,
+                    DS_Types::INTV_T const &x_to_y_map,
+                    int &x_max, DS_Types::INTV_T &x_to_xnew_map) {
+  static_assert(std::is_base_of<SOA_Idx::Entity, MeshEntity1>::value);
+  static_assert(std::is_base_of<SOA_Idx::Entity, MeshEntity2>::value);
+  assert(x.size() == static_cast<int>(x_to_y_map.size()));
+  assert(x.size() == static_cast<int>(x_to_xnew_map.size()));
+
+  int const yl1 = y.local_size() + 1;
+  DS_Types::INTV_T storage_locations(yl1, 0);
+
+  auto const &x_type = x.mask;
+  for (int x_idx : x.local_indices()) { // Count x attached to each y
+    if (x_type[x_idx] == 0)
+      continue;
+
+    int const y_idx = x_to_y_map[x_idx];
+    storage_locations[y_idx + 1] += 1;
+  }
+
+  for (int y_idx : std::ranges::iota_view{1, yl1 - 1}) {
+    /* Sum storage locations */
+    storage_locations[y_idx] += storage_locations[y_idx - 1];
+  }
+
+  for (int x_idx : x.local_indices()) { // Set new numbers
+    if (x_type[x_idx] == 0)
+      continue;
+
+    int const y_idx = x_to_y_map[x_idx];
+    x_to_xnew_map[x_idx] = storage_locations[y_idx];
+    x_max = std::max(x_max, storage_locations[y_idx]);
+  }
+}
 
 } // namespace Ume
 
