@@ -78,7 +78,8 @@ void new_numbering(MeshEntity1 const &x, MeshEntity2 const &y,
   DS_Types::INTV_T storage_locations(yl1, 0);
 
   auto const &x_type = x.mask;
-  for (int x_idx : x.local_indices()) { // Count x attached to each y
+  /* Count x attached to each y. */
+  for (int x_idx : x.local_indices()) {
     if (x_type[x_idx] == 0)
       continue;
 
@@ -86,12 +87,13 @@ void new_numbering(MeshEntity1 const &x, MeshEntity2 const &y,
     storage_locations[y_idx + 1] += 1;
   }
 
+  /* Sum storage locations. */
   for (int y_idx : std::ranges::iota_view{1, yl1 - 1}) {
-    /* Sum storage locations */
     storage_locations[y_idx] += storage_locations[y_idx - 1];
   }
 
-  for (int x_idx : x.local_indices()) { // Set new numbers
+  /* Set new numbers. */
+  for (int x_idx : x.local_indices()) {
     if (x_type[x_idx] == 0)
       continue;
 
