@@ -27,11 +27,14 @@ enum OPS {
 };
 typedef int Op_t;
 
+/* Renumber_MeshMaps[RenumWaveMinMax]-->RenumWaveMinMax */
 void renumber_mesh(Mesh &mesh) {
+  /* Broadcast each to the mesh handle. */
   renumber_s_maps(mesh);
 }
 
-void renumber_s_maps(Mesh &mesh) { /* Renumb_S */
+/* Renumber_S[kksll]-->Renumb_S */
+void renumber_s_maps(Mesh &mesh) {
   /* Get sizes for general use. */
   int const sll = mesh.sides.size();
   int const sgl = mesh.sides.ghost_local_size();
@@ -47,7 +50,7 @@ void renumber_s_maps(Mesh &mesh) { /* Renumb_S */
   INTV_T s_to_snew_map(sll, 0);
   INTV_T sg_to_sgnew_map(sgll, 0);
 
-  { /* RenumWaveMinMaxS */
+  { /* Renumber_SMaps[RenumWaveMinMax]-->RenumWaveMinMaxS */
     /* Initialize new indices to current indices. */
     for (int s : mesh.sides.all_indices())
       s_to_snew_map[s] = s;
@@ -122,6 +125,59 @@ void renumber_s_maps(Mesh &mesh) { /* Renumb_S */
    * this entity and index lists pointing to this entity data. This is
    * a special case of a general ReshapeX operation since the sizes of
    * the entity data have not changed, only the ordering. */
+
+  { /* ReshapeS() */
+    /* Set masks to 1 or 0 depending on map value */
+    INTV_T side_type_new(sll, 0);
+    for (int s: mesh.sides.all_indices()) {
+      side_type_new[s] = std::max(0, std::min(s_to_snew_map[s], 1));
+      s_to_snew_map[s] = std::abs(s_to_snew_map[s]);
+    }
+
+    INTV_T ghost_side_type_new(sgll, 0);
+    auto const &ghost_side_type = mesh.sides.ghost_mask;
+    if (sgl > 0) {
+      for (int sg : mesh.sides.ghost_indices_offset()) {
+        if (ghost_side_type[sg] == 0)
+          continue;
+        ghost_side_type_new[sg] = std::max(0, std::min(sg_to_sgnew_map[sg], 1));
+        sg_to_sgnew_map[sg] = std::abs(sg_to_sgnew_map[sg]);
+      }
+    }
+
+    /* Update MPI stuff: upKKSSLVPELL() */
+
+    /* We must now renumber all the database maps and variables for
+     * this entity. To do this, we emulate the broadcasts to mesh
+     * entities of the form m:x>y and m:y>x along with all variables
+     * beginning with the letter x. */
+
+    /* ReshapeS[Mesh]-->(potentially lots of things) */
+
+    { /* Reshape m:y>x maps. */
+      std::vector<std::string> entity_names;
+      mesh.ds->to_entity_map_names("s", entity_names);
+
+      for (size_t x = 0; x < entity_names.size(); ++x) {
+      }
+    }
+
+    { /* Reshape m:x>y maps. */
+      std::vector<std::string> entity_names;
+      mesh.ds->from_entity_map_names("s", entity_names);
+
+      for (size_t x = 0; x < entity_names.size(); ++x) {
+      }
+    }
+
+    { /* Reshape x vars. */
+      std::vector<std::string> entity_names;
+      mesh.ds->entity_var_names("s", entity_names);
+
+      for (size_t x = 0; x < entity_names.size(); ++x) {
+      }
+    }
+  }
 }
 
 } // namespace Ume

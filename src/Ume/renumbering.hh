@@ -16,6 +16,19 @@
  * techniques: wavefront renumbering for mesh points, minimum/maximum
  * renumbering for all other mesh entities. The data for each processor
  * is renumbered separately.
+ *
+ * The call chains invoked by the renumbering node are large and
+ * largely opaque, driven by the AJAX broadcast mechanism which we
+ * emulate here. In this way, messages are broadcast to the mesh entity
+ * to drive renumbering. The message propagates down the subtree of the
+ * database rooted at the mesh handle such that each mesh entity may
+ * respond to the given message via dynamic dispatch. There is no way
+ * to know how many, if any, mesh entities needing renumbering will
+ * exist prior to a simulation from which the UME mesh inputs are
+ * derived. It is possible for the renumbering scheme to be a no-op.
+ *
+ * NOTE: broadcast dispatch is sequential and follows a canonical order
+ * that may not be done in parallel.
 */
 #ifndef UME_RENUMBERING_HH
 #define UME_RENUMBERING_HH 1

@@ -168,6 +168,29 @@ private:
   //! The name of this datastore
   std::string name_;
 
+public:
+  //! Return a list of "to" maps for a mesh entity.
+  void to_entity_map_names(std::string const &x,
+                           std::vector<std::string> &names) {
+    for (auto const &pair: entries_)
+      if (pair.first.find(">" + x) != std::string::npos)
+        names.emplace_back(pair.first);
+  }
+  //! Return a list of "from" maps for a mesh entity.
+  void from_entity_map_names(std::string const &x,
+                             std::vector<std::string> &names) {
+    for (auto const &pair: entries_)
+      if (pair.first.find(x + ">") != std::string::npos)
+        names.emplace_back(pair.first);
+  }
+  //! Return a list of var names for a mesh entity.
+  void entity_var_names(std::string const &x,
+                        std::vector<std::string> &names) {
+    for (auto const &pair: entries_)
+      if (pair.first[0] == x[0])
+        names.emplace_back(pair.first);
+  }
+
 public: /* These are public for testing purposes */
   Datastore *parent_; //!< The parent of this datastore (null if root)
   std::vector<dsptr> children_; //!< The list of subtrees
