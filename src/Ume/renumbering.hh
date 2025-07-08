@@ -44,36 +44,28 @@ void renumber_mesh(SOA_Idx::Mesh &mesh);
 
 //! Get a new mesh ordering for points.
 /*! Renumber points via advancing wavefront. */
-void renumber_p_maps(SOA_Idx::Mesh &mesh);
+void renumber_p(SOA_Idx::Mesh &mesh);
 
 //! Get a new mesh ordering for sides.
 /*! Renumber sides via min/max point number. */
-void renumber_s_maps(SOA_Idx::Mesh &mesh);
+void renumber_s(SOA_Idx::Mesh &mesh);
 
 //! Get a new mesh ordering for zones.
 /*! Renumber zones via min/max point number. */
-void renumber_z_maps(SOA_Idx::Mesh &mesh);
+void renumber_z(SOA_Idx::Mesh &mesh);
 
 //! Get a new mesh ordering for faces.
 /*! Renumber faces via minimum side number. It only needs to be done
  * once because there is never more than one face attached to a side. */
-void renumber_f_maps(SOA_Idx::Mesh &mesh);
+void renumber_f(SOA_Idx::Mesh &mesh);
 
 //! Get a new mesh ordering for edges.
 /*! Renumber edges via min/max point number. */
-void renumber_e_maps(SOA_Idx::Mesh &mesh);
+void renumber_e(SOA_Idx::Mesh &mesh);
 
 //! Get a new mesh ordering for corners.
 /*! Renumber corners based on point order. */
-void renumber_c_maps(SOA_Idx::Mesh &mesh);
-
-//! Get a new mesh ordering for iotas.
-/*! Renumber iotas based on point order. */
-void renumber_a_maps(SOA_Idx::Mesh &mesh);
-
-//! Get a new mesh ordering for wedges.
-/*! Renumber wedges via min/max point number. */
-void renumber_w_maps(SOA_Idx::Mesh &mesh);
+void renumber_c(SOA_Idx::Mesh &mesh);
 
 //! Renumber entity X based on Y.
 /*! Assumes that Y is already renumbered smoothly, so that ordering X

@@ -30,11 +30,34 @@ typedef int Op_t;
 /* Renumber_MeshMaps[RenumWaveMinMax]-->RenumWaveMinMax */
 void renumber_mesh(Mesh &mesh) {
   /* Broadcast each to the mesh handle. */
-  renumber_s_maps(mesh);
+  renumber_p(mesh);
+  renumber_s(mesh);
+  renumber_z(mesh);
+  renumber_f(mesh);
+  renumber_e(mesh);
+  renumber_c(mesh);
+}
+
+/* Renumber_P[kkpll]-->Renumb_P */
+void renumber_p(Mesh &mesh) {
+  /* Get sizes for general use. */
+  int const pll = mesh.points.size();
+  int const pgl = mesh.points.ghost_local_size();
+  int const pgll = mesh.points.ghost_size();
+
+  /* Store new-to-old mappings for debugging/testing. After the reshape,
+   * these will represent current-to-old mappings. */
+  INTV_T p_to_pold_map(pll, 0);
+  for (int p : mesh.points.all_indices())
+    p_to_pold_map[p] = p;
+
+  /* Initialize local storage for new mappings. */
+  INTV_T p_to_pnew_map(pll, 0);
+  INTV_T pg_to_pgnew_map(pgll, 0);
 }
 
 /* Renumber_S[kksll]-->Renumb_S */
-void renumber_s_maps(Mesh &mesh) {
+void renumber_s(Mesh &mesh) {
   /* Get sizes for general use. */
   int const sll = mesh.sides.size();
   int const sgl = mesh.sides.ghost_local_size();
@@ -178,6 +201,78 @@ void renumber_s_maps(Mesh &mesh) {
       }
     }
   }
+}
+
+/* Renumber_Z[kkzll]-->Renumb_Z */
+void renumber_z(Mesh &mesh) {
+  /* Get sizes for general use. */
+  int const zll = mesh.zones.size();
+  int const zgl = mesh.zones.ghost_local_size();
+  int const zgll = mesh.zones.ghost_size();
+
+  /* Store new-to-old mappings for debugging/testing. After the reshape,
+   * these will represent current-to-old mappings. */
+  INTV_T z_to_zold_map(zll, 0);
+  for (int z : mesh.zones.all_indices())
+    z_to_zold_map[z] = z;
+
+  /* Initialize local storage for new mappings. */
+  INTV_T z_to_znew_map(zll, 0);
+  INTV_T zg_to_zgnew_map(zgll, 0);
+}
+
+/* Renumber_F[kkfll]-->Renumb_F */
+void renumber_f(Mesh &mesh) {
+  /* Get sizes for general use. */
+  int const fll = mesh.faces.size();
+  int const fgl = mesh.faces.ghost_local_size();
+  int const fgll = mesh.faces.ghost_size();
+
+  /* Store new-to-old mappings for debugging/testing. After the reshape,
+   * these will represent current-to-old mappings. */
+  INTV_T f_to_fold_map(fll, 0);
+  for (int f : mesh.faces.all_indices())
+    f_to_fold_map[f] = f;
+
+  /* Initialize local storage for new mappings. */
+  INTV_T f_to_fnew_map(fll, 0);
+  INTV_T fg_to_fgnew_map(fgll, 0);
+}
+
+/* Renumber_E[kkell]-->Renumb_E */
+void renumber_e(Mesh &mesh) {
+  /* Get sizes for general use. */
+  int const ell = mesh.edges.size();
+  int const egl = mesh.edges.ghost_local_size();
+  int const egll = mesh.edges.ghost_size();
+
+  /* Store new-to-old mappings for debugging/testing. After the reshape,
+   * these will represent current-to-old mappings. */
+  INTV_T e_to_eold_map(ell, 0);
+  for (int e : mesh.edges.all_indices())
+    e_to_eold_map[e] = e;
+
+  /* Initialize local storage for new mappings. */
+  INTV_T e_to_enew_map(ell, 0);
+  INTV_T eg_to_egnew_map(egll, 0);
+}
+
+/* Renumber_C[kkcll]-->Renumb_C */
+void renumber_c(Mesh &mesh) {
+  /* Get sizes for general use. */
+  int const cll = mesh.corners.size();
+  int const cgl = mesh.corners.ghost_local_size();
+  int const cgll = mesh.corners.ghost_size();
+
+  /* Store new-to-old mappings for debugging/testing. After the reshape,
+   * these will represent current-to-old mappings. */
+  INTV_T c_to_cold_map(cll, 0);
+  for (int c : mesh.corners.all_indices())
+    c_to_cold_map[c] = c;
+
+  /* Initialize local storage for new mappings. */
+  INTV_T c_to_cnew_map(cll, 0);
+  INTV_T cg_to_cgnew_map(cgll, 0);
 }
 
 } // namespace Ume
