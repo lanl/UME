@@ -327,6 +327,43 @@ void renumber_f(Mesh &mesh) {
   /* Initialize local storage for new mappings. */
   INTV_T f_to_fnew_map(fll, 0);
   INTV_T fg_to_fgnew_map(fgll, 0);
+
+  { /* Renumber_FMaps[RenumWaveMinMax]-->RenumWaveMinMaxF */
+    /* Faces get renumbered by minimum side number (only have to do it
+     * once because there is never more than one face attached to a
+     * side). */
+    { /* Faces_minmax */
+      /* Access database. */
+      auto const &side_type = mesh.sides.mask;
+      auto const &s_to_f_map = mesh.ds->caccess_intv("m:s>f");
+      auto const &s_to_s2_map = mesh.ds->caccess_intv("m:s>s2");
+
+      /* Use simple map for ghosts. */
+      for (int fg : mesh.faces.ghost_indices_offset())
+        fg_to_fgnew_map[fg] = fg;
+
+      /* Create new f->s mappings. */
+      INTV_T f_to_s_map_new(fll, mesh.sides.size() + 1);
+      for (int s : mesh.sides.local_indices()) {
+        if (side_type[s] == 0)
+          continue;
+
+        int const f = s_to_f_map[s];
+        int const s2 = s_to_s2_map[s];
+        int const temp = std::min(s, s2);
+        f_to_s_map_new[f] = std::min(temp, f_to_s_map_new[f]);
+      }
+
+      /* Generate the new numbers. */
+      int f_max = 0;
+      new_numbering(mesh.faces, mesh.sides,
+                    f_to_s_map_new,
+                    f_max, f_to_fnew_map);
+    }
+  }
+
+  { /* ReshapeF() */
+  }
 }
 
 /* Renumber_E[kkell]-->Renumb_E */
