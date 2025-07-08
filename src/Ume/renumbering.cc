@@ -219,6 +219,96 @@ void renumber_z(Mesh &mesh) {
   /* Initialize local storage for new mappings. */
   INTV_T z_to_znew_map(zll, 0);
   INTV_T zg_to_zgnew_map(zgll, 0);
+
+  { /* Renumber_ZMaps[RenumWaveMinMax]-->RenumWaveMinMaxZ */
+    /* Initialize new indices to current indices. */
+    for (int z : mesh.zones.all_indices())
+      z_to_znew_map[z] = z;
+
+    Op_t op = MIN;
+    do { /* Zones_minmax */
+      /* Access database. */
+      auto const &side_type = mesh.sides.mask;
+      auto const &ghost_zone_type = mesh.zones.ghost_mask;
+      auto const &s_to_z_map = mesh.ds->caccess_intv("m:s>z");
+      auto const &s_to_p1_map = mesh.ds->caccess_intv("m:s>p1");
+      auto const &s_to_p2_map = mesh.ds->caccess_intv("m:s>p2");
+      auto const &zg_to_z_map = mesh.zones.cpy_idx;
+
+      /* Use simple map for ghosts. */
+      for (int zg : mesh.zones.ghost_indices_offset())
+        zg_to_zgnew_map[zg] = zg;
+
+      /* Create new z->p mappings. */
+      INTV_T z_to_p_map_new(zll, 0);
+
+      /* Set the initial point number for each zone to be  either zero
+       * (for max sort) or 2*kkpll (for min sort). */
+      int p = 0;
+
+      if (MIN == op)
+        p = 2*mesh.points.size();
+
+      for (int z : mesh.zones.local_indices()) {
+        z_to_p_map_new[z] = p;
+      }
+
+      /* Identify the min/max point number on each zone. */
+      for (int s : mesh.sides.local_indices()) {
+        if (side_type[s] == 0)
+          continue;
+
+        int const z = s_to_z_map[s];
+        int const p1 = s_to_p1_map[s];
+        int const p2 = s_to_p2_map[s];
+        int const znew = z_to_znew_map[z];
+        int const p = z_to_p_map_new[znew];
+
+        if (MIN == op) {
+          int const temp = std::min(p1, p2);
+          z_to_p_map_new[znew] = std::min(temp, p);
+        } else if (MAX == op) {
+          int const temp = std::max(p1, p2);
+          z_to_p_map_new[znew] = std::max(temp, p);
+        }
+      }
+
+      /* Generate the new numbers. */
+      int z_max = 0;
+      INTV_T znew_to_znew2_map(zll, 0);
+      new_numbering(mesh.zones, mesh.points,
+                    z_to_p_map_new,
+                    z_max, znew_to_znew2_map);
+
+      /* The first iteration translates X->XNEW and the second iteration
+       * translates XNEW->XNEW2. The X->XNEW map contains both
+       * translations X->XNEW->XNEW2. */
+      for (int z : mesh.zones.all_indices()) {
+        int const znew = z_to_znew_map[z];
+        if (znew == 0)
+          continue;
+
+        int const znew2 = znew_to_znew2_map[znew];
+        z_to_znew_map[z] = znew2;
+      }
+
+      if (zgl > 0) { // Set new ghost indices, if there are ghosts
+        for (int zg : mesh.zones.ghost_indices_offset()) {
+          if (ghost_zone_type[zg] == 0)
+            continue;
+
+          int const z = zg_to_z_map[zg];
+          z_max += 1;
+          z_to_znew_map[z] = z_max;
+        }
+      }
+
+      op += 1;
+    } while(op <= MAX);
+  }
+
+  { /* ReshapeZ() */
+  }
 }
 
 /* Renumber_F[kkfll]-->Renumb_F */
