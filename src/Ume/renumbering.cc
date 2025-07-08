@@ -461,6 +461,40 @@ void renumber_c(Mesh &mesh) {
   /* Initialize local storage for new mappings. */
   INTV_T c_to_cnew_map(cll, 0);
   INTV_T cg_to_cgnew_map(cgll, 0);
+
+  { /* Renumber_CMaps[RenumWaveMinMax]-->RenumWaveMinMaxC */
+    /* Renumber corners based on point number. */
+    { /* Corner_minmax */
+      /* Access database. */
+      auto const &c_to_p_map = mesh.ds->caccess_intv("m:c>p");
+      auto const &ghost_corner_type = mesh.corners.ghost_mask;
+      auto const &cg_to_c_map = mesh.corners.cpy_idx;
+
+      /* Use simple map for ghosts. */
+      for (int cg : mesh.corners.ghost_indices_offset())
+        cg_to_cgnew_map[cg] = cg;
+
+      /* Generate the new numbers. */
+      int c_max = 0;
+      new_numbering(mesh.corners, mesh.points,
+                    c_to_p_map,
+                    c_max, c_to_cnew_map);
+
+      if (cgl > 0) { // Set new ghost indices, if there are ghosts
+        for (int cg : mesh.corners.ghost_indices_offset()) {
+          if (ghost_corner_type[cg] == 0)
+            continue;
+
+          int const c = cg_to_c_map[cg];
+          c_max += 1;
+          c_to_cnew_map[c] = c_max;
+        }
+      }
+    }
+  }
+
+  { /* ReshapeC() */
+  }
 }
 
 } // namespace Ume
