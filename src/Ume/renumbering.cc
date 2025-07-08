@@ -382,6 +382,67 @@ void renumber_e(Mesh &mesh) {
   /* Initialize local storage for new mappings. */
   INTV_T e_to_enew_map(ell, 0);
   INTV_T eg_to_egnew_map(egll, 0);
+
+  { /* Renumber_EMaps[RenumWaveMinMax]-->RenumWaveMinMaxE */
+    /* Initialize new indices to current indices. */
+    for (int e : mesh.edges.all_indices())
+      e_to_enew_map[e] = e;
+
+    Op_t op = MIN;
+    do { /* Edges_minmax */
+      /* Access database. */
+      auto const &edge_type = mesh.edges.mask;
+      auto const &e_to_p1_map = mesh.ds->caccess_intv("m:e>p1");
+      auto const &e_to_p2_map = mesh.ds->caccess_intv("m:e>p2");
+
+      /* Use simple map for ghosts. */
+      for (int eg : mesh.edges.ghost_indices_offset())
+        eg_to_egnew_map[eg] = eg;
+
+      /* Create new e->p mappings. */
+      INTV_T e_to_p_map_new(ell, 0);
+
+      /* Fill help array based on min/max point number and flag. */
+      for (int e : mesh.edges.local_indices()) {
+        if (edge_type[e] == 0)
+          continue;
+
+        int const enew = e_to_enew_map[e];
+        int const p1 = e_to_p1_map[e];
+        int const p2 = e_to_p2_map[e];
+
+        if (MIN == op) {
+          e_to_p_map_new[enew] = std::min(p1, p2);
+        } else if (MAX == op) {
+          e_to_p_map_new[enew] = std::max(p1, p2);
+        }
+      }
+
+      /* Generate the new numbers. */
+      int e_max = 0;
+      INTV_T enew_to_enew2_map(ell, 0);
+      new_numbering(mesh.edges, mesh.points,
+                    e_to_p_map_new,
+                    e_max, enew_to_enew2_map);
+
+      /* The first iteration translates X->XNEW and the second iteration
+       * translates XNEW->XNEW2. The X->XNEW map contains both
+       * translations X->XNEW->XNEW2. */
+      for (int e : mesh.edges.all_indices()) {
+        int const enew = e_to_enew_map[e];
+        if (enew == 0)
+          continue;
+
+        int const enew2 = enew_to_enew2_map[enew];
+        e_to_enew_map[e] = enew2;
+      }
+
+      op += 1;
+    } while(op <= MAX);
+  }
+
+  { /* ReshapeE() */
+  }
 }
 
 /* Renumber_C[kkcll]-->Renumb_C */
