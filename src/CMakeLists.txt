@@ -14,6 +14,12 @@ target_link_libraries(txt2bin Ume)
 target_compile_options(txt2bin PRIVATE ${WARNING_FLAGS}
   ${COMMON_COMPILE_OPTIONS})
 
+add_executable(scale_mesh scale_mesh.cc)
+target_link_libraries(scale_mesh Ume)
+set_target_properties(scale_mesh PROPERTIES
+  COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
+  COMPILE_OPTIONS "${WARNING_FLAGS}"
+  )
 
 #############################################################################
 # Things that depend on MPI
