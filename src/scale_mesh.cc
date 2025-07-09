@@ -83,6 +83,13 @@ int main(int argc, char *argv[]) {
         std::cerr << "Aborting." << std::endl;
         return 1;
     }
+
+    if (mype == 0)
+        std::cout << "Done." << std::endl;
+#ifdef HAVE_MPI
+    comm.stop();
+#endif
+    return 0;
 }
 
 bool read_mesh(
