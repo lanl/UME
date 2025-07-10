@@ -305,6 +305,47 @@ void read_sides(std::istream &is, Sides &sides, const int kksl, const int kksll,
   }
 }
 
+void read_iotas(std::istream &is, Iotas &iotas, const int kkal, const int kkall,
+    const int kkagl) {
+  int idx;
+  iotas.resize(kkal, kkall, kkagl);
+  auto &z = iotas.ds().access_intv("m:a>z");
+  auto &f = iotas.ds().access_intv("m:a>f");
+  auto &p = iotas.ds().access_intv("m:a>p");
+  auto &e = iotas.ds().access_intv("m:a>e");
+  auto &s = iotas.ds().access_intv("m:a>s");
+
+  for (int i = 0; i < kkall; ++i) {
+    idx = -1;
+    is >> idx;
+    if (idx != i + 1) {
+      std::cerr << "Iota " << i + 1 << " read error" << std::endl;
+      exit(1);
+    }
+    is >> iotas.mask[i] >> iotas.comm_type[i];
+    is >> z[i] >> f[i] >> p[i] >> e[i] >> s[i] >> std::ws;
+    --z[i];
+    --f[i];
+    --p[i];
+    --e[i];
+    --s[i];
+  }
+  expect_line(is, "Ghost Iotas");
+  skip_line(is);
+  for (int i = 0; i < kkagl; ++i) {
+    idx = -1;
+    is >> idx;
+    if (idx != i + 1) {
+      std::cerr << "Ghost iota " << i + 1 << " read error" << std::endl;
+      exit(1);
+    }
+    is >> iotas.cpy_idx[i] >> iotas.ghost_mask[i] >> iotas.src_idx[i] >>
+        iotas.src_pe[i] >> std::ws;
+    --iotas.cpy_idx[i];
+    --iotas.src_idx[i];
+  }
+}
+
 void read_edges(std::istream &is, Edges &edges, const int kkel, const int kkell,
     const int kkegl) {
   int idx;
@@ -481,6 +522,7 @@ int read(std::istream &is, Mesh &m) {
     std::cerr << "Unknown igeo flag = " << igeo << '\n';
     return 2;
   }
+  m.dump_iotas = read_tag(is, "Iotas dumped");
 
   /*
     The "Number of <entity>" tags represent kkXl. The "Dimension:
@@ -509,6 +551,9 @@ int read(std::istream &is, Mesh &m) {
   const int kkcll = read_tag(is, "Corner total");
   const int kkcl = read_tag(is, "Corner local");
   const int kkcgl = read_tag(is, "Corner ghost");
+  const int kkall = read_tag(is, "Iota total");
+  const int kkal = read_tag(is, "Iota local");
+  const int kkagl = read_tag(is, "Iota ghost");
 
   expect_line(is, "Points");
   skip_line(is);
@@ -534,6 +579,12 @@ int read(std::istream &is, Mesh &m) {
   skip_line(is);
   read_corners(is, m.corners, kkcl, kkcll, kkcgl);
 
+  if (m.dump_iotas) {
+    skip_to_line(is, "Iotas");
+    skip_line(is);
+    read_iotas(is, m.iotas, kkal, kkall, kkagl);
+  }
+
   const int has_mpi = read_tag(is, "Has MPI connectivity");
   if (has_mpi) {
     skip_to_line(is, "C-MPI");
@@ -553,6 +604,11 @@ int read(std::istream &is, Mesh &m) {
 
     skip_to_line(is, "Z-MPI");
     read_mpi(is, m.zones);
+
+    if (m.dump_iotas) {
+      skip_to_line(is, "A-MPI");
+      read_mpi(is, m.iotas);
+    }
   }
 
   const size_t num_mats = read_tag(is, "Num materials");

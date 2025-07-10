@@ -25,7 +25,7 @@ namespace SOA_Idx {
 
 Mesh::Mesh()
     : Mesh_Base(), corners{this}, edges{this}, faces{this}, points{this},
-      sides{this}, zones{this} {}
+      sides{this}, zones{this}, iotas{this} {}
 
 std::ostream &operator<<(std::ostream &os, Mesh::Geometry_Type const &geo) {
   switch (geo) {
@@ -46,30 +46,37 @@ void Mesh::write(std::ostream &os) const {
   write_bin(os, mype);
   write_bin(os, numpe);
   write_bin(os, geo);
+  write_bin(os, dump_iotas);
   points.write(os);
   edges.write(os);
   faces.write(os);
   sides.write(os);
   corners.write(os);
   zones.write(os);
+  if (dump_iotas)
+    iotas.write(os);
 }
 
 void Mesh::read(std::istream &is) {
   read_bin(is, mype);
   read_bin(is, numpe);
   read_bin(is, geo);
+  read_bin(is, dump_iotas);
   points.read(is);
   edges.read(is);
   faces.read(is);
   sides.read(is);
   corners.read(is);
   zones.read(is);
+  if (dump_iotas)
+    iotas.read(is);
 }
 
 bool Mesh::operator==(Mesh const &rhs) const {
   return mype == rhs.mype && numpe == rhs.numpe && geo == rhs.geo &&
-      points == rhs.points && edges == rhs.edges && sides == rhs.sides &&
-      corners == rhs.corners && zones == rhs.zones;
+      dump_iotas == rhs.dump_iotas && points == rhs.points &&
+      edges == rhs.edges && sides == rhs.sides && corners == rhs.corners &&
+      zones == rhs.zones && iotas == rhs.iotas;
 }
 
 void Mesh::print_stats(std::ostream &os) const {
@@ -77,12 +84,14 @@ void Mesh::print_stats(std::ostream &os) const {
      << '\n';
   os << "\tPoint dimensions: " << ndims() << '\n';
   os << "\tCoordinate system: " << geo << '\n';
+  os << "\tIotas dumped: " << dump_iotas << '\n';
   os << "\tPoints: " << points.local_size() << '\n';
   os << "\tZones: " << zones.local_size() << ' ' << zones.size() << '\n';
   os << "\tSides: " << sides.local_size() << ' ' << sides.size() << '\n';
   os << "\tEdges: " << edges.local_size() << '\n';
   os << "\tFaces: " << faces.local_size() << '\n';
   os << "\tCorners: " << corners.local_size() << ' ' << corners.size() << '\n';
+  os << "\tIotas: " << iotas.local_size() << ' ' << iotas.size() << '\n';
 }
 
 } // namespace SOA_Idx

@@ -26,6 +26,7 @@ set(UME_INCLUDE_FILES
   SOA_Idx_Points.hh
   SOA_Idx_Sides.hh
   SOA_Idx_Zones.hh
+  SOA_Idx_Iotas.hh
   Timer.hh
   VecN.hh
   face_area.hh
@@ -50,6 +51,7 @@ add_library(Ume
   SOA_Idx_Points.cc
   SOA_Idx_Sides.cc
   SOA_Idx_Zones.cc
+  SOA_Idx_Iotas.cc
   face_area.cc
   gradient.cc
   renumbering.cc
