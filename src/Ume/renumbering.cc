@@ -39,6 +39,7 @@ void renumber_mesh(Mesh &mesh) {
   renumber_f(mesh);
   renumber_e(mesh);
   renumber_c(mesh);
+  renumber_a(mesh);
 }
 
 /* Renumber_P[kkpll]-->Renumb_P */
@@ -657,6 +658,58 @@ void renumber_c(Mesh &mesh) {
   }
 
   { /* ReshapeC() */
+  }
+}
+
+/* Renumber_A[kkall]-->Renumb_A */
+void renumber_a(Mesh &mesh) {
+  /* Get sizes for general use. */
+  int const all = mesh.iotas.size();
+  int const agl = mesh.iotas.ghost_local_size();
+  int const agll = mesh.iotas.ghost_size();
+
+  /* Store new-to-old mappings for debugging/testing. After the reshape,
+   * these will represent current-to-old mappings. */
+  INTV_T a_to_aold_map(all, 0);
+  for (int a : mesh.iotas.all_indices())
+    a_to_aold_map[a] = a;
+
+  /* Initialize local storage for new mappings. */
+  INTV_T a_to_anew_map(all, 0);
+  INTV_T ag_to_agnew_map(agll, 0);
+
+  { /* Renumber_AMaps[RenumWaveMinMax]-->RenumWaveMinMaxA */
+    /* Renumber iotas based on point number. */
+    { /* Iota_minmax */
+      /* Access database. */
+      auto const &a_to_p_map = mesh.ds->caccess_intv("m:a>p");
+      auto const &ghost_iota_type = mesh.iotas.ghost_mask;
+      auto const &ag_to_a_map = mesh.iotas.cpy_idx;
+
+      /* Use simple map for ghosts. */
+      for (int ag : mesh.iotas.ghost_indices_offset())
+        ag_to_agnew_map[ag] = ag;
+
+      /* Generate the new numbers. */
+      int a_max = 0;
+      new_numbering(mesh.iotas, mesh.points,
+                    a_to_p_map,
+                    a_max, a_to_anew_map);
+
+      if (agl > 0) { // Set new ghost indices, if there are ghosts
+        for (int ag : mesh.iotas.ghost_indices_offset()) {
+          if (ghost_iota_type[ag] == 0)
+            continue;
+
+          int const a = ag_to_a_map[ag];
+          a_max += 1;
+          a_to_anew_map[a] = a_max;
+        }
+      }
+    }
+  }
+
+  { /* ReshapeA() */
   }
 }
 

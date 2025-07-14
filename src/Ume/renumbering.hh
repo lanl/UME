@@ -67,6 +67,10 @@ void renumber_e(SOA_Idx::Mesh &mesh);
 /*! Renumber corners based on point order. */
 void renumber_c(SOA_Idx::Mesh &mesh);
 
+//! Get a new mesh ordering for iotas.
+/*! Renumber iotas based on point order. */
+void renumber_a(SOA_Idx::Mesh &mesh);
+
 //! Renumber entity X based on Y.
 /*! Assumes that Y is already renumbered smoothly, so that ordering X
  * based on Y will produce a smooth ordering of X. */
