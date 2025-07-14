@@ -54,6 +54,164 @@ void renumber_p(Mesh &mesh) {
   /* Initialize local storage for new mappings. */
   INTV_T p_to_pnew_map(pll, 0);
   INTV_T pg_to_pgnew_map(pgll, 0);
+
+  { /* Renumber_PMaps[RenumWaveMinMax]-->RenumWaveMinMaxP */
+    auto const &iota_type = mesh.iotas.mask;
+    auto const &a_to_p_map = mesh.ds->caccess_intv("m:a>p");
+
+    INTV_T p_to_a1_map(pll, 0), p_to_a2_map(pll, 0);
+
+    /* Construct P->A linked list. */
+    { /* LinkedList */
+      INTV_T last(pll, 0);
+      int prev;
+
+      for (int a : mesh.iotas.local_indices()) { /* Sequential only */
+        if (iota_type[a] == 0)
+          continue;
+
+        int const p = a_to_p_map[a];
+        if (p_to_a1_map[p] == 0) {
+          p_to_a1_map[p] = a;
+        } else {
+          prev = last[p];
+          p_to_a2_map[prev] = a;
+        }
+        last[p] = a;
+      }
+    }
+
+    /* Number of a connected to p for each p */
+    INTV_T num_a_to_p(pll, 0);
+    for (int a : mesh.iotas.local_indices()) {
+      if (iota_type[a] == 0)
+        continue;
+
+      int const p = a_to_p_map[a];
+      num_a_to_p[p] += 1;
+    }
+
+    { /* Wave_main */
+      /* Access database */
+      auto const &point_type = mesh.points.mask;
+      auto const &a_to_s_map = mesh.ds->caccess_intv("m:a>s");
+      auto const &s_to_p1_map = mesh.ds->caccess_intv("m:s>p1");
+      auto const &s_to_p2_map = mesh.ds->caccess_intv("m:s>p2");
+      int const sll = mesh.sides.size();
+
+      /* Use simple map for ghosts. */
+      for (int pg : mesh.points.ghost_indices_offset())
+        pg_to_pgnew_map[pg] = pg;
+
+      /* Count number of non-null points. We'll use this to determine
+       * if all points were considered. */
+      int totp = 0;
+      for (int p : mesh.points.local_indices()) {
+        if (point_type[p] != 0)
+          totp += 1;
+      }
+
+      /* Find first seed point */
+      int pseed;
+      { /* Wave_seed */
+        pseed = 0;
+        int max_s = 0, num_s;
+
+        /* Take as the seed point the inactive point with the maximum
+         * number of surrounding sides. */
+        for (int p : mesh.points.local_indices()) {
+          if (point_type[p] == 0)
+            continue;
+
+          num_s = num_a_to_p[p];
+          if (num_s > max_s && p_to_pnew_map[p] == 0) {
+            pseed = p;
+            max_s = num_s;
+          }
+        }
+      }
+
+      /* Load the first point into the front. */
+      INTV_T currfront_p(pll, 0);
+      currfront_p[0] = pseed;
+      int pnew = 0;
+      p_to_pnew_map[pseed] = pnew;
+
+      /* Loop until wavefront has encountered all points. This will be
+       * true when the number of points in the current front is zero. */
+      INTV_T newfront_p(pll, 0), side_tag(sll, 0);
+      int num_p_currfront = 1;
+      while (num_p_currfront > 0) {
+        int num_p_newfront = 0;
+        for (int ip = 0; ip < num_p_currfront; ++ip) {
+          int const p = currfront_p[ip];
+
+          /* Loop over all a connected to p. */
+          int a = p_to_a1_map[p];
+          while (a != 0) {
+            /* Only treat each side once. */
+            int const s = a_to_s_map[a];
+            if (side_tag[s] == 1) {
+              a = p_to_a2_map[a];
+              continue;
+            }
+
+            /* Fetch the other point and add it to the next front if it
+             * has not been encountered. */
+            int sp = s_to_p1_map[s];
+            if (p == sp)
+              sp = s_to_p2_map[s];
+            if (p_to_pnew_map[sp] == 0) {
+              num_p_newfront += 1;
+              newfront_p[num_p_newfront] = sp;
+              pnew += 1;
+              p_to_pnew_map[sp] = pnew;
+            }
+
+            side_tag[s] = 1;
+            a = p_to_a2_map[a];
+          }
+        }
+
+        /* Rebuild the front for the next pass. */
+        for (int ip = 1; ip < num_p_newfront; ++ip)
+          currfront_p[ip] = newfront_p[ip];
+        num_p_currfront = num_p_newfront;
+
+        /* If there is a slideline or if the sub-domain is
+         * discontiguous, an advancing wavefront will be required for
+         * each disjoint piece. */
+        if (num_p_currfront == 0 && pnew != totp) {
+          /* Find a new seed point. */
+          { /* Wave_seed */
+            pseed = 0;
+            int max_s = 0, num_s;
+
+            /* Take as the seed point the inactive point with the
+             * maximum number of surrounding sides. */
+            for (int p : mesh.points.local_indices()) {
+              if (point_type[p] == 0)
+                continue;
+
+              num_s = num_a_to_p[p];
+              if (num_s > max_s && p_to_pnew_map[p] == 0) {
+                pseed = p;
+                max_s = num_s;
+              }
+            }
+          }
+
+          /* Rebuild front for next pass if not finished yet. */
+          if (pseed != 0) {
+            num_p_currfront = 1;
+            currfront_p[0] = pseed;
+            pnew += 1;
+            p_to_pnew_map[pseed] = pnew;
+          }
+        }
+      }
+    }
+  }
 }
 
 /* Renumber_S[kksll]-->Renumb_S */
