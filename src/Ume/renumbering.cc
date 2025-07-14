@@ -15,6 +15,9 @@
 
 #include "Ume/renumbering.hh"
 
+#define INVALID_INDEX (-1)
+#define START_INDEX 0
+
 namespace Ume {
 
 using Mesh = SOA_Idx::Mesh;
@@ -42,36 +45,36 @@ void renumber_mesh(Mesh &mesh) {
 void renumber_p(Mesh &mesh) {
   /* Get sizes for general use. */
   int const pll = mesh.points.size();
-  int const pgl = mesh.points.ghost_local_size();
   int const pgll = mesh.points.ghost_size();
 
   /* Store new-to-old mappings for debugging/testing. After the reshape,
    * these will represent current-to-old mappings. */
-  INTV_T p_to_pold_map(pll, 0);
+  INTV_T p_to_pold_map(pll, INVALID_INDEX);
   for (int p : mesh.points.all_indices())
     p_to_pold_map[p] = p;
 
   /* Initialize local storage for new mappings. */
-  INTV_T p_to_pnew_map(pll, 0);
-  INTV_T pg_to_pgnew_map(pgll, 0);
+  INTV_T p_to_pnew_map(pll, INVALID_INDEX);
+  INTV_T pg_to_pgnew_map(pgll, INVALID_INDEX);
 
   { /* Renumber_PMaps[RenumWaveMinMax]-->RenumWaveMinMaxP */
     auto const &iota_type = mesh.iotas.mask;
     auto const &a_to_p_map = mesh.ds->caccess_intv("m:a>p");
 
-    INTV_T p_to_a1_map(pll, 0), p_to_a2_map(pll, 0);
+    INTV_T p_to_a1_map(pll, INVALID_INDEX), p_to_a2_map(pll, INVALID_INDEX);
 
     /* Construct P->A linked list. */
     { /* LinkedList */
-      INTV_T last(pll, 0);
+      int const al = mesh.iotas.local_size();
+      INTV_T last(pll, START_INDEX);
       int prev;
 
-      for (int a : mesh.iotas.local_indices()) { /* Sequential only */
+      for (int a = 0; a < al; ++a) { /* Sequential only */
         if (iota_type[a] == 0)
           continue;
 
         int const p = a_to_p_map[a];
-        if (p_to_a1_map[p] == 0) {
+        if (INVALID_INDEX == p_to_a1_map[p]) {
           p_to_a1_map[p] = a;
         } else {
           prev = last[p];
@@ -124,7 +127,7 @@ void renumber_p(Mesh &mesh) {
             continue;
 
           num_s = num_a_to_p[p];
-          if (num_s > max_s && p_to_pnew_map[p] == 0) {
+          if (num_s > max_s && INVALID_INDEX == p_to_pnew_map[p]) {
             pseed = p;
             max_s = num_s;
           }
@@ -132,18 +135,18 @@ void renumber_p(Mesh &mesh) {
       }
 
       /* Load the first point into the front. */
-      INTV_T currfront_p(pll, 0);
-      currfront_p[0] = pseed;
-      int pnew = 0;
-      p_to_pnew_map[pseed] = pnew;
+      INTV_T currfront_p(pll, START_INDEX);
+      currfront_p[START_INDEX] = pseed;
+      int pnew = INVALID_INDEX;
 
       /* Loop until wavefront has encountered all points. This will be
        * true when the number of points in the current front is zero. */
-      INTV_T newfront_p(pll, 0), side_tag(sll, 0);
+      INTV_T newfront_p(pll, START_INDEX), side_tag(sll, 0);
       int num_p_currfront = 1;
       while (num_p_currfront > 0) {
         int num_p_newfront = 0;
-        for (int ip = 0; ip < num_p_currfront; ++ip) {
+        int p_newfront_idx = INVALID_INDEX;
+        for (int ip = START_INDEX; ip < num_p_currfront; ++ip) {
           int const p = currfront_p[ip];
 
           /* Loop over all a connected to p. */
@@ -161,9 +164,10 @@ void renumber_p(Mesh &mesh) {
             int sp = s_to_p1_map[s];
             if (p == sp)
               sp = s_to_p2_map[s];
-            if (p_to_pnew_map[sp] == 0) {
+            if (INVALID_INDEX == p_to_pnew_map[sp]) {
               num_p_newfront += 1;
-              newfront_p[num_p_newfront] = sp;
+              p_newfront_idx += 1;
+              newfront_p[p_newfront_idx] = sp;
               pnew += 1;
               p_to_pnew_map[sp] = pnew;
             }
@@ -174,14 +178,14 @@ void renumber_p(Mesh &mesh) {
         }
 
         /* Rebuild the front for the next pass. */
-        for (int ip = 1; ip < num_p_newfront; ++ip)
+        for (int ip : std::ranges::iota_view{START_INDEX, num_p_newfront - 1})
           currfront_p[ip] = newfront_p[ip];
         num_p_currfront = num_p_newfront;
 
         /* If there is a slideline or if the sub-domain is
          * discontiguous, an advancing wavefront will be required for
          * each disjoint piece. */
-        if (num_p_currfront == 0 && pnew != totp) {
+        if (num_p_currfront == 0 && (pnew + 1) != totp) {
           /* Find a new seed point. */
           { /* Wave_seed */
             pseed = 0;
@@ -194,7 +198,7 @@ void renumber_p(Mesh &mesh) {
                 continue;
 
               num_s = num_a_to_p[p];
-              if (num_s > max_s && p_to_pnew_map[p] == 0) {
+              if (num_s > max_s && INVALID_INDEX == p_to_pnew_map[p]) {
                 pseed = p;
                 max_s = num_s;
               }
@@ -204,13 +208,16 @@ void renumber_p(Mesh &mesh) {
           /* Rebuild front for next pass if not finished yet. */
           if (pseed != 0) {
             num_p_currfront = 1;
-            currfront_p[0] = pseed;
+            currfront_p[START_INDEX] = pseed;
             pnew += 1;
             p_to_pnew_map[pseed] = pnew;
           }
         }
       }
     }
+  }
+
+  { /* ReshapeP() */
   }
 }
 
