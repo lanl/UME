@@ -480,7 +480,6 @@ void renumber_z(Mesh &mesh) {
 void renumber_f(Mesh &mesh) {
   /* Get sizes for general use. */
   int const fll = mesh.faces.size();
-  int const fgl = mesh.faces.ghost_local_size();
   int const fgll = mesh.faces.ghost_size();
 
   /* Store new-to-old mappings for debugging/testing. After the reshape,
@@ -535,7 +534,6 @@ void renumber_f(Mesh &mesh) {
 void renumber_e(Mesh &mesh) {
   /* Get sizes for general use. */
   int const ell = mesh.edges.size();
-  int const egl = mesh.edges.ghost_local_size();
   int const egll = mesh.edges.ghost_size();
 
   /* Store new-to-old mappings for debugging/testing. After the reshape,
