@@ -59,15 +59,16 @@ void renumber_p(Mesh &mesh) {
   INTV_T pg_to_pgnew_map(pgll, INVALID_INDEX);
 
   { /* Renumber_PMaps[RenumWaveMinMax]-->RenumWaveMinMaxP */
+    int const all = mesh.iotas.size();
     auto const &iota_type = mesh.iotas.mask;
     auto const &a_to_p_map = mesh.ds->caccess_intv("m:a>p");
 
-    INTV_T p_to_a1_map(pll, INVALID_INDEX), p_to_a2_map(pll, INVALID_INDEX);
+    INTV_T p_to_a1_map(pll, INVALID_INDEX), a1_to_a2_map(all, INVALID_INDEX);
 
     /* Construct P->A linked list. */
     { /* LinkedList */
       int const al = mesh.iotas.local_size();
-      INTV_T last(pll, START_INDEX);
+      INTV_T last(pll, INVALID_INDEX);
       int prev;
 
       for (int a = 0; a < al; ++a) { /* Sequential only */
@@ -79,7 +80,7 @@ void renumber_p(Mesh &mesh) {
           p_to_a1_map[p] = a;
         } else {
           prev = last[p];
-          p_to_a2_map[prev] = a;
+          a1_to_a2_map[prev] = a;
         }
         last[p] = a;
       }
@@ -152,11 +153,11 @@ void renumber_p(Mesh &mesh) {
 
           /* Loop over all a connected to p. */
           int a = p_to_a1_map[p];
-          while (a != 0) {
+          while (a != INVALID_INDEX) {
             /* Only treat each side once. */
             int const s = a_to_s_map[a];
             if (side_tag[s] == 1) {
-              a = p_to_a2_map[a];
+              a = a1_to_a2_map[a];
               continue;
             }
 
@@ -174,12 +175,12 @@ void renumber_p(Mesh &mesh) {
             }
 
             side_tag[s] = 1;
-            a = p_to_a2_map[a];
+            a = a1_to_a2_map[a];
           }
         }
 
         /* Rebuild the front for the next pass. */
-        for (int ip : std::ranges::iota_view{START_INDEX, num_p_newfront - 1})
+        for (int ip = 0; ip < num_p_newfront; ++ip)
           currfront_p[ip] = newfront_p[ip];
         num_p_currfront = num_p_newfront;
 
