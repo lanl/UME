@@ -231,13 +231,13 @@ void renumber_s(Mesh &mesh) {
 
   /* Store new-to-old mappings for debugging/testing. After the reshape,
    * these will represent current-to-old mappings. */
-  INTV_T s_to_sold_map(sll, 0);
+  INTV_T s_to_sold_map(sll, INVALID_INDEX);
   for (int s : mesh.sides.all_indices())
     s_to_sold_map[s] = s;
 
   /* Initialize local storage for new mappings. */
-  INTV_T s_to_snew_map(sll, 0);
-  INTV_T sg_to_sgnew_map(sgll, 0);
+  INTV_T s_to_snew_map(sll, INVALID_INDEX);
+  INTV_T sg_to_sgnew_map(sgll, INVALID_INDEX);
 
   { /* Renumber_SMaps[RenumWaveMinMax]-->RenumWaveMinMaxS */
     /* Initialize new indices to current indices. */
@@ -378,13 +378,13 @@ void renumber_z(Mesh &mesh) {
 
   /* Store new-to-old mappings for debugging/testing. After the reshape,
    * these will represent current-to-old mappings. */
-  INTV_T z_to_zold_map(zll, 0);
+  INTV_T z_to_zold_map(zll, INVALID_INDEX);
   for (int z : mesh.zones.all_indices())
     z_to_zold_map[z] = z;
 
   /* Initialize local storage for new mappings. */
-  INTV_T z_to_znew_map(zll, 0);
-  INTV_T zg_to_zgnew_map(zgll, 0);
+  INTV_T z_to_znew_map(zll, INVALID_INDEX);
+  INTV_T zg_to_zgnew_map(zgll, INVALID_INDEX);
 
   { /* Renumber_ZMaps[RenumWaveMinMax]-->RenumWaveMinMaxZ */
     /* Initialize new indices to current indices. */
@@ -485,13 +485,13 @@ void renumber_f(Mesh &mesh) {
 
   /* Store new-to-old mappings for debugging/testing. After the reshape,
    * these will represent current-to-old mappings. */
-  INTV_T f_to_fold_map(fll, 0);
+  INTV_T f_to_fold_map(fll, INVALID_INDEX);
   for (int f : mesh.faces.all_indices())
     f_to_fold_map[f] = f;
 
   /* Initialize local storage for new mappings. */
-  INTV_T f_to_fnew_map(fll, 0);
-  INTV_T fg_to_fgnew_map(fgll, 0);
+  INTV_T f_to_fnew_map(fll, INVALID_INDEX);
+  INTV_T fg_to_fgnew_map(fgll, INVALID_INDEX);
 
   { /* Renumber_FMaps[RenumWaveMinMax]-->RenumWaveMinMaxF */
     /* Faces get renumbered by minimum side number (only have to do it
@@ -539,13 +539,13 @@ void renumber_e(Mesh &mesh) {
 
   /* Store new-to-old mappings for debugging/testing. After the reshape,
    * these will represent current-to-old mappings. */
-  INTV_T e_to_eold_map(ell, 0);
+  INTV_T e_to_eold_map(ell, INVALID_INDEX);
   for (int e : mesh.edges.all_indices())
     e_to_eold_map[e] = e;
 
   /* Initialize local storage for new mappings. */
-  INTV_T e_to_enew_map(ell, 0);
-  INTV_T eg_to_egnew_map(egll, 0);
+  INTV_T e_to_enew_map(ell, INVALID_INDEX);
+  INTV_T eg_to_egnew_map(egll, INVALID_INDEX);
 
   { /* Renumber_EMaps[RenumWaveMinMax]-->RenumWaveMinMaxE */
     /* Initialize new indices to current indices. */
@@ -618,13 +618,13 @@ void renumber_c(Mesh &mesh) {
 
   /* Store new-to-old mappings for debugging/testing. After the reshape,
    * these will represent current-to-old mappings. */
-  INTV_T c_to_cold_map(cll, 0);
+  INTV_T c_to_cold_map(cll, INVALID_INDEX);
   for (int c : mesh.corners.all_indices())
     c_to_cold_map[c] = c;
 
   /* Initialize local storage for new mappings. */
-  INTV_T c_to_cnew_map(cll, 0);
-  INTV_T cg_to_cgnew_map(cgll, 0);
+  INTV_T c_to_cnew_map(cll, INVALID_INDEX);
+  INTV_T cg_to_cgnew_map(cgll, INVALID_INDEX);
 
   { /* Renumber_CMaps[RenumWaveMinMax]-->RenumWaveMinMaxC */
     /* Renumber corners based on point number. */
@@ -670,13 +670,13 @@ void renumber_a(Mesh &mesh) {
 
   /* Store new-to-old mappings for debugging/testing. After the reshape,
    * these will represent current-to-old mappings. */
-  INTV_T a_to_aold_map(all, 0);
+  INTV_T a_to_aold_map(all, INVALID_INDEX);
   for (int a : mesh.iotas.all_indices())
     a_to_aold_map[a] = a;
 
   /* Initialize local storage for new mappings. */
-  INTV_T a_to_anew_map(all, 0);
-  INTV_T ag_to_agnew_map(agll, 0);
+  INTV_T a_to_anew_map(all, INVALID_INDEX);
+  INTV_T ag_to_agnew_map(agll, INVALID_INDEX);
 
   { /* Renumber_AMaps[RenumWaveMinMax]-->RenumWaveMinMaxA */
     /* Renumber iotas based on point number. */
