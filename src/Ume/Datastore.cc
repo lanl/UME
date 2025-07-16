@@ -16,7 +16,6 @@
 #include "Ume/Datastore.hh"
 #include <cstdlib>
 #include <iomanip>
-#include <iostream>
 
 namespace Ume {
 

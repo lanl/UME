@@ -23,6 +23,7 @@
 #include "Ume/SOA_Idx_Points.hh"
 #include "Ume/SOA_Idx_Sides.hh"
 #include "Ume/SOA_Idx_Zones.hh"
+#include "Ume/SOA_Idx_Iotas.hh"
 #include <iosfwd>
 
 namespace Ume {
@@ -38,12 +39,14 @@ struct Mesh : public Mesh_Base {
   int mype;
   int numpe;
   Geometry_Type geo;
+  int dump_iotas;
   Corners corners;
   Edges edges;
   Faces faces;
   Points points;
   Sides sides;
   Zones zones;
+  Iotas iotas;
   Mesh();
   void write(std::ostream &os) const;
   void read(std::istream &is);

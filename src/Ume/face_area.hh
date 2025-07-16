@@ -19,8 +19,8 @@
 
 namespace Ume {
 
-//! Calculate the flat face area
-/* This method computes the face areas for each face in the mesh by
+//! Compute the flat face area.
+/*! This method computes the face areas for each face in the mesh by
  * accumulating side surface area vector magnitudes of internal sides
  * corresponding to internal or master faces in the MPI comm stencil,
  * making sure not to double count sides. */

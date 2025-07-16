@@ -43,7 +43,7 @@ struct DS_Types {
   using INTV_T = std::vector<INT_T>; //!< vector<int> type
   using INTRR_T = RaggedRight<INT_T>; //!< RaggedRight<int> type
   using DBL_T = double; //!< scalar double type
-  using DBLV_T = std::vector<DBL_T>; //!< vector<double> tye
+  using DBLV_T = std::vector<DBL_T>; //!< vector<double> type
   using DBLRR_T = RaggedRight<DBL_T>; //!< RaggedRight<double> type
   using VEC3_T = Vec3; //!< scalar Vec3 type
   using VEC3V_T = std::vector<VEC3_T>; //!< vector<Vec3> type
