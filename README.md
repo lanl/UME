@@ -98,7 +98,7 @@ files.
 
 You can also run `scale_mesh` with MPI
 ```
-%scale_mesh <prefix> 8
+% mpirun -np <n> scale_mesh <prefix> 8
 ```
 
 ## Project Name
@@ -112,6 +112,10 @@ question "oo-meh?"
 
 UME was created by Paul Henning (<phenning@lanl.gov>).
 
+UME is currently maintained by:
+Austin Bullock (<abullock@lanl.gov>)
+Sumathi Lakshmiranganatha (<sumathil@lanl.gov>)
+Jered Dominguez-Trujillo (<jereddt@lanl.gov>)
 
 ## Release
 
