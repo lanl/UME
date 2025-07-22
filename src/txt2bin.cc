@@ -157,6 +157,31 @@ int read_vtag(std::istream &is, char const *const expect) {
   return val;
 }
 
+bool read_bool_tag(std::istream &is, char const *const expect) {
+  char tagname[25];
+  is.get(tagname, 23);
+  std::string ts(tagname);
+
+  while (ts.back() == ':' || ts.back() == ' ')
+    ts.pop_back();
+
+  if (ts != std::string(expect)) {
+    std::cerr << "Expecting tag \"" << expect << "\", got \"" << ts << "\""
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  bool val = false;
+  is >> std::boolalpha >> val;
+  if (!is) {
+    std::cerr << "Didn't find an integer after tag \"" << ts << "\""
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  is >> std::ws;
+  return val;
+}
+
 std::string read_tag_str(std::istream &is, char const *const expect) {
   char tagname[25];
   is.get(tagname, 23);
@@ -554,9 +579,9 @@ int read(std::istream &is, Mesh &m) {
     return 2;
   }
   if (m.ivtag >= UME_VERSION_2) {
-    m.dump_iotas = read_tag(is, "Iotas dumped");
+    m.dump_iotas = read_bool_tag(is, "Iotas dumped");
   } else {
-    m.dump_iotas = 0;
+    m.dump_iotas = false;
   }
 
   /*

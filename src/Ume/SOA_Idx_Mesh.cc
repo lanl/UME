@@ -87,7 +87,7 @@ void Mesh::print_stats(std::ostream &os) const {
      << '\n';
   os << "\tPoint dimensions: " << ndims() << '\n';
   os << "\tCoordinate system: " << geo << '\n';
-  os << "\tIotas dumped: " << dump_iotas << '\n';
+  os << "\tIotas dumped: " << std::boolalpha << dump_iotas << '\n';
   os << "\tPoints: " << points.local_size() << '\n';
   os << "\tZones: " << zones.local_size() << ' ' << zones.size() << '\n';
   os << "\tSides: " << sides.local_size() << ' ' << sides.size() << '\n';

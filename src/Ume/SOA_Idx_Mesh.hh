@@ -49,7 +49,7 @@ struct Mesh : public Mesh_Base {
   int mype;
   int numpe;
   Geometry_Type geo;
-  int dump_iotas;
+  bool dump_iotas;
   Corners corners;
   Edges edges;
   Faces faces;
