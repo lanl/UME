@@ -138,7 +138,7 @@ void double_entity_count(Ume::SOA_Idx::Entity &entity) {
 }
 
 void update_coords(Ume::DS_Types::VEC3V_T &coords, const int iter_start,
-    const int iter_end, const int delta, const int dim) {
+    const int iter_end, const double delta, const int dim) {
   for (int c = iter_start; c < iter_end; ++c) {
     coords[c][dim] = coords[c - iter_start][dim] + delta;
   }
@@ -168,7 +168,7 @@ void stitch(Ume::SOA_Idx::Mesh &mesh, const int dim) {
   //! ----- Zones -----
   // Double Number of Zones
   int original_zones_total = mesh.zones.size();
-  int new_zones_total = original_zones_total * 2;
+  //int new_zones_total = original_zones_total * 2;
   double_entity_count(mesh.zones);
 
   //! ----- Edges -----
@@ -257,6 +257,32 @@ void stitch(Ume::SOA_Idx::Mesh &mesh, const int dim) {
       s_to_s4_map, original_sides_total, new_sides_total, original_sides_total);
   update_entity(
       s_to_s5_map, original_sides_total, new_sides_total, original_sides_total);
+
+  //! ----- Iotas -----
+  // Double Number of Iotas
+  int original_iotas_total = mesh.iotas.size();
+  int new_iotas_total = original_iotas_total * 2;
+  double_entity_count(mesh.iotas);
+
+  // Update Corner Maps of new Corners
+  if (mesh.dump_iotas) {
+    auto &a_to_z_map = mesh.ds->access_intv("m:a>z");
+    auto &a_to_f_map = mesh.ds->access_intv("m:a>f");
+    auto &a_to_p_map = mesh.ds->access_intv("m:a>p");
+    auto &a_to_e_map = mesh.ds->access_intv("m:a>e");
+    auto &a_to_s_map = mesh.ds->access_intv("m:a>s");
+
+    update_entity(a_to_z_map, original_iotas_total, new_iotas_total,
+        original_zones_total);
+    update_entity(a_to_f_map, original_iotas_total, new_iotas_total,
+        original_faces_total);
+    update_entity(a_to_p_map, original_iotas_total, new_iotas_total,
+        original_points_total);
+    update_entity(a_to_e_map, original_iotas_total, new_iotas_total,
+        original_edges_total);
+    update_entity(a_to_s_map, original_iotas_total, new_iotas_total,
+        original_sides_total);
+  }
 }
 
 void scale_mesh(int const scale, Ume::SOA_Idx::Mesh &mesh) {
