@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   /* We will read in the mesh */
   Mesh mesh;
 
-  /* We need to instantiat the MPI Transport in order to get the PE
+  /* We need to instantiate the MPI Transport in order to get the PE
    * number used to form our filename and attach the communicator to
    * the mesh. */
   Ume::Comm::MPI comm(&argc, &argv);
