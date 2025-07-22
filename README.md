@@ -98,7 +98,7 @@ files.
 
 You can also run `scale_mesh` with MPI
 ```
-%scale_mesh <prefix> 8
+% mpirun -np <n> scale_mesh <prefix> 8
 ```
 
 ## Project Name
@@ -111,7 +111,6 @@ question "oo-meh?"
 ## Authors
 
 UME was created by Paul Henning (<phenning@lanl.gov>).
-
 
 ## Release
 
