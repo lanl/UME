@@ -112,6 +112,11 @@ question "oo-meh?"
 
 UME was created by Paul Henning (<phenning@lanl.gov>).
 
+UME is currently maintained by:
+Austin Bullock (<abullock@lanl.gov>)
+Sumathi (<sumathil@lanl.gov>)
+Jered Dominguez-Trujillo (<jereddt@lanl.gov>)
+
 ## Release
 
 UME is released as open source under a BSD-3 License.  For more
