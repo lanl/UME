@@ -66,8 +66,13 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  /* This allows us to attach a debugger to a single rank specified in
-   * the UME_DEBUG_RANK environment variable. */
+  size_t ic = 1; // set iteration count to 1 for default 
+  if(argc > 3 && std::string(argv[2])=="-i") {
+     ic=std::atoi(argv[3]);
+  } 
+
+  /* This allows us to attach a debugger to a single rank specified in the
+     UME_DEBUG_RANK environment variable. */
   Ume::debug_attach_point(comm.pe());
 
   /*
@@ -105,16 +110,24 @@ int main(int argc, char *argv[]) {
    * using inverted connectivities. */
   VEC3V_T pgrad, zgrad;
   Ume::Timer orig_time;
-  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+  Ume::gradzatz(mesh, zfield, zgrad, pgrad, 0);
   orig_time.start();
-  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
+  for (size_t i=0;i<ic;i++) {
+    Ume::gradzatz(mesh, zfield, zgrad, pgrad, 1);
+  }
   orig_time.stop();
+
+  double vm, rss;
+  process_mem_usage(vm, rss);
+  std::cout << "VM: " << vm << "; RSS: " << rss << std::endl;
 
   VEC3V_T pgrad_invert, zgrad_invert;
   Ume::Timer invert_time;
-  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert, 0);
   invert_time.start();
-  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
+  for (size_t i=0;i<ic;i++) {
+    Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert, 1);
+  }
   invert_time.stop();
 
   if (comm.pe() == 0) {
@@ -150,7 +163,9 @@ int main(int argc, char *argv[]) {
       Ume::Timer renumber_time;
       Ume::renumber_mesh(mesh);
       renumber_time.start();
-      Ume::renumber_mesh(mesh);
+      for (size_t i=0;i<ic;i++) {
+        Ume::renumber_mesh(mesh);
+      }
       renumber_time.stop();
 
       if (comm.pe() == 0)
