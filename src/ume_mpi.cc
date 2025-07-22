@@ -142,22 +142,24 @@ int main(int argc, char *argv[]) {
   if (comm.pe() == 0)
     std::cout << "Face area computation took: " << face_time.seconds() << "s\n";
 
-  if (comm.pe() == 0)
-    std::cout << "Renumbering mesh entities..." << std::endl;
-
-  if (mesh.dump_iotas) {
-    Ume::Timer renumber_time;
-    Ume::renumber_mesh(mesh);
-    renumber_time.start();
-    Ume::renumber_mesh(mesh);
-    renumber_time.stop();
-
+  if (mesh.ivtag >= UME_VERSION_2) {
     if (comm.pe() == 0)
-      std::cout << "Renumbering algorithm took: " << renumber_time.seconds() << "s\n";
-  } else {
-    if (comm.pe() == 0)
-      std::cout << "Iotas must be present in the mesh for renumbering."
-        << " Skipping renumbering..." << std::endl;
+      std::cout << "Renumbering mesh entities..." << std::endl;
+
+    if (mesh.dump_iotas) {
+      Ume::Timer renumber_time;
+      Ume::renumber_mesh(mesh);
+      renumber_time.start();
+      Ume::renumber_mesh(mesh);
+      renumber_time.stop();
+
+      if (comm.pe() == 0)
+        std::cout << "Renumbering algorithm took: " << renumber_time.seconds() << "s\n";
+    } else {
+      if (comm.pe() == 0)
+        std::cout << "Iotas must be present in the mesh for renumbering."
+          << " Skipping renumbering..." << std::endl;
+    }
   }
 
   if (comm.pe() == 0)

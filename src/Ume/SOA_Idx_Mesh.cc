@@ -43,6 +43,7 @@ std::ostream &operator<<(std::ostream &os, Mesh::Geometry_Type const &geo) {
 }
 
 void Mesh::write(std::ostream &os) const {
+  write_bin(os, ivtag);
   write_bin(os, mype);
   write_bin(os, numpe);
   write_bin(os, geo);
@@ -58,6 +59,7 @@ void Mesh::write(std::ostream &os) const {
 }
 
 void Mesh::read(std::istream &is) {
+  read_bin(is, ivtag);
   read_bin(is, mype);
   read_bin(is, numpe);
   read_bin(is, geo);
@@ -73,13 +75,14 @@ void Mesh::read(std::istream &is) {
 }
 
 bool Mesh::operator==(Mesh const &rhs) const {
-  return mype == rhs.mype && numpe == rhs.numpe && geo == rhs.geo &&
-      dump_iotas == rhs.dump_iotas && points == rhs.points &&
+  return ivtag == rhs.ivtag && mype == rhs.mype && numpe == rhs.numpe &&
+      geo == rhs.geo && dump_iotas == rhs.dump_iotas && points == rhs.points &&
       edges == rhs.edges && sides == rhs.sides && corners == rhs.corners &&
       zones == rhs.zones && iotas == rhs.iotas;
 }
 
 void Mesh::print_stats(std::ostream &os) const {
+  os << "\tInput version: " << ivtag << '\n';
   os << "\tDecomposed Rank " << mype << " (" << mype + 1 << "/" << numpe << ')'
      << '\n';
   os << "\tPoint dimensions: " << ndims() << '\n';

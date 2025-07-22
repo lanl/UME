@@ -127,6 +127,36 @@ int read_tag(std::istream &is, char const *const expect) {
   return val;
 }
 
+int read_vtag(std::istream &is, char const *const expect) {
+  /* If "Input version" tag is absent, default to old input version. */
+  char const c1 = static_cast<char>(is.peek());
+  if (c1 != 'I')
+    return UME_VERSION_1;
+
+  char tagname[25];
+  is.get(tagname, 23);
+  std::string ts(tagname);
+
+  while (ts.back() == ':' || ts.back() == ' ')
+    ts.pop_back();
+
+  if (ts != std::string(expect)) {
+    std::cerr << "Expecting tag \"" << expect << "\", got \"" << ts << "\""
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  int val = -1;
+  is >> val;
+  if (!is) {
+    std::cerr << "Didn't find an integer after tag \"" << ts << "\""
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  is >> std::ws;
+  return val;
+}
+
 std::string read_tag_str(std::istream &is, char const *const expect) {
   char tagname[25];
   is.get(tagname, 23);
@@ -499,6 +529,7 @@ void read_mpi(std::istream &is, Entity &e) {
 }
 
 int read(std::istream &is, Mesh &m) {
+  m.ivtag = read_vtag(is, "Input version");
   m.numpe = read_tag(is, "Total ranks");
   m.mype = read_tag(is, "This rank");
   int ndims = read_tag(is, "Num dims");
@@ -522,7 +553,11 @@ int read(std::istream &is, Mesh &m) {
     std::cerr << "Unknown igeo flag = " << igeo << '\n';
     return 2;
   }
-  m.dump_iotas = read_tag(is, "Iotas dumped");
+  if (m.ivtag >= UME_VERSION_2) {
+    m.dump_iotas = read_tag(is, "Iotas dumped");
+  } else {
+    m.dump_iotas = 0;
+  }
 
   /*
     The "Number of <entity>" tags represent kkXl. The "Dimension:
@@ -551,9 +586,14 @@ int read(std::istream &is, Mesh &m) {
   const int kkcll = read_tag(is, "Corner total");
   const int kkcl = read_tag(is, "Corner local");
   const int kkcgl = read_tag(is, "Corner ghost");
-  const int kkall = read_tag(is, "Iota total");
-  const int kkal = read_tag(is, "Iota local");
-  const int kkagl = read_tag(is, "Iota ghost");
+  int kkall = 0;
+  int kkal = 0;
+  int kkagl = 0;
+  if (m.ivtag >= UME_VERSION_2) {
+    kkall = read_tag(is, "Iota total");
+    kkal = read_tag(is, "Iota local");
+    kkagl = read_tag(is, "Iota ghost");
+  }
 
   expect_line(is, "Points");
   skip_line(is);
