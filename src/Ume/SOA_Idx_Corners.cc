@@ -28,7 +28,7 @@ Corners::Corners(Mesh *mesh) : Entity{mesh} {
   ds().insert("m:c>z", std::make_unique<Ume::DS_Entry>(Types::INTV));
   ds().insert("corner_vol", std::make_unique<VAR_corner_vol>(*this));
   ds().insert("corner_csurf", std::make_unique<VAR_corner_csurf>(*this));
-  ds().insert("m:c>ss", std::make_unique<VAR_corner_to_sides>(*this));
+  ds().insert("m:c>s", std::make_unique<VAR_corner_to_sides>(*this));
 }
 
 void Corners::write(std::ostream &os) const {

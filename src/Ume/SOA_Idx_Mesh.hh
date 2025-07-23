@@ -15,6 +15,15 @@
 #ifndef UME_SOA_IDX_MESH_HH
 #define UME_SOA_IDX_MESH_HH 1
 
+/*! Input version tags. These document breaking changes in UME input
+ * decks. All inputs of a particular version are valid up to the next
+ * version number. */
+
+/*! 1.0.0 release tag. */
+#define UME_VERSION_1 20230330
+/*! The latest input version tag. Inputs include iota information. */
+#define UME_VERSION_2 20250722
+
 #include "Ume/Mesh_Base.hh"
 #include "Ume/SOA_Entity.hh"
 #include "Ume/SOA_Idx_Corners.hh"
@@ -23,6 +32,7 @@
 #include "Ume/SOA_Idx_Points.hh"
 #include "Ume/SOA_Idx_Sides.hh"
 #include "Ume/SOA_Idx_Zones.hh"
+#include "Ume/SOA_Idx_Iotas.hh"
 #include <iosfwd>
 
 namespace Ume {
@@ -35,15 +45,18 @@ using Types = Ume::DS_Types::Types;
 //! An Struct-Of-Arrays Mesh
 struct Mesh : public Mesh_Base {
   enum Geometry_Type { CARTESIAN, CYLINDRICAL, SPHERICAL };
+  int ivtag;
   int mype;
   int numpe;
   Geometry_Type geo;
+  bool dump_iotas;
   Corners corners;
   Edges edges;
   Faces faces;
   Points points;
   Sides sides;
   Zones zones;
+  Iotas iotas;
   Mesh();
   void write(std::ostream &os) const;
   void read(std::istream &is);
