@@ -110,10 +110,10 @@ int main(int argc, char *argv[]) {
    * using inverted connectivities. */
   VEC3V_T pgrad, zgrad;
   Ume::Timer orig_time;
-  Ume::gradzatz(mesh, zfield, zgrad, pgrad, 0);
+  Ume::gradzatz(mesh, zfield, zgrad, pgrad);
   orig_time.start();
   for (size_t i=0;i<ic;i++) {
-    Ume::gradzatz(mesh, zfield, zgrad, pgrad, 1);
+    Ume::gradzatz(mesh, zfield, zgrad, pgrad);
   }
   orig_time.stop();
 
@@ -123,10 +123,10 @@ int main(int argc, char *argv[]) {
 
   VEC3V_T pgrad_invert, zgrad_invert;
   Ume::Timer invert_time;
-  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert, 0);
+  Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
   invert_time.start();
   for (size_t i=0;i<ic;i++) {
-    Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert, 1);
+    Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
   }
   invert_time.stop();
 
