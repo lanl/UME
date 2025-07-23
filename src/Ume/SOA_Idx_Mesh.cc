@@ -15,6 +15,8 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
+#include "Ume/utils.hh"
+
 #include <istream>
 #include <ostream>
 
@@ -24,7 +26,7 @@ namespace SOA_Idx {
 /* --------------------------------- Mesh -----------------------------------*/
 
 Mesh::Mesh()
-    : Mesh_Base(), corners{this}, edges{this}, faces{this}, points{this},
+    : Mesh_Base(), dump_iotas{false}, corners{this}, edges{this}, faces{this}, points{this},
       sides{this}, zones{this}, iotas{this} {}
 
 std::ostream &operator<<(std::ostream &os, Mesh::Geometry_Type const &geo) {
@@ -59,11 +61,14 @@ void Mesh::write(std::ostream &os) const {
 }
 
 void Mesh::read(std::istream &is) {
-  read_bin(is, ivtag);
+  ivtag = read_vtag(is, "Input version");
   read_bin(is, mype);
   read_bin(is, numpe);
   read_bin(is, geo);
-  read_bin(is, dump_iotas);
+  
+  if (ivtag >= UME_VERSION_2)
+    read_bin(is, dump_iotas);
+
   points.read(is);
   edges.read(is);
   faces.read(is);

@@ -13,6 +13,8 @@
   \file Ume/utils.cc
 */
 
+#include "Ume/utils.hh"
+
 #include <cstdlib>
 #include <iostream>
 #include <sys/types.h>
@@ -23,6 +25,36 @@
 #endif
 
 namespace Ume {
+
+int read_vtag(std::istream &is, char const *const expect) {
+  /* If "Input version" tag is absent, default to old input version. */
+  char const c1 = static_cast<char>(is.peek());
+  if (c1 != 'I')
+    return UME_VERSION_1;
+
+  char tagname[25];
+  is.get(tagname, 23);
+  std::string ts(tagname);
+
+  while (ts.back() == ':' || ts.back() == ' ')
+    ts.pop_back();
+
+  if (ts != std::string(expect)) {
+    std::cerr << "Expecting tag \"" << expect << "\", got \"" << ts << "\""
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  int val = -1;
+  is >> val;
+  if (!is) {
+    std::cerr << "Didn't find an integer after tag \"" << ts << "\""
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  is >> std::ws;
+  return val;
+}
 
 void debug_attach_point(int const mype) {
   int release = 0;

@@ -12,17 +12,9 @@
 /*!
   \file Ume/SOA_Idx_Mesh.hh
 */
+
 #ifndef UME_SOA_IDX_MESH_HH
 #define UME_SOA_IDX_MESH_HH 1
-
-/*! Input version tags. These document breaking changes in UME input
- * decks. All inputs of a particular version are valid up to the next
- * version number. */
-
-/*! 1.0.0 release tag. */
-#define UME_VERSION_1 20230330
-/*! The latest input version tag. Inputs include iota information. */
-#define UME_VERSION_2 20250722
 
 #include "Ume/Mesh_Base.hh"
 #include "Ume/SOA_Entity.hh"
