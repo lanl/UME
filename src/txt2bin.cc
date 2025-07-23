@@ -127,36 +127,6 @@ int read_tag(std::istream &is, char const *const expect) {
   return val;
 }
 
-int read_vtag(std::istream &is, char const *const expect) {
-  /* If "Input version" tag is absent, default to old input version. */
-  char const c1 = static_cast<char>(is.peek());
-  if (c1 != 'I')
-    return UME_VERSION_1;
-
-  char tagname[25];
-  is.get(tagname, 23);
-  std::string ts(tagname);
-
-  while (ts.back() == ':' || ts.back() == ' ')
-    ts.pop_back();
-
-  if (ts != std::string(expect)) {
-    std::cerr << "Expecting tag \"" << expect << "\", got \"" << ts << "\""
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  int val = -1;
-  is >> val;
-  if (!is) {
-    std::cerr << "Didn't find an integer after tag \"" << ts << "\""
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-  is >> std::ws;
-  return val;
-}
-
 bool read_bool_tag(std::istream &is, char const *const expect) {
   char tagname[25];
   is.get(tagname, 23);
@@ -554,7 +524,7 @@ void read_mpi(std::istream &is, Entity &e) {
 }
 
 int read(std::istream &is, Mesh &m) {
-  m.ivtag = read_vtag(is, "Input version");
+  m.ivtag = Ume::read_vtag(is, "Input version");
   m.numpe = read_tag(is, "Total ranks");
   m.mype = read_tag(is, "This rank");
   int ndims = read_tag(is, "Num dims");

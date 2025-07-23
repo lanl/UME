@@ -13,6 +13,15 @@
 \file Ume/utils.hh
 */
 
+/*! Input version tags. These document breaking changes in UME input
+ * decks. All inputs of a particular version are valid up to the next
+ * version number. */
+
+/*! 1.0.0 release tag. */
+#define UME_VERSION_1 20230330
+/*! The latest input version tag. Inputs include iota information. */
+#define UME_VERSION_2 20250722
+
 #include <istream>
 #include <limits>
 #include <memory>
@@ -86,6 +95,8 @@ template <class T> void read_bin(std::istream &is, std::vector<T> &data) {
   }
   Ume::skip_line(is);
 }
+
+int read_vtag(std::istream &is, char const *const expect);
 
 inline std::string ltrim(const std::string &s) {
   const std::string WHITESPACE{" \n\r\t\f\v"};
