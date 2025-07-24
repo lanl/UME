@@ -117,10 +117,6 @@ int main(int argc, char *argv[]) {
   }
   orig_time.stop();
 
-  double vm, rss;
-  process_mem_usage(vm, rss);
-  std::cout << "VM: " << vm << "; RSS: " << rss << std::endl;
-
   VEC3V_T pgrad_invert, zgrad_invert;
   Ume::Timer invert_time;
   Ume::gradzatz_invert(mesh, zfield, zgrad_invert, pgrad_invert);
