@@ -145,7 +145,9 @@ int main(int argc, char *argv[]) {
   Ume::Timer face_time;
   Ume::calc_face_area(mesh, face_area);
   face_time.start();
-  Ume::calc_face_area(mesh, face_area);
+  for (size_t i=0;i<ic;i++) {
+    Ume::calc_face_area(mesh, face_area);
+  }
   face_time.stop();
 
   if (comm.pe() == 0)
