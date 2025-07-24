@@ -102,7 +102,7 @@ You can also run `scale_mesh` with MPI
 ```
 ### Run gradient kernel multiple times
 
-By default, the gradient and face area calculation kernel is run once. There is an option to run these kernels in `ume_mpi` multiple times to increase the computations for benchmarking purposes using command line argument. 
+By default, all the kernels is run once. There is an option to run these kernels in `ume_mpi` multiple times to increase the computations for benchmarking purposes using command line argument. 
 
 ```shell
  % mpirun -np <n> ume_mpi <prefix> -i <number of iterations>
