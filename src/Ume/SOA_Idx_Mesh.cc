@@ -15,8 +15,6 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
-#include "Ume/utils.hh"
-
 #include <istream>
 #include <ostream>
 
@@ -26,7 +24,7 @@ namespace SOA_Idx {
 /* --------------------------------- Mesh -----------------------------------*/
 
 Mesh::Mesh()
-    : Mesh_Base(), dump_iotas{false}, corners{this}, edges{this}, faces{this}, points{this},
+    : Mesh_Base(), corners{this}, edges{this}, faces{this}, points{this},
       sides{this}, zones{this}, iotas{this} {}
 
 std::ostream &operator<<(std::ostream &os, Mesh::Geometry_Type const &geo) {
@@ -61,12 +59,34 @@ void Mesh::write(std::ostream &os) const {
 }
 
 void Mesh::read(std::istream &is) {
-  ivtag = read_vtag(is, "Input version");
-  read_bin(is, mype);
+  read_bin(is, ivtag);
+  
+  // Handle the case when the only an old binary ume file is available:
+  //
+  // The ume binary was created before a heading existed in the umetxt
+  // and the original umetxt is no longer available.
+  // 
+  // Therefore, trying to read the version gives you mype since
+  // no version information exists
+  //
+  // An alternative solution is to have a script to modify these 
+  // original binary ume files
+  if (ivtag != UME_VERSION_1 && ivtag != UME_VERSION_2) {
+    mype = ivtag;
+    ivtag = UME_VERSION_1;
+    dump_iotas = false;
+    version_header = false;
+    std::cout << "No Version Header" << std::endl;
+  }
+  else {
+    read_bin(is, mype);
+    version_header = true;
+  }
+
   read_bin(is, numpe);
   read_bin(is, geo);
-  
-  if (ivtag >= UME_VERSION_2)
+
+  if (version_header)
     read_bin(is, dump_iotas);
 
   points.read(is);
