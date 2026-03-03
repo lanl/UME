@@ -35,4 +35,62 @@ template <typename T>
 using SArrayRank4 =
     Kokkos::View<T ****, MemLayout, DefaultMemSpace>;
 
+/* Memory pool scratch array allocators. These optionally fall back to the basic
+ * Kokkos view scratch array types. */
+
+template <typename T, bool useMemPool = true,
+          typename CopyOpt = MemOpts::CopyInit>
+inline auto NewArrayRank1(const std::string &name, const int dim0,
+                          const T init_value = static_cast<T>(0),
+                          CopyOpt &&opt = MemOpts::CopyInit{}) {
+  if constexpr (useMemPool)
+    return GetMemPool().GetView<T>(
+        init_value, dim0, std::forward<CopyOpt>(opt));
+  else
+    return SArrayRank1<T>(name, static_cast<size_t>(dim0));
+};
+
+template <typename T, bool useMemPool = true,
+          typename CopyOpt = MemOpts::CopyInit>
+inline auto NewArrayRank2(const std::string &name, const int dim0,
+                          const int dim1,
+                          const T init_value = static_cast<T>(0),
+                          CopyOpt &&opt = MemOpts::CopyInit{}) {
+  if constexpr (useMemPool)
+    return GetMemPool().GetView<T>(
+        init_value, dim0, dim1, std::forward<CopyOpt>(opt));
+  else
+    return SArrayRank2<T>(
+        name, static_cast<size_t>(dim0), static_cast<size_t>(dim1));
+};
+
+template <typename T, bool useMemPool = true,
+          typename CopyOpt = MemOpts::CopyInit>
+inline auto NewArrayRank3(const std::string &name, const int dim0,
+                          const int dim1, const int dim2,
+                          const T init_value = static_cast<T>(0),
+                          CopyOpt &&opt = MemOpts::CopyInit{}) {
+  if constexpr (useMemPool)
+    return GetMemPool().GetView<T>(
+        init_value, dim0, dim1, dim2, std::forward<CopyOpt>(opt));
+  else
+    return SArrayRank3<T>(name, static_cast<size_t>(dim0),
+        static_cast<size_t>(dim1), static_cast<size_t>(dim2));
+};
+
+template <typename T, bool useMemPool = true,
+          typename CopyOpt = MemOpts::CopyInit>
+inline auto NewArrayRank4(const std::string &name, const int dim0,
+                          const int dim1, const int dim2, const int dim3,
+                          const T init_value = static_cast<T>(0),
+                          CopyOpt &&opt = MemOpts::CopyInit{}) {
+  if constexpr (useMemPool)
+    return GetMemPool().GetView<T>(
+        init_value, dim0, dim1, dim2, dim3, std::forward<CopyOpt>(opt));
+  else
+    return SArrayRank4<T>(name, static_cast<size_t>(dim0),
+        static_cast<size_t>(dim1), static_cast<size_t>(dim2),
+        static_cast<size_t>(dim3));
+};
+
 #endif
