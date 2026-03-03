@@ -16,9 +16,9 @@
 #ifndef UME_MEMORY_HH
 #define UME_MEMORY_HH
 
+#include "utils.hh"
 #include <Kokkos_Core.hpp>
 #include <type_traits>
-#include "utils.hh"
 
 /* Define the default memory space for scratch arrays */
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -29,16 +29,23 @@ using DefaultMemSpace = Kokkos::HIPSpace;
 using DefaultMemSpace = Kokkos::SharedSpace;
 #endif
 
+/* Define the default execution spaces */
+using DevExecSpace = Kokkos::DefaultExecutionSpace;
+using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
+
 /* NOTE: We use left layout to avoid transposing arrays across
  * Fortran/C++ language barriers. For maximum performance, we
  * should be using right layout but the size of the "bad" dimension
  * is usuallly small. */
 using MemLayout = Kokkos::LayoutLeft;
 
+/* Trait to prevent view from being memory managed by Kokkos */
+using MemUnmanaged = Kokkos::MemoryTraits<Kokkos::Unmanaged>;
+
 namespace MemOpts {
 struct DoNotCopyInit : std::false_type {};
 struct CopyInit : std::true_type {};
-}
+} // namespace MemOpts
 
 template <typename MemorySpace> class MemoryPoolAllocation {
 private:
@@ -186,7 +193,7 @@ public:
         auto this_claim_end = claims_[i].start + claims_[i].length;
         if (claims_[i + 1].start - this_claim_end > num_blocks_needed) {
           claims_.insert(claims_.begin() + i + 1,
-                         BlockClaim(this_claim_end, num_blocks_needed));
+              BlockClaim(this_claim_end, num_blocks_needed));
           return GetPtrToOffsetInPool(claims_[i + 1].start);
         }
       }
@@ -255,9 +262,9 @@ public:
 
   template <typename T, typename CopyOpt, typename Tuple, std::size_t... Is>
   auto GetViewImplTuple(T const &init_value, CopyOpt &&opt, Tuple &&t,
-                        std::index_sequence<Is...>) {
+      std::index_sequence<Is...>) {
     return GetViewImpl(init_value, std::forward<CopyOpt>(opt),
-                       std::get<Is>(std::forward<Tuple>(t))...);
+        std::get<Is>(std::forward<Tuple>(t))...);
   }
 
   /* Check final parameter in pack, If not a copy option, append copy option. */
@@ -284,8 +291,8 @@ public:
     constexpr auto N = sizeof...(Args);
 
     if constexpr (N == 0) { // No copy arg passed and no other arguments either
-      return GetViewImpl(init_value, MemOpts::CopyInit{},
-                         std::forward<Args>(args)...);
+      return GetViewImpl(
+          init_value, MemOpts::CopyInit{}, std::forward<Args>(args)...);
     } else { // Parameter pack as tuple
       auto tuple = std::forward_as_tuple(std::forward<Args>(args)...);
 
@@ -297,20 +304,111 @@ public:
       /* If that type is one of the copy options, pass in the copy option and
        * separate out the dims as a new pack. */
       if constexpr (std::is_same_v<Last_t, MemOpts::CopyInit> ||
-                    std::is_same_v<Last_t, MemOpts::DoNotCopyInit>) {
+          std::is_same_v<Last_t, MemOpts::DoNotCopyInit>) {
         /* Call the tuple version to create a new parameter pack that doesn't
          * include the last argument. */
-        return GetViewImplTuple(init_value, Last_t{}, tuple,
-                                std::make_index_sequence<N - 1>{});
+        return GetViewImplTuple(
+            init_value, Last_t{}, tuple, std::make_index_sequence<N - 1>{});
       } else {
         /* Dims were passed-in but no copy opt so use the CopyInit as the
          * default. */
-        return GetViewImpl(init_value, MemOpts::CopyInit{},
-                           std::forward<Args>(args)...);
+        return GetViewImpl(
+            init_value, MemOpts::CopyInit{}, std::forward<Args>(args)...);
       }
     }
   }
 }; // class MemoryPool
+
+template <typename ViewDataType, typename MemorySpace>
+class LifetimeWrapper
+    : public Kokkos::View<ViewDataType, MemLayout, MemorySpace, MemUnmanaged> {
+  using Base = Kokkos::View<ViewDataType, MemLayout, MemorySpace, MemUnmanaged>;
+  using ValueType = Base::value_type;
+
+  unsigned int *ref_count_ = nullptr;
+
+  KOKKOS_INLINE_FUNCTION
+  bool RefCounted() const { return ref_count_ != nullptr; }
+
+  void DecrementRefCounterAndMaybeRelease() {
+    if (RefCounted()) {
+      // TODO: theadsafety
+      --(*(ref_count_));
+      if (0 == *ref_count_) {
+        MemoryPool<DefaultMemSpace>::GetInstance().Pool().Release(this->data());
+        delete ref_count_;
+        ref_count_ = nullptr;
+      }
+    }
+  }
+
+public:
+  // LifetimeWrapper() = delete;
+
+  template <typename PtrType, typename CopyOpt, typename... Dims>
+  LifetimeWrapper(PtrType p, ValueType const &v, [[maybe_unused]] CopyOpt &&opt,
+      Dims &&...dims)
+      : Base{p, static_cast<size_t>(dims)...}, ref_count_(nullptr) {
+    /* NOTE: there are valid usecases where p is a nullptr, but we need not
+     * refcount those. */
+    if (p != nullptr) {
+      /* The copy options inherit from true type and false type as appropriate
+       * thus this contexpr if expression will do the correct thing by not doing
+       * the deep copy if DoNotCopyInit is passed in. */
+      if constexpr (CopyOpt::value) {
+        Kokkos::deep_copy(DevExecSpace(), *this, v);
+        DevExecSpace().fence();
+      }
+
+      // TODO: threadsafety
+      ref_count_ = new unsigned int;
+      *(ref_count_) = 1;
+    }
+  }
+
+  // Copying
+  KOKKOS_INLINE_FUNCTION
+  LifetimeWrapper(LifetimeWrapper const &rhs) : Base(rhs) {
+    this->ref_count_ = rhs.ref_count_;
+    if (RefCounted()) {
+      KOKKOS_IF_ON_HOST(
+          // TODO: threadsafety
+          ++(*(this->ref_count_));)
+    }
+  }
+  KOKKOS_INLINE_FUNCTION
+  LifetimeWrapper &operator=(LifetimeWrapper const &rhs) {
+    KOKKOS_IF_ON_HOST(this->DecrementRefCounterAndMaybeRelease();)
+    Base::operator=(rhs);
+    this->ref_count_ = rhs.ref_count_;
+    if (RefCounted()) {
+      KOKKOS_IF_ON_HOST(
+          // TODO: threadsafety
+          ++(*(this->ref_count_));)
+    }
+    return *this;
+  }
+
+  // Moving
+  KOKKOS_INLINE_FUNCTION
+  LifetimeWrapper(LifetimeWrapper &&rhs) noexcept : Base(std::move(rhs)) {
+    this->ref_count_ = rhs.ref_count_;
+    rhs.ref_count_ = nullptr;
+  }
+  KOKKOS_INLINE_FUNCTION
+  LifetimeWrapper &operator=(LifetimeWrapper &&rhs) noexcept {
+    KOKKOS_IF_ON_HOST(this->DecrementRefCounterAndMaybeRelease();)
+    Base::operator=(std::move(rhs));
+    this->ref_count_ = rhs.ref_count_;
+    rhs.ref_count_ = nullptr;
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  ~LifetimeWrapper() {
+    KOKKOS_IF_ON_HOST(DecrementRefCounterAndMaybeRelease();)
+  }
+}; // class LifetimeWrapper
 
 /* Return a reference to the memory pool. */
 inline MemoryPool<DefaultMemSpace> &GetMemPool() {
