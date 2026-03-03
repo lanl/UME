@@ -34,6 +34,8 @@ set(UME_INCLUDE_FILES
   renumbering.hh
   soa_idx_helpers.hh
   utils.hh
+  memory.hh
+  array_types.hh
   )
 
 add_library(Ume
