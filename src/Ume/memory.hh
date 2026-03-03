@@ -312,4 +312,9 @@ public:
   }
 }; // class MemoryPool
 
+/* Return a reference to the memory pool. */
+inline MemoryPool<DefaultMemSpace> &GetMemPool() {
+  return MemoryPool<DefaultMemSpace>::GetInstance();
+}
+
 #endif
