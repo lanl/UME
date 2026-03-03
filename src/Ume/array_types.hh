@@ -16,4 +16,23 @@
 #ifndef UME_ARRAY_TYPES_HH
 #define UME_ARRAY_TYPES_HH
 
+#include "memory.hh"
+
+/* Basic scratch array types -- memory managed by Kokkos */
+
+template <typename T>
+using SArrayRank1 = Kokkos::View<T *, DefaultMemSpace>;
+
+template <typename T>
+using SArrayRank2 =
+    Kokkos::View<T **, MemLayout, DefaultMemSpace>;
+
+template <typename T>
+using SArrayRank3 =
+    Kokkos::View<T ***, MemLayout, DefaultMemSpace>;
+
+template <typename T>
+using SArrayRank4 =
+    Kokkos::View<T ****, MemLayout, DefaultMemSpace>;
+
 #endif
