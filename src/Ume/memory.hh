@@ -18,6 +18,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <type_traits>
+#include "utils.hh"
 
 /* Define the default memory space for scratch arrays */
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -211,5 +212,104 @@ public:
   } // Release
 
 }; // class MemoryPoolAllocation
+
+template <typename ViewDataType, typename MemorySpace> class LifetimeWrapper;
+
+template <typename MemorySpace> class MemoryPool {
+private:
+  MemoryPool() {
+    is_initialized_ = false;
+    pool_enabled_ = false;
+  }
+  ~MemoryPool() = default;
+
+  MemoryPoolAllocation<MemorySpace> pool_;
+  bool is_initialized_;
+  bool pool_enabled_;
+
+public:
+  MemoryPool(const MemoryPool &) = delete;
+  MemoryPool &operator=(const MemoryPool &) = delete;
+
+  static MemoryPool &GetInstance() {
+    static MemoryPool instance;
+    return instance;
+  }
+
+  bool &IsInitialized() { return is_initialized_; }
+  bool &IsPoolEnabled() { return pool_enabled_; }
+  auto &Pool() { return pool_; }
+
+  template <typename T, typename CopyOpt, typename... Dims>
+  auto GetViewImpl(T const &init_value, CopyOpt &&opt, Dims &&...dims) {
+    /* Separate dims and memopt, only forward dims */
+    using ReturnType = LifetimeWrapper<
+        typename Ume::detail::AddPointerNTimes<T, sizeof...(Dims)>::type,
+        MemorySpace>;
+    size_t const num_entries = (1 * ... * dims);
+    size_t const num_bytes = num_entries * sizeof(T);
+
+    return ReturnType{static_cast<T *>(pool_.Claim(num_bytes)), init_value,
+        std::forward<CopyOpt>(opt), std::forward<Dims>(dims)...};
+  }
+
+  template <typename T, typename CopyOpt, typename Tuple, std::size_t... Is>
+  auto GetViewImplTuple(T const &init_value, CopyOpt &&opt, Tuple &&t,
+                        std::index_sequence<Is...>) {
+    return GetViewImpl(init_value, std::forward<CopyOpt>(opt),
+                       std::get<Is>(std::forward<Tuple>(t))...);
+  }
+
+  /* Check final parameter in pack, If not a copy option, append copy option. */
+  template <typename T, typename... Args>
+  auto GetView(T const &init_value, Args &&...args) {
+    /* The args in this case can either be a sequence of dimensions followed by
+     * a copy option or just a sequence of dimensions. This function will add
+     * the default copy option if one wasn't provided.
+     * -----
+     * args... = dims... , copy_option
+     * - or -
+     * args... = dims...
+     * ------
+     * - if -
+     * args... = dims..., copy_option
+     * - then -
+     * call getview(init_value, copy_option, dims...)
+     * - else (no copy option provided and args... = dims...) -
+     * Note: CopyInit{} will produce the default behavior of copy initializing
+     * the view call getview(init_value, CopyInit{}, args...) (again, args... =
+     * dims...)
+     * -----
+     * size (number of arguments) of parameter pack */
+    constexpr auto N = sizeof...(Args);
+
+    if constexpr (N == 0) { // No copy arg passed and no other arguments either
+      return GetViewImpl(init_value, MemOpts::CopyInit{},
+                         std::forward<Args>(args)...);
+    } else { // Parameter pack as tuple
+      auto tuple = std::forward_as_tuple(std::forward<Args>(args)...);
+
+      /* Get underlying type of last arg of tuple */
+      using LastUnclean = std::tuple_element_t<N - 1, decltype(tuple)>;
+      using Last_t = typename std::remove_cv_t<
+          typename std::remove_reference<LastUnclean>::type>;
+
+      /* If that type is one of the copy options, pass in the copy option and
+       * separate out the dims as a new pack. */
+      if constexpr (std::is_same_v<Last_t, MemOpts::CopyInit> ||
+                    std::is_same_v<Last_t, MemOpts::DoNotCopyInit>) {
+        /* Call the tuple version to create a new parameter pack that doesn't
+         * include the last argument. */
+        return GetViewImplTuple(init_value, Last_t{}, tuple,
+                                std::make_index_sequence<N - 1>{});
+      } else {
+        /* Dims were passed-in but no copy opt so use the CopyInit as the
+         * default. */
+        return GetViewImpl(init_value, MemOpts::CopyInit{},
+                           std::forward<Args>(args)...);
+      }
+    }
+  }
+}; // class MemoryPool
 
 #endif
