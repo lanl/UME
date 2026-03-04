@@ -16,6 +16,38 @@
 #include "process_mgmt.hh"
 #include "memory.hh"
 
+#include <stdlib.h>
+#include <stdio.h>
+#ifdef HAVE_MPI
+#include <mpi.h>
+#endif
+
+namespace {
+
+void show_backtrace() {
+#ifdef NO_LIBUNWIND
+  printf("No libunwind backtrace available on this platform.\n");
+#else
+#endif
+}
+
+void halt_with_backtrace(char const msg[], bool const show_bt) {
+  printf("\n%s\n", msg);
+  if (show_bt)
+    show_backtrace();
+
+#ifdef HAVE_MPI
+  int err_code = MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+  if (err_code)
+    std::exit(EXIT_FAILURE);
+#else
+  std::exit(EXIT_FAILURE);
+#endif
+
+}
+
+}
+
 namespace Ume {
 
 /* First initialize Kokkos, then the memory pool */
@@ -48,6 +80,14 @@ void initialize(int &argc, char *argv[]) {
 void finalize() {
   GetMemPool().Pool().Finalize();
   Kokkos::finalize();
+}
+
+/* With error condition and backtrace, abort the job (if have MPI)
+ * or process exit (if no MPI). This is an asynchronous operation:
+ * all calling processes will write to standard out. */
+void error_stop(char const msg[]) {
+  finalize();
+  halt_with_backtrace(msg, true);
 }
 
 } // namespace Ume
