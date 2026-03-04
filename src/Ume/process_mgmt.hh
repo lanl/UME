@@ -16,4 +16,13 @@
 #ifndef UME_PROCESS_MGMT_HH
 #define UME_PROCESS_MGMT_HH
 
+#include <Kokkos_Core.hpp>
+
+namespace Ume {
+
+void initialize(int &argc, char *argv[]);
+void finalize();
+
+}
+
 #endif
