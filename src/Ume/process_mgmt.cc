@@ -21,6 +21,10 @@
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
+#ifndef NO_LIBUNWIND
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+#endif
 
 namespace {
 
@@ -28,6 +32,49 @@ void show_backtrace() {
 #ifdef NO_LIBUNWIND
   printf("No libunwind backtrace available on this platform.\n");
 #else
+  /* Limit on the number of stack frames output.
+   * Set to a large number to disable. */
+  constexpr int max_stack_frames = 0xFFFF;
+  constexpr int namelen = 512;
+
+  unw_context_t uc;
+  if (unw_getcontext(&uc)) {
+    printf("<stack trace unavailable>\n");
+    return;
+  }
+
+  unw_cursor_t cursor;
+  if (unw_init_local(&cursor, &uc)) {
+    printf("<stack trace unavailable>\n");
+    return;
+  }
+
+  unw_word_t ip, sp, offset;
+  int stack_frame_count = 0, name_status, step_status;
+  char procname[namelen];
+  do {
+    if (stack_frame_count < max_stack_frames) {
+      name_status = unw_get_proc_name(&cursor, procname, namelen, &offset);
+      if (name_status) {
+        printf("%2d: <no information>\n", stack_frame_count);
+      } else {
+        if (unw_get_reg(&cursor, UNW_REG_IP, &ip))
+          ip = 0xDEADBEEF;
+        if (unw_get_reg(&cursor, UNW_REG_SP, &sp))
+          sp = 0xDEADBEEF;
+        printf("%2d: ip = %#010lx, sp = %#014lx: %s\n", stack_frame_count,
+               (unsigned long)ip, (unsigned long)sp, procname);
+      }
+    }
+    stack_frame_count += 1;
+  } while ((step_status = unw_step(&cursor)) > 0);
+  if (step_status < 0) {
+    printf("<stack trace truncated by libunwind error>\n\t%s\n",
+           unw_strerror(step_status));
+  } else if (stack_frame_count >= max_stack_frames) {
+    printf("<stack trace output truncated at %d/%d frames>\n", max_stack_frames,
+           stack_frame_count);
+  }
 #endif
 }
 
@@ -43,7 +90,6 @@ void halt_with_backtrace(char const msg[], bool const show_bt) {
 #else
   std::exit(EXIT_FAILURE);
 #endif
-
 }
 
 }
