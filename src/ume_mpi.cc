@@ -261,20 +261,40 @@ void check_gradzatz_diffs(Mesh const &mesh, int const &centered_zone_index,
     VEC3V_T const &pgrad_invert) {
   auto const &kztyp = mesh.zones.mask;
 
+  double tol = 1e-6;
+
   if (zgrad != zgrad_invert) {
-    std::cout << "PE" << mesh.mype << " zgrad != zgrad_invert" << std::endl;
     if (mesh.mype == 0) {
       for (int z = 0; z < mesh.zones.size(); ++z) {
-        if (zgrad[z] != zgrad_invert[z]) {
-          std::cout << "Z" << z << " " << mesh.zones.mask[z] << ": " << zgrad[z]
-                    << " vs. " << zgrad_invert[z] << "\n";
+        // Compute the difference between zone gradient from original and inverted algorithm
+        auto diff = zgrad[z] - zgrad_invert[z];
+        bool cwise = std::abs(diff[0])> tol && std::abs(diff[1])> tol && std::abs(diff[2])> tol;
+        bool l2_norm = (std::sqrt(diff[0]*diff[0] + diff[1]*diff[1] + diff[2]*diff[2])) > tol;
+        // If the absolute difference of all components or 
+        // L2 norm of the difference is greater than defined tolerance then results mismatch
+        if (cwise || l2_norm) {
+          std::cout << "PE" << mesh.mype << " zgrad != zgrad_invert" << " Z" << z << " " 
+                  << mesh.zones.mask[z] << ": " << zgrad[z]  << " vs. " << zgrad_invert[z] << "\n";
         }
       }
     }
   }
 
   if (pgrad != pgrad_invert) {
-    std::cout << "PE" << mesh.mype << " pgrad != pgrad_invert" << std::endl;
+    if (mesh.mype == 0) {
+      for (int p = 0; p < mesh.points.size(); ++p) {
+        // Compute the difference between point gradient from original and inverted algorithm
+        auto diff = pgrad[p] - pgrad_invert[p];
+        bool cwise = std::abs(diff[0])> tol && std::abs(diff[1])> tol && std::abs(diff[2])> tol;
+        bool l2_norm = (std::sqrt(diff[0]*diff[0] + diff[1]*diff[1] + diff[2]*diff[2])) > tol;
+        // If the absolute difference of all components or 
+        // L2 norm of the difference is greater than defined tolerance then results mismatch
+        if (cwise || l2_norm) {
+          std::cout << "PE" << mesh.mype << " pgrad != pgrad_invert" << " P" << p << " " 
+          << mesh.points.mask[p] << ": " << pgrad[p] << " vs. " << pgrad_invert[p] << "\n";
+        }
+      }
+    }
   }
 
   auto const &z2pz = mesh.ds->caccess_intrr("m:z>pz");
