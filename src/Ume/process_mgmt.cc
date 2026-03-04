@@ -16,8 +16,8 @@
 #include "process_mgmt.hh"
 #include "memory.hh"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -64,17 +64,17 @@ void show_backtrace() {
         if (unw_get_reg(&cursor, UNW_REG_SP, &sp))
           sp = 0xDEADBEEF;
         printf("%2d: ip = %#010lx, sp = %#014lx: %s\n", stack_frame_count,
-               (unsigned long)ip, (unsigned long)sp, procname);
+            (unsigned long)ip, (unsigned long)sp, procname);
       }
     }
     stack_frame_count += 1;
   } while ((step_status = unw_step(&cursor)) > 0);
   if (step_status < 0) {
     printf("<stack trace truncated by libunwind error>\n\t%s\n",
-           unw_strerror(step_status));
+        unw_strerror(step_status));
   } else if (stack_frame_count >= max_stack_frames) {
     printf("<stack trace output truncated at %d/%d frames>\n", max_stack_frames,
-           stack_frame_count);
+        stack_frame_count);
   }
 #endif
 }

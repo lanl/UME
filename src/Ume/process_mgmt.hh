@@ -24,6 +24,6 @@ void initialize(int &argc, char *argv[]);
 void finalize();
 extern "C" void error_stop(char const msg[]);
 
-}
+} // namespace Ume
 
 #endif
