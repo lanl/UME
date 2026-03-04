@@ -30,7 +30,7 @@ void initialize(int &argc, char *argv[]) {
     /* Set pool defaults if environment variables are not set */
     unsigned blockSizeBytes = 128;
     size_t defaultSizeMB = 8000;
-    const char *envPoolSizeMB = std::getenv("LOKKOS_POOL_SIZE_MB");
+    const char *envPoolSizeMB = std::getenv("MEMORY_POOL_SIZE_MB");
     size_t poolSizeBytes;
 
     if (envPoolSizeMB != nullptr)
