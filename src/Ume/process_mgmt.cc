@@ -27,6 +27,7 @@
 #endif
 
 namespace {
+extern "C" {
 
 void show_backtrace() {
 #ifdef NO_LIBUNWIND
@@ -92,7 +93,8 @@ void halt_with_backtrace(char const msg[], bool const show_bt) {
 #endif
 }
 
-}
+} // extern "C"
+} // namespace
 
 namespace Ume {
 
@@ -131,7 +133,7 @@ void finalize() {
 /* With error condition and backtrace, abort the job (if have MPI)
  * or process exit (if no MPI). This is an asynchronous operation:
  * all calling processes will write to standard out. */
-void error_stop(char const msg[]) {
+extern "C" void error_stop(char const msg[]) {
   finalize();
   halt_with_backtrace(msg, true);
 }

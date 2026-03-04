@@ -22,7 +22,7 @@ namespace Ume {
 
 void initialize(int &argc, char *argv[]);
 void finalize();
-void error_stop(char const msg[]);
+extern "C" void error_stop(char const msg[]);
 
 }
 
