@@ -16,6 +16,7 @@
 #ifndef UME_MEMORY_HH
 #define UME_MEMORY_HH
 
+#include "process_mgmt.hh"
 #include "utils.hh"
 #include <Kokkos_Core.hpp>
 #include <type_traits>
@@ -200,7 +201,7 @@ public:
     }
 
     /* Claim doesn't fit anywhere, so we can't allocate it */
-    /* TODO: ERROR HANDLER GOES HERE */
+    Ume::error_stop("Memory pool cannot claim memory.");
     return nullptr;
   } // Claim
 
