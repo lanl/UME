@@ -113,10 +113,12 @@ public:
     claims_.reserve(num_claims_reservations);
     pool_ = Alloc_(num_blocks_ * block_size);
 
-    assert(pool_);
-    /* Should we have a diagnostic on OOM? */
-    // if (!pool_) {
-    // }
+    if (!pool_) {
+      printf("MemoryPoolAllocation: insufficient free memory to allocate\n"
+             "  %zu bytes for %zu blocks of size %d\n",
+          num_bytes, num_blocks_, block_size_);
+      Ume::error_stop("MemoryPoolAllocation failed");
+    }
   } // MemoryPoolAllocation
 
   /* Only allow moving, NOT copying */
