@@ -1,0 +1,15 @@
+
+include(pkgs/helpers)
+SimplePkg(LIBUNWIND libunwind.h unwind)
+if (LIBUNWIND_NOT_FOUND)
+  set(COMMON_COMPILE_DEFINITIONS
+    ${COMMON_COMPILE_DEFINITIONS}
+    NO_LIBUNWIND
+    )
+  set(LIBUNWIND_INCLUDE_DIRS "")
+else()
+  set(COMMON_LINK_LIBRARIES
+    ${COMMON_LINK_LIBRARIES}
+    ${LIBUNWIND_LIBRARIES}
+    )
+endif()

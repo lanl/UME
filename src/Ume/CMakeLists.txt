@@ -74,6 +74,7 @@ target_include_directories(Ume
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:include/Ume>
+  ${LIBUNWIND_INCLUDE_DIRS}
   )
 
 target_link_libraries(Ume
