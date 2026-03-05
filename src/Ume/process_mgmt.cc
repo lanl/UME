@@ -26,6 +26,9 @@
 #include <libunwind.h>
 #endif
 
+static bool ume_is_initialized = false;
+static bool ume_is_finalized = false;
+
 namespace {
 extern "C" {
 
@@ -85,8 +88,15 @@ void halt_with_backtrace(char const msg[], bool const show_bt) {
     show_backtrace();
 
 #ifdef HAVE_MPI
-  int err_code = MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-  if (err_code)
+  int mpi_is_initialized, mpi_is_finalized, err = 0;
+  MPI_Initialized(&mpi_is_initialized);
+  MPI_Finalized(&mpi_is_finalized);
+
+  if (mpi_is_initialized && !mpi_is_finalized) {
+    err = MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    if (err)
+      std::exit(EXIT_FAILURE);
+  } else
     std::exit(EXIT_FAILURE);
 #else
   std::exit(EXIT_FAILURE);
@@ -122,12 +132,17 @@ void initialize(int &argc, char *argv[]) {
     GetMemPool().Pool() =
         MemoryPoolAllocation<DefaultMemSpace>(poolSizeBytes, blockSizeBytes);
   }
+
+  ume_is_initialized = true;
 }
 
 /* First finalize the memory pool, then Kokkos */
 void finalize() {
-  GetMemPool().Pool().Finalize();
-  Kokkos::finalize();
+  if (ume_is_initialized) {
+    GetMemPool().Pool().Finalize();
+    Kokkos::finalize();
+  }
+  ume_is_finalized = true;
 }
 
 /* With error condition and backtrace, abort the job (if have MPI)
