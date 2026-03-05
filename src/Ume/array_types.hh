@@ -93,4 +93,20 @@ inline auto NewArrayRank4(const std::string &name, const int dim0,
         static_cast<size_t>(dim3));
 };
 
+/* Array typedefs for mempool return types */
+
+template <typename T>
+using ArrayRank1 = Kokkos::View<T *, DefaultMemSpace, MemUnmanaged>;
+
+template <typename T>
+using ArrayRank2 = Kokkos::View<T **, MemLayout, DefaultMemSpace, MemUnmanaged>;
+
+template <typename T>
+using ArrayRank3 =
+    Kokkos::View<T ***, MemLayout, DefaultMemSpace, MemUnmanaged>;
+
+template <typename T>
+using ArrayRank4 =
+    Kokkos::View<T ****, MemLayout, DefaultMemSpace, MemUnmanaged>;
+
 #endif
