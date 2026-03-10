@@ -149,7 +149,8 @@ TEST_CASE("2D double scratch array"
 TEST_CASE("1D Vec3 scratch array"
           "[ArrayRank1<Vec3>]") {
   constexpr int dim0 = 512;
-  auto scratch_array = NewArrayRank1<Ume::Vec3>("Vec3 scratch array", dim0);
+  auto scratch_array = NewArrayRank1<Ume::Vec3>(
+      "Vec3 scratch array", dim0, Ume::Vec3(777777777.0));
   auto host_scratch_array =
       Kokkos::create_mirror_view(HostExecMemSpace(), scratch_array);
 
