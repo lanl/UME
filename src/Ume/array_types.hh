@@ -36,7 +36,10 @@ using SArrayRank4 =
     Kokkos::View<T ****, MemLayout, DefaultMemSpace>;
 
 /* Memory pool scratch array allocators. These optionally fall back to the basic
- * Kokkos view scratch array types. */
+ * Kokkos view scratch array types.
+ * NOTE: These allocate in device memory and will always initialize to zero
+ * unless an initialization value is provided following the required dimensions.
+ */
 
 template <typename T, bool useMemPool = true,
           typename CopyOpt = MemOpts::CopyInit>
