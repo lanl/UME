@@ -34,11 +34,8 @@ using DefaultMemSpace = Kokkos::SharedSpace;
 using DevExecSpace = Kokkos::DefaultExecutionSpace;
 using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
 
-/* NOTE: We use left layout to avoid transposing arrays across
- * Fortran/C++ language barriers. For maximum performance, we
- * should be using right layout but the size of the "bad" dimension
- * is usuallly small. */
-using MemLayout = Kokkos::LayoutLeft;
+/* Define the memory layout */
+using MemLayout = Kokkos::LayoutRight;
 
 /* Trait to prevent view from being memory managed by Kokkos */
 using MemUnmanaged = Kokkos::MemoryTraits<Kokkos::Unmanaged>;
