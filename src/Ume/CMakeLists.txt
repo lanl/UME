@@ -64,6 +64,7 @@ add_library(Ume
   )
 
 # Build option to force the use of the Kokkos::Serial backend.
+option(UME_SERIAL "Enable the Kokkos::Serial backend")
 if (UME_SERIAL)
   set(COMMON_COMPILE_DEFINITIONS
     ${COMMON_COMPILE_DEFINITIONS}
@@ -74,6 +75,7 @@ endif()
 
 # Build option to compile and link with LLVM ASAN/UBSAN for
 # developement/debugging purposes only.
+option(UME_SANITIZE "Enable LLVM ASAN and UBSAN")
 if (UME_SANITIZE)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     message(FATAL_ERROR "LLVM Sanitizers require an LLVM-based compiler.")
