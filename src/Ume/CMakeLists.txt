@@ -117,10 +117,8 @@ target_compile_options(Ume
   PRIVATE ${WARNING_FLAGS}
   )
 
-if (USE_KOKKOS)
-  if (Kokkos_ENABLE_CUDA)
-    target_compile_options(Ume PUBLIC "--expt-relaxed-constexpr")
-  endif()
+if (Kokkos_ENABLE_CUDA)
+  target_compile_options(Ume PUBLIC "--expt-relaxed-constexpr")
 endif()
 
 # -----------------------------------------------------------------------
