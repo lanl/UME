@@ -37,7 +37,6 @@ set(UME_INCLUDE_FILES
   memory.hh
   array_types.hh
   process_mgmt.hh
-  process_mgmt.cc
   )
 
 add_library(Ume
@@ -60,6 +59,7 @@ add_library(Ume
   gradient.cc
   renumbering.cc
   utils.cc
+  process_mgmt.cc
   )
 
 
