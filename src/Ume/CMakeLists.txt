@@ -37,6 +37,7 @@ set(UME_INCLUDE_FILES
   memory.hh
   array_types.hh
   process_mgmt.hh
+  mem_exec_spaces.hh
   )
 
 add_library(Ume
