@@ -12,10 +12,9 @@
 #include "Ume/VecN.hh"
 #include "Ume/array_types.hh"
 #include "Ume/memory.hh"
+#include "Ume/mem_exec_spaces.hh"
 #include <catch2/catch_test_macros.hpp>
 #include <concepts>
-
-using HostExecMemSpace = Kokkos::DefaultHostExecutionSpace::memory_space;
 
 TEST_CASE("1D int scratch array"
           "[ArrayRank1<int>]") {

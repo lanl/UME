@@ -15,6 +15,7 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
+#include "Ume/mem_exec_spaces.hh"
 #include <cassert>
 
 namespace Ume {
@@ -68,18 +69,16 @@ bool Edges::VAR_ecoord::init_() const {
   auto &ecoord = mydata_vec3v();
   ecoord.resize(ell);
 
-  using Execspace = Kokkos::HostSpace::execution_space;
-
-  Kokkos::View<Vec3 *, Kokkos::HostSpace> h_ecoord(&ecoord[0], ecoord.size());
-  Kokkos::View<const Vec3 *, Kokkos::HostSpace> h_pcoord(
+  Kokkos::View<Vec3 *, HostSpace> h_ecoord(&ecoord[0], ecoord.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_pcoord(
       &pcoord[0], pcoord.size());
-  Kokkos::View<const short *, Kokkos::HostSpace> h_emask(
+  Kokkos::View<const short *, HostSpace> h_emask(
       &emask[0], emask.size());
-  Kokkos::View<const int *, Kokkos::HostSpace> h_e2p2(e2p2.data(), e2p2.size());
-  Kokkos::View<const int *, Kokkos::HostSpace> h_e2p1(e2p1.data(), e2p1.size());
+  Kokkos::View<const int *, HostSpace> h_e2p2(e2p2.data(), e2p2.size());
+  Kokkos::View<const int *, HostSpace> h_e2p1(e2p1.data(), e2p1.size());
 
   Kokkos::parallel_for(
-      "VAR_ecoord", Kokkos::RangePolicy<Execspace>(0, el), [&](const int e) {
+      "VAR_ecoord", Kokkos::RangePolicy<HostExecSpace>(0, el), [&](const int e) {
         if (h_emask(e)) {
           h_ecoord(e) = (h_pcoord(h_e2p1(e)) + h_pcoord(h_e2p2(e))) * 0.5;
         } else {
