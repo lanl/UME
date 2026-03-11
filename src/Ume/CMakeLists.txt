@@ -62,6 +62,13 @@ add_library(Ume
   process_mgmt.cc
   )
 
+if (UME_SERIAL)
+  set(COMMON_COMPILE_DEFINITIONS
+    ${COMMON_COMPILE_DEFINITIONS}
+    UME_SERIAL
+    )
+  message(STATUS "Using the Kokkos::Serial backend.")
+endif()
 
 set_target_properties(Ume PROPERTIES
   COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
