@@ -36,7 +36,7 @@ TEST_CASE("1D int scratch array"
       "assign 1D int scratch array", dim0,
       KOKKOS_LAMBDA(const int i) { scratch_array(i) = i; });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
 #endif
@@ -67,7 +67,7 @@ TEST_CASE("2D int scratch array"
           scratch_array(j, i) = j * i;
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
 #endif
@@ -100,7 +100,7 @@ TEST_CASE("1D double scratch array"
         scratch_array(i) = static_cast<double>(i);
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
 #endif
@@ -132,7 +132,7 @@ TEST_CASE("2D double scratch array"
           scratch_array(j, i) = static_cast<double>(j * i);
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
 #endif
@@ -166,7 +166,7 @@ TEST_CASE("1D Vec3 scratch array"
       "assign 1D Vec3 scratch array", dim0,
       KOKKOS_LAMBDA(const int i) { scratch_array(i) = Ume::Vec3(static_cast<double>(i)); });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
 #endif
