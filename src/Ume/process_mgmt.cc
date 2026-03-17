@@ -106,20 +106,22 @@ void halt_with_backtrace(char const msg[], bool const show_bt) {
   std::exit(EXIT_FAILURE);
 #endif
 }
-std::optional<size_t> get_env_size(const char* name) {
-  if (const char* s = std::getenv(name)) {
+
+} // extern "C"
+
+std::optional<size_t> get_env_size(char const name[]) {
+  if (char const *const s = std::getenv(name)) {
     size_t value{};
     std::string_view sv{s};
-    
+
     auto [ptr, e] = std::from_chars(sv.data(), sv.data() + sv.size(), value);
     if (e == std::errc{} && ptr == sv.data() + sv.size()) {
       return value;
-    }   
+    }
   }
   return std::nullopt;
 }
 
-} // extern "C"
 } // namespace
 
 namespace Ume {
@@ -137,9 +139,9 @@ void initialize(int &argc, char *argv[]) {
     constexpr unsigned blockSizeBytes = 128;
     constexpr size_t defaultSizeMB = 8000;
     constexpr size_t bytesPerMB = 1024 * 1024;
-    
-    const size_t poolSizeMB = get_env_size("MEMORY_POOL_SIZE_MB").value_or(defaultSizeMB);
-    
+
+    const size_t poolSizeMB =
+        get_env_size("MEMORY_POOL_SIZE_MB").value_or(defaultSizeMB);
     const size_t poolSizeBytes = poolSizeMB * bytesPerMB;
 
     GetMemPool().Pool() =
