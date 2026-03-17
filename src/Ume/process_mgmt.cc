@@ -106,6 +106,18 @@ void halt_with_backtrace(char const msg[], bool const show_bt) {
   std::exit(EXIT_FAILURE);
 #endif
 }
+std::optional<size_t> get_env_size(const char* name) {
+  if (const char* s = std::getenv(name)) {
+    size_t value{};
+    std::string_view sv{s};
+    
+    auto [ptr, e] = std::from_chars(sv.data(), sv.data() + sv.size(), value);
+    if (e == std::errc{} && ptr == sv.data() + sv.size()) {
+      return value;
+    }   
+  }
+  return std::nullopt;
+}
 
 } // extern "C"
 } // namespace
@@ -122,17 +134,14 @@ void initialize(int &argc, char *argv[]) {
     GetMemPool().IsPoolEnabled() = true;
 
     /* Set pool defaults if environment variables are not set */
-    unsigned blockSizeBytes = 128;
-    size_t defaultSizeMB = 8000;
-    const char *envPoolSizeMB = std::getenv("MEMORY_POOL_SIZE_MB");
-    size_t poolSizeBytes;
+    constexpr unsigned blockSizeBytes = 128;
+    constexpr size_t defaultSizeMB = 8000;
+    constexpr size_t bytesPerMB = 1024 * 1024;
+    
+    const size_t poolSizeMB = get_env_size("MEMORY_POOL_SIZE_MB").value_or(defaultSizeMB);
+    
+    const size_t poolSizeBytes = poolSizeMB * bytesPerMB;
 
-    if (envPoolSizeMB != nullptr)
-      poolSizeBytes = std::atoi(envPoolSizeMB);
-    else
-      poolSizeBytes = defaultSizeMB;
-
-    poolSizeBytes *= 1024 * 1024;
     GetMemPool().Pool() =
         MemoryPoolAllocation<DefaultMemSpace>(poolSizeBytes, blockSizeBytes);
   }
