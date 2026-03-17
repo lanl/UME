@@ -83,6 +83,7 @@ void show_backtrace() {
         stack_frame_count);
   }
 #endif
+#endif
 }
 
 void halt_with_backtrace(char const msg[], bool const show_bt) {
