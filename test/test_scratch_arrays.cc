@@ -164,7 +164,7 @@ TEST_CASE("1D Vec3 scratch array"
 
   Kokkos::parallel_for(
       "assign 1D Vec3 scratch array", dim0,
-      KOKKOS_LAMBDA(const int i) { scratch_array(i) = Ume::Vec3(i); });
+      KOKKOS_LAMBDA(const int i) { scratch_array(i) = Ume::Vec3(static_cast<double>(i)); });
 
 #ifdef KOKKOS_ENABLE_CUDA
   Kokkos::fence();
