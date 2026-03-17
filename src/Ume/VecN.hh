@@ -16,6 +16,7 @@
 #define UME_VECN_HH 1
 
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Array.hpp>
 
 #include <algorithm>
 #include <array>
@@ -38,19 +39,20 @@ public:
   KOKKOS_INLINE_FUNCTION
   constexpr VecN() {
     static_assert(std::is_arithmetic_v<T>, "VecN is only for arithmetic types");
+    for (size_t i = 0; i < N; ++i) data_[i] = T{};
   }
   KOKKOS_INLINE_FUNCTION
   explicit constexpr VecN(T const &val) {
     static_assert(std::is_arithmetic_v<T>, "VecN is only for arithmetic types");
-    data_.fill(val);
+    for (size_t i = 0; i < N; ++i) data_[i] = val;
   }
   KOKKOS_INLINE_FUNCTION
-  explicit constexpr VecN(std::array<T, N> &&val) : data_{val} {
+  explicit constexpr VecN(Kokkos::Array<T, N> &&val) : data_{val} {
     static_assert(std::is_arithmetic_v<T>, "VecN is only for arithmetic types");
   }
   KOKKOS_INLINE_FUNCTION
   constexpr const_ref operator=(T const &v) {
-    data_.fill(v);
+    for (size_t i = 0; i < N; ++i) data_[i] = v;
     return *this;
   }
   KOKKOS_INLINE_FUNCTION
@@ -145,8 +147,17 @@ public:
     lhs /= rhs;
     return lhs;
   }
-  
-  constexpr auto operator<=>(const_ref rhs) const = default;
+ 
+  KOKKOS_FUNCTION
+  constexpr std::partial_ordering operator<=>(const_ref rhs) const {
+    for (std::size_t i = 0; i < N; ++i) {
+      if (auto cmp = data_[i] <=> rhs.data_[i]; cmp != 0) {
+        return cmp;
+      }
+    }
+    return std::partial_ordering::equivalent;
+  }
+ 
   constexpr bool operator==(const_ref rhs) const = default;
   constexpr bool operator==(T const &rhs) const {
     return std::all_of(
@@ -170,7 +181,7 @@ public:
   constexpr auto cend() { return data_.cend(); }
 
 private:
-  std::array<T, N> data_;
+  Kokkos::Array<T, N> data_;
 };
 
 using Vec3 = VecN<double, 3>;
