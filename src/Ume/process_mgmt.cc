@@ -21,9 +21,11 @@
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
+#ifndef __CUDACC__
 #ifndef NO_LIBUNWIND
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
+#endif
 #endif
 
 static bool ume_is_initialized = false;
