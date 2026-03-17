@@ -33,6 +33,7 @@ namespace {
 extern "C" {
 
 void show_backtrace() {
+#ifndef __CUDACC__
 #ifdef NO_LIBUNWIND
   printf("No libunwind backtrace available on this platform.\n");
 #else
