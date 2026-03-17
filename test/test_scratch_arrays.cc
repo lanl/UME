@@ -11,8 +11,8 @@
 
 #include "Ume/VecN.hh"
 #include "Ume/array_types.hh"
-#include "Ume/memory.hh"
 #include "Ume/mem_exec_spaces.hh"
+#include "Ume/memory.hh"
 #include <catch2/catch_test_macros.hpp>
 #include <concepts>
 
@@ -35,7 +35,8 @@ TEST_CASE("1D int scratch array"
       "assign 1D int scratch array", dim0,
       KOKKOS_LAMBDA(const int i) { scratch_array(i) = i; });
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
 #endif
@@ -66,7 +67,8 @@ TEST_CASE("2D int scratch array"
           scratch_array(j, i) = j * i;
       });
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
 #endif
@@ -99,7 +101,8 @@ TEST_CASE("1D double scratch array"
         scratch_array(i) = static_cast<double>(i);
       });
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
 #endif
@@ -131,7 +134,8 @@ TEST_CASE("2D double scratch array"
           scratch_array(j, i) = static_cast<double>(j * i);
       });
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
 #endif
@@ -162,10 +166,12 @@ TEST_CASE("1D Vec3 scratch array"
       "Variable must be castable to a Kokkos view.");
 
   Kokkos::parallel_for(
-      "assign 1D Vec3 scratch array", dim0,
-      KOKKOS_LAMBDA(const int i) { scratch_array(i) = Ume::Vec3(static_cast<double>(i)); });
+      "assign 1D Vec3 scratch array", dim0, KOKKOS_LAMBDA(const int i) {
+        scratch_array(i) = Ume::Vec3(static_cast<double>(i));
+      });
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
 #endif
