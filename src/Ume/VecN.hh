@@ -161,7 +161,7 @@ public:
   constexpr bool operator==(const_ref rhs) const = default;
   constexpr bool operator==(T const &rhs) const {
     return std::all_of(
-        data_.begin(), data_.end(), [rhs](int i) { return i == rhs; });
+        data_.data(), data_.data() + N, [rhs](int i) { return i == rhs; });
   }
   constexpr bool operator!=(T const &rhs) const { return !(*this == rhs); }
  
@@ -173,12 +173,12 @@ public:
     }
     return os << '>';
   }
-  constexpr auto begin() { return data_.begin(); }
-  constexpr auto end() { return data_.end(); }
-  constexpr auto begin() const { return data_.begin(); }
-  constexpr auto end() const { return data_.end(); }
-  constexpr auto cbegin() { return data_.cbegin(); }
-  constexpr auto cend() { return data_.cend(); }
+  constexpr auto begin() { return data_.data(); }
+  constexpr auto end() { return data_.data() + N; }
+  constexpr auto begin() const { return data_.data(); }
+  constexpr auto end() const { return data_.data() + N; }
+  constexpr auto cbegin() { return data_.data(); }
+  constexpr auto cend() { return data_.data() + N; }
 
 private:
   Kokkos::Array<T, N> data_;
