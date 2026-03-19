@@ -104,5 +104,17 @@ inline std::string trim(const std::string &s) { return rtrim(ltrim(s)); }
 int init_depth(int const delta);
 void debug_attach_point(int const mype);
 
+namespace detail {
+
+template <typename T, size_t N> struct AddPointerNTimes {
+  using type = typename AddPointerNTimes<std::add_pointer_t<T>, N - 1>::type;
+};
+
+template <typename T> struct AddPointerNTimes<T, 0> {
+  using type = T;
+};
+
+} // namespace detail
+
 } // namespace Ume
 #endif

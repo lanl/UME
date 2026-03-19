@@ -28,6 +28,7 @@
 #include "Ume/face_area.hh"
 #include "Ume/gradient.hh"
 #include "Ume/renumbering.hh"
+#include "Ume/process_mgmt.hh"
 #include "Ume/utils.hh"
 #include <cassert>
 #include <cstdio>
@@ -48,9 +49,10 @@ void check_gradzatz_diffs(Mesh const &mesh, int const &centered_zone_index,
     VEC3V_T const &pgrad_invert);
 
 int main(int argc, char *argv[]) {
+  Ume::initialize(argc, argv);
+
   /* We will read in the mesh */
   Mesh mesh;
-  Kokkos::initialize(argc, argv);
   /* We need to instantiate the MPI Transport in order to get the PE
    * number used to form our filename and attach the communicator to
    * the mesh. */
@@ -180,7 +182,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Done." << std::endl;
 
   comm.stop();
-  Kokkos::finalize();
+  Ume::finalize();
   return EXIT_SUCCESS;
 }
 
