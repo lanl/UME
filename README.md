@@ -59,7 +59,11 @@ flag. Package-specific CMake options for UME include:
 
 CMake options that are not package-specific include:
 * `UME_SERIAL=YES` will forcefully enable the use of the
-  `Kokkos::Serial` backend.
+  `Kokkos::Serial` execution space.
+* `UME_HUGEPAGES=YES` will link with the [HugeTLB
+  Pages](https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html)
+  library. If properly configured, this can dramatically speed up the
+  performance of the application.
 * `UME_SANITIZE=YES` will compile and link with the LLVM Address
   Sanitizer (ASAN) and Undefined Behavior Sanitizer (UBSAN). Note that
   this requires building with a compatible LLVM-based compiler. This
