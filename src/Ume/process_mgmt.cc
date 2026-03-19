@@ -16,6 +16,7 @@
 #include "process_mgmt.hh"
 #include "memory.hh"
 
+#include <charconv>
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_MPI
