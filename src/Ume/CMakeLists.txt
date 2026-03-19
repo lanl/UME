@@ -66,7 +66,6 @@ add_library(Ume
 set_target_properties(Ume PROPERTIES
   COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
   COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS}"
-  CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --expt-relaxed-constexpr"
   OUTPUT_NAME "ume"
   )
 
@@ -87,6 +86,12 @@ target_link_libraries(Ume
 target_compile_options(Ume
   PRIVATE ${WARNING_FLAGS}
   )
+
+if (USE_KOKKOS)
+  if (Kokkos_ENABLE_CUDA)
+    target_compile_options(Ume PUBLIC "--expt-relaxed-constexpr")
+  endif()
+endif()
 
 # -----------------------------------------------------------------------
 # Library/Header installation section
