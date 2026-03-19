@@ -29,7 +29,7 @@
 #endif
 
 static bool ume_is_initialized = false;
-static bool ume_is_finalized = false;
+[[maybe_unused]] static bool ume_is_finalized = false;
 
 namespace {
 extern "C" {
