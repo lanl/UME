@@ -113,6 +113,11 @@ target_link_libraries(Ume
     Kokkos::kokkos
     )
 
+option(UME_HUGEPAGES "Link with the Huge pages library")
+if (UME_HUGEPAGES)
+  target_link_options(Ume PUBLIC -lhugetlbfs)
+endif()
+
 target_compile_options(Ume
   PRIVATE ${WARNING_FLAGS}
   )
