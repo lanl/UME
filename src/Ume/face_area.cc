@@ -60,7 +60,7 @@ void calc_face_area(Mesh &mesh, DBLV_T &face_area) {
   auto d_side_type = create_mirror_view(space_t(), h_side_type);
   auto d_face_comm_type = create_mirror_view(space_t(), h_face_comm_type);
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::deep_copy(d_face_area, h_face_area);
   Kokkos::deep_copy(d_s_to_f_map, h_s_to_f_map);
   Kokkos::deep_copy(d_s_to_s2_map, h_s_to_s2_map);
@@ -87,7 +87,7 @@ void calc_face_area(Mesh &mesh, DBLV_T &face_area) {
         }
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::fence();
   Kokkos::deep_copy(h_face_area, d_face_area);
 #endif

@@ -86,7 +86,7 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto d_point_normal = create_mirror_view(space_t(), h_point_normal);
   auto d_csurf = create_mirror_view(space_t(), h_csurf);
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::deep_copy(d_point_gradient, h_point_gradient);
   Kokkos::deep_copy(d_c_to_z_map, h_c_to_z_map);
   Kokkos::deep_copy(d_corner_volume, h_corner_volume);
@@ -118,7 +118,7 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
         }
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::fence();
   Kokkos::deep_copy(h_point_volume, d_point_volume);
   Kokkos::deep_copy(h_point_gradient, d_point_gradient);
@@ -146,7 +146,7 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
         }
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::fence();
   Kokkos::deep_copy(h_point_gradient, d_point_gradient);
 #endif
@@ -188,7 +188,7 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
         }
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   Kokkos::fence();
   Kokkos::deep_copy(h_zone_gradient, d_zone_gradient);
 #endif
