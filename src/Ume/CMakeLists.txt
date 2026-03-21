@@ -121,6 +121,10 @@ target_compile_options(Ume
 
 if (Kokkos_ENABLE_CUDA)
   target_compile_options(Ume PUBLIC "--expt-relaxed-constexpr")
+  if (NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    # NVCC requires this to get full device symbols
+    target_compile_options(Ume PUBLIC "-G")
+  endif()
 endif()
 
 # -----------------------------------------------------------------------
