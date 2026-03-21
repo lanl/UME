@@ -13,8 +13,30 @@
 \file Ume/mem_exec_spaces.hh
 */
 
-#ifndef UME_MEM_EXEC_SPACE_HH
-#define UME_MEM_EXEC_SPACE_HH
+#ifndef UME_MEM_EXEC_SPACES_HH
+#define UME_MEM_EXEC_SPACES_HH
+
+/* **NOTES ON MEMORY SPACES**
+ *   The default memory space used for scratch array allocations is always
+ * non-page-migrating device memory in the HIP GPU and SYCL GPU programming
+ * environments. The default memory space used in the CUDA programming
+ * environment is the unified virtual memory space CudaUVMSpace. This is because
+ * the page-migrating memory spaces HIPManagedSpace and SYCLSharedUSMSpace
+ * suffer severe performance degradation unless the XNACK feature is enabled.
+ * There is an enormous amount of prerequisites at the hardware and software
+ * level that must be met for the XNACK feature to be truly enabled for this
+ * appliation:
+ * 1) The target device hardware must include the xnack+ target feature.
+ *    (ex: amdgcn-amd-amdhsa--gfx942:sramecc+:xnack+)
+ * 2) The xnack target feature should be enabled in the --offload-arch compiler
+ *    option. This should be set as a pass-through option from Kokkos but it's
+ *    unclear how to achieve this in a consistent way that also prevents
+ *    multiple offload architectures from being defined.
+ * 3) The kernel must support
+ *    [Heterogeneous Memory Management (HMM)](https://www.kernel.org/doc/html/v5.0/vm/hmm.html)
+ *    and XNACK must be enabled by the kernel.
+ * 4) HSA_XNACK=1 must be set in the environment.
+ */
 
 #include <Kokkos_Core.hpp>
 
@@ -22,19 +44,14 @@
 using HostSpace = Kokkos::HostSpace;
 
 /* Define the default memory space for memory pool allocations */
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_SYCL)
-/* This will be CudaUVMSpace or SYCLSharedUSMSpace */
-using DefaultMemSpace = Kokkos::SharedSpace;
+#if defined(KOKKOS_ENABLE_CUDA)
+using DefaultMemSpace = Kokkos::CudaUVMSpace;
 #elif defined(KOKKOS_ENABLE_HIP)
-/* We override the use of HIPManagedSpace here because it requires both
- * operating system and hardware to support and enable the xnack feature. */
 using DefaultMemSpace = Kokkos::HIPSpace;
-#elif !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
-/* This will be HostSpace */
-using DefaultMemSpace = Kokkos::SharedSpace;
+#elif defined(KOKKOS_ENABLE_SYCL)
+using DefaultMemSpace = Kokkos::SYCLDeviceUSMSpace;
 #else
-/* Default to HostSpace */
-using DefaultMemSpace = Kokkos::HostSpace;
+using DefaultMemSpace = HostSpace;
 #endif
 
 /* Define the default execution spaces */
