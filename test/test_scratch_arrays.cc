@@ -33,13 +33,15 @@ TEST_CASE("1D int scratch array"
       "Variable must be castable to a Kokkos view.");
 
   Kokkos::parallel_for(
-      "assign 1D int scratch array", dim0,
+      "assign 1D int scratch array", Kokkos::RangePolicy<DevExecSpace>(0, dim0),
       KOKKOS_LAMBDA(const int i) { scratch_array(i) = i; });
 
+#if !defined(UME_SERIAL)
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
+#endif
 #endif
 
   REQUIRE(host_scratch_array(0) == 0);
@@ -63,15 +65,18 @@ TEST_CASE("2D int scratch array"
       "Variable must be castable to a Kokkos view.");
 
   Kokkos::parallel_for(
-      "assign 2D int scratch array", dim1, KOKKOS_LAMBDA(const int j) {
+      "assign 2D int scratch array", Kokkos::RangePolicy<DevExecSpace>(0, dim1),
+      KOKKOS_LAMBDA(const int j) {
         for (int i = 0; i < dim0; ++i)
           scratch_array(j, i) = j * i;
       });
 
+#if !defined(UME_SERIAL)
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
+#endif
 #endif
 
   REQUIRE(host_scratch_array(0, 0) == 0);
@@ -98,14 +103,17 @@ TEST_CASE("1D double scratch array"
       "Variable must be castable to a Kokkos view.");
 
   Kokkos::parallel_for(
-      "assign 1D double scratch array", dim0, KOKKOS_LAMBDA(const int i) {
+      "assign 1D double scratch array",
+      Kokkos::RangePolicy<DevExecSpace>(0, dim0), KOKKOS_LAMBDA(const int i) {
         scratch_array(i) = static_cast<double>(i);
       });
 
+#if !defined(UME_SERIAL)
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
+#endif
 #endif
 
   REQUIRE(host_scratch_array(0) == static_cast<double>(0));
@@ -130,15 +138,18 @@ TEST_CASE("2D double scratch array"
       "Variable must be castable to a Kokkos view.");
 
   Kokkos::parallel_for(
-      "assign 2D double scratch array", dim1, KOKKOS_LAMBDA(const int j) {
+      "assign 2D double scratch array",
+      Kokkos::RangePolicy<DevExecSpace>(0, dim1), KOKKOS_LAMBDA(const int j) {
         for (int i = 0; i < dim0; ++i)
           scratch_array(j, i) = static_cast<double>(j * i);
       });
 
+#if !defined(UME_SERIAL)
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
+#endif
 #endif
 
   REQUIRE(host_scratch_array(0, 0) == static_cast<double>(0));
@@ -167,14 +178,17 @@ TEST_CASE("1D Vec3 scratch array"
       "Variable must be castable to a Kokkos view.");
 
   Kokkos::parallel_for(
-      "assign 1D Vec3 scratch array", dim0, KOKKOS_LAMBDA(const int i) {
+      "assign 1D Vec3 scratch array",
+      Kokkos::RangePolicy<DevExecSpace>(0, dim0), KOKKOS_LAMBDA(const int i) {
         scratch_array(i) = Ume::Vec3(static_cast<double>(i));
       });
 
+#if !defined(UME_SERIAL)
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
+#endif
 #endif
 
   REQUIRE(host_scratch_array(0) == Ume::Vec3(0));
