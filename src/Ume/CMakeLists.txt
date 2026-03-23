@@ -66,10 +66,7 @@ add_library(Ume
 # Build option to force the use of the Kokkos::Serial backend.
 option(UME_SERIAL "Enable the Kokkos::Serial backend")
 if (UME_SERIAL)
-  set(COMMON_COMPILE_DEFINITIONS
-    ${COMMON_COMPILE_DEFINITIONS}
-    UME_SERIAL
-    )
+  add_compile_definitions(UME_SERIAL)
   message(STATUS "Using the Kokkos::Serial backend.")
 endif()
 
