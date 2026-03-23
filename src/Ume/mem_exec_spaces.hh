@@ -44,8 +44,14 @@
 using HostSpace = Kokkos::HostSpace;
 
 /* Define the default memory space for memory pool allocations */
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(UME_SERIAL)
+using DefaultMemSpace = Kokkos::Serial::memory_space;
+#elif defined(KOKKOS_ENABLE_CUDA)
+#if !defined(KOKKOS_HAS_SHARED_SPACE)
+using DefaultMemSpace = Kokkos::CudaSpace;
+#else
 using DefaultMemSpace = Kokkos::CudaUVMSpace;
+#endif
 #elif defined(KOKKOS_ENABLE_HIP)
 using DefaultMemSpace = Kokkos::HIPSpace;
 #elif defined(KOKKOS_ENABLE_SYCL)
