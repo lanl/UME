@@ -183,10 +183,6 @@ TEST_CASE("1D Vec3 scratch array"
 
 TEST_CASE("STL vector view copy/set/copy-back"
           "[DBLV_T]") {
-  if constexpr (std::is_same_v<DevExecSpace, Kokkos::Serial>) {
-#define UME_SERIAL
-  }
-
   constexpr int dim0 = 512;
 
   Ume::DS_Types::DBLV_T var(dim0, 0.0);
@@ -223,8 +219,4 @@ TEST_CASE("STL vector view copy/set/copy-back"
   REQUIRE(var[0] == const_var[0]);
   REQUIRE(host_var(dim0 - 1) == host_const_var(dim0 - 1));
   REQUIRE(var[dim0 - 1] == const_var[dim0 - 1]);
-
-  if constexpr (std::is_same_v<DevExecSpace, Kokkos::Serial>) {
-#undef UME_SERIAL
-  }
 }
