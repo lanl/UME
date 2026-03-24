@@ -83,7 +83,9 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   auto d_point_normal = create_mirror_view(DevExecMemSpace(), h_point_normal);
   auto d_csurf = create_mirror_view(DevExecMemSpace(), h_csurf);
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if !defined(UME_SERIAL)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::deep_copy(d_point_gradient, h_point_gradient);
   Kokkos::deep_copy(d_c_to_z_map, h_c_to_z_map);
   Kokkos::deep_copy(d_corner_volume, h_corner_volume);
@@ -96,6 +98,7 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   Kokkos::deep_copy(d_point_volume, h_point_volume);
   Kokkos::deep_copy(d_point_normal, h_point_normal);
   Kokkos::deep_copy(d_csurf, h_csurf);
+#endif
 #endif
 
   Kokkos::parallel_for(
@@ -116,10 +119,13 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
         }
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if !defined(UME_SERIAL)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(h_point_volume, d_point_volume);
   Kokkos::deep_copy(h_point_gradient, d_point_gradient);
+#endif
 #endif
 
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_volume);
@@ -145,9 +151,12 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
         }
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if !defined(UME_SERIAL)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(h_point_gradient, d_point_gradient);
+#endif
 #endif
 
   mesh.points.scatter(point_gradient);
@@ -189,9 +198,12 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
         }
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if !defined(UME_SERIAL)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(h_zone_gradient, d_zone_gradient);
+#endif
 #endif
 
   mesh.zones.scatter(zone_gradient);
