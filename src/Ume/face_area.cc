@@ -69,7 +69,8 @@ void calc_face_area(Mesh &mesh, DBLV_T &face_area) {
 #endif
 
   Kokkos::parallel_for(
-      "face_area", sl, KOKKOS_LAMBDA(const int s) {
+      "face_area", Kokkos::RangePolicy<DevExecSpace>(0, sl),
+      KOKKOS_LAMBDA(const int s) {
         if (d_side_type(s) >= 1 && d_side_tag(s) != 1) {
           int const f = d_s_to_f_map(s);
           if (d_face_comm_type(f) < 3) { // Internal or master face

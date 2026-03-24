@@ -99,7 +99,8 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #endif
 
   Kokkos::parallel_for(
-      "gradzatz-1", cl, KOKKOS_LAMBDA(const int c) {
+      "gradzatz-1", Kokkos::RangePolicy<DevExecSpace>(0, cl),
+      KOKKOS_LAMBDA(const int c) {
         if (d_corner_type(c) >= 1) {
           // Only operate on interior corners
           int const z = d_c_to_z_map(c);
@@ -130,7 +131,8 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
     of the gradient using the point normals.
    */
   Kokkos::parallel_for(
-      "gradzatz-2", pl, KOKKOS_LAMBDA(const int p) {
+      "gradzatz-2", Kokkos::RangePolicy<DevExecSpace>(0, pl),
+      KOKKOS_LAMBDA(const int p) {
         if (d_point_type(p) > 0) {
           // Internal point
           d_point_gradient(p) /= d_point_volume(p);
@@ -153,7 +155,8 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
   /* Accumulate the zone volume.  Note that we need to allocate a zone field for
      volume, as we are accumulating from corners */
   Kokkos::parallel_for(
-      "gradzatz-3", num_local_corners, KOKKOS_LAMBDA(const int corner_idx) {
+      "gradzatz-3", Kokkos::RangePolicy<DevExecSpace>(0, num_local_corners),
+      KOKKOS_LAMBDA(const int corner_idx) {
         if (d_corner_type(corner_idx) >= 1) {
           // Only operate on interior corners
           int const zone_idx = d_c_to_z_map(corner_idx);
@@ -168,7 +171,8 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 
   // Accumulate the zone-centered gradient
   Kokkos::parallel_for(
-      "gradzatz-4", num_local_corners, KOKKOS_LAMBDA(const int corner_idx) {
+      "gradzatz-4", Kokkos::RangePolicy<DevExecSpace>(0, num_local_corners),
+      KOKKOS_LAMBDA(const int corner_idx) {
         if (d_corner_type(corner_idx) >=
             1) { //  continue; // Only operate on interior corners
           int const zone_idx = d_c_to_z_map(corner_idx);
