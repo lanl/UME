@@ -39,13 +39,11 @@ endif()
 # Things that depend on Kokkos
 #############################################################################
 
-if(USE_KOKKOS)
-  add_executable(kokkos_hello kokkos_hello.cc)
-  target_link_libraries(kokkos_hello
-    Ume
-    Kokkos::kokkos
-    )
-endif()
+add_executable(kokkos_hello kokkos_hello.cc)
+target_link_libraries(kokkos_hello
+  Ume
+  Kokkos::kokkos
+  )
 
 
 #############################################################################

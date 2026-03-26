@@ -15,6 +15,7 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
+#include "Ume/mem_exec_spaces.hh"
 #include <set>
 
 namespace Ume {
@@ -65,38 +66,36 @@ bool Zones::VAR_zcoord::init_() const {
 
   std::vector<int> num_zone_pts(zl, 0);
 
-  Kokkos::View<Vec3 *, Kokkos::HostSpace> h_zcoord(&zcoord[0], zcoord.size());
-  Kokkos::View<const Vec3 *, Kokkos::HostSpace> h_pcoord(
+  Kokkos::View<Vec3 *, HostSpace> h_zcoord(&zcoord[0], zcoord.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_pcoord(
       &pcoord[0], pcoord.size());
-  Kokkos::View<const short *, Kokkos::HostSpace> h_cmask(
+  Kokkos::View<const short *, HostSpace> h_cmask(
       &cmask[0], cmask.size());
-  Kokkos::View<const int *, Kokkos::HostSpace> h_c2z(c2z.data(), c2z.size());
-  Kokkos::View<const int *, Kokkos::HostSpace> h_c2p(c2p.data(), c2p.size());
-  Kokkos::View<int *, Kokkos::HostSpace> h_num_zone_pts(
+  Kokkos::View<const int *, HostSpace> h_c2z(c2z.data(), c2z.size());
+  Kokkos::View<const int *, HostSpace> h_c2p(c2p.data(), c2p.size());
+  Kokkos::View<int *, HostSpace> h_num_zone_pts(
       num_zone_pts.data(), num_zone_pts.size());
 
-  using ExecSpace = Kokkos::HostSpace::execution_space;
-
   Kokkos::parallel_for(
-      "VAR_zcoord-1", Kokkos::RangePolicy<ExecSpace>(0, cl), [&](const int c) {
+      "VAR_zcoord-1", Kokkos::RangePolicy<HostExecSpace>(0, cl), [&](const int c) {
         if (h_cmask(c)) {
           int const z = h_c2z(c);
-          if (std::is_same_v<ExecSpace, Kokkos::Serial>) {
-            h_zcoord(z) += h_pcoord(h_c2p(c));
-          } else {
-            Kokkos::atomic_add(&h_zcoord(z), h_pcoord(h_c2p(c)));
-          }
+#if defined(UME_SERIAL)
+          h_zcoord(z) += h_pcoord(h_c2p(c));
+#else
+          Kokkos::atomic_add(&h_zcoord(z), h_pcoord(h_c2p(c)));
+#endif
           h_num_zone_pts.access(z) += 1;
         }
       });
 
   auto const &zmask{zones().mask};
 
-  Kokkos::View<const short *, Kokkos::HostSpace> h_zmask(
+  Kokkos::View<const short *, HostSpace> h_zmask(
       &zmask[0], zmask.size());
 
   Kokkos::parallel_for(
-      "VAR_zcoord-2", Kokkos::RangePolicy<ExecSpace>(0, zl), [&](const int z) {
+      "VAR_zcoord-2", Kokkos::RangePolicy<HostExecSpace>(0, zl), [&](const int z) {
         if (h_zmask(z)) {
           h_zcoord(z) /= static_cast<double>(h_num_zone_pts(z));
         }

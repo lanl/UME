@@ -16,23 +16,9 @@
 #ifndef UME_MEMORY_HH
 #define UME_MEMORY_HH
 
+#include "mem_exec_spaces.hh"
 #include "process_mgmt.hh"
 #include "utils.hh"
-#include <Kokkos_Core.hpp>
-#include <type_traits>
-
-/* Define the default memory space for scratch arrays */
-#if defined(KOKKOS_ENABLE_CUDA)
-using DefaultMemSpace = Kokkos::SharedSpace;
-#elif defined(KOKKOS_ENABLE_HIP)
-using DefaultMemSpace = Kokkos::HIPSpace;
-#else
-using DefaultMemSpace = Kokkos::SharedSpace;
-#endif
-
-/* Define the default execution spaces */
-using DevExecSpace = Kokkos::DefaultExecutionSpace;
-using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
 
 /* Define the memory layout */
 using MemLayout = Kokkos::LayoutRight;

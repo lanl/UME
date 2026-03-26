@@ -37,6 +37,7 @@ set(UME_INCLUDE_FILES
   memory.hh
   array_types.hh
   process_mgmt.hh
+  mem_exec_spaces.hh
   )
 
 add_library(Ume
@@ -62,6 +63,32 @@ add_library(Ume
   process_mgmt.cc
   )
 
+# Build option to force the use of the Kokkos::Serial backend.
+option(UME_SERIAL "Enable the Kokkos::Serial backend")
+if (UME_SERIAL)
+  add_compile_definitions(UME_SERIAL)
+  message(STATUS "Using the Kokkos::Serial backend.")
+endif()
+
+# Build option to compile and link with LLVM ASAN/UBSAN for
+# developement/debugging purposes only.
+option(UME_SANITIZE "Enable LLVM ASAN and UBSAN")
+if (UME_SANITIZE)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(FATAL_ERROR "LLVM Sanitizers require an LLVM-based compiler.")
+  endif()
+  target_compile_options(Ume PUBLIC
+    -fno-omit-frame-pointer
+    -fno-optimize-sibling-calls
+    -fsanitize=address,undefined,integer,nullability
+    -fsanitize-recover=address
+  )
+  target_link_options(Ume PUBLIC
+    -fsanitize=address,undefined,integer,nullability
+  )
+  message(STATUS "Compiling and linking with ASAN and UBSAN.")
+  message(STATUS "  Recommended to have the llvm-symbolizer in PATH.")
+endif()
 
 set_target_properties(Ume PROPERTIES
   COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
@@ -83,13 +110,20 @@ target_link_libraries(Ume
     Kokkos::kokkos
     )
 
+option(UME_HUGEPAGES "Link with the Huge pages library")
+if (UME_HUGEPAGES)
+  target_link_options(Ume PUBLIC -lhugetlbfs)
+endif()
+
 target_compile_options(Ume
   PRIVATE ${WARNING_FLAGS}
   )
 
-if (USE_KOKKOS)
-  if (Kokkos_ENABLE_CUDA)
-    target_compile_options(Ume PUBLIC "--expt-relaxed-constexpr")
+if (Kokkos_ENABLE_CUDA)
+  target_compile_options(Ume PUBLIC "--expt-relaxed-constexpr")
+  if (NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    # NVCC requires this to get full device symbols
+    target_compile_options(Ume PUBLIC "-G")
   endif()
 endif()
 

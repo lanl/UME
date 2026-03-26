@@ -49,17 +49,31 @@ tool, or on the command line of `cmake`, preceded by the `-D`
 flag. Package-specific CMake options for UME include:
 * `USE_CATCH2=NO` will disable Ctest testing that relies on version 3 
   of the Catch2 testing framework.
-* `USE_KOKKOS=YES` will enable Kokkos support, and requires Kokkos
-  to be found in the environment.
+* [DEPRECATED] `USE_KOKKOS=YES` will enable Kokkos support, and requires
+  Kokkos to be found in the environment. Deprecation note: This option
+  does nothing now that Kokkos is always required.
 * `USE_MPI=YES` will enable MPI support, and requires MPI compilers
   to be available on the search path.
 * `USE_OPENACC=YES` will enable OpenACC support, and requires the
   C++ compiler to support it (UME does not currently use OpenACC).
 
+CMake options that are not package-specific include:
+* `UME_SERIAL=YES` will forcefully enable the use of the
+  `Kokkos::Serial` execution space.
+* `UME_HUGEPAGES=YES` will link with the [HugeTLB
+  Pages](https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html)
+  library. If properly configured, this can dramatically speed up the
+  performance of the application.
+* `UME_SANITIZE=YES` will compile and link with the LLVM Address
+  Sanitizer (ASAN) and Undefined Behavior Sanitizer (UBSAN). Note that
+  this requires building with a compatible LLVM-based compiler. This
+  option is provided for developers. When using this option, it is
+  recommended to have the `llvm-symbolizer` in `$PATH`.
+
 ### Build command
 
 ```
-% cmake -B <build_dir> -DUSE_KOKKOS=ON -DUSE_MPI=ON -DCMAKE_BUILD_TYPE=Release
+% cmake -B <build_dir> -DUSE_MPI=YES -DCMAKE_BUILD_TYPE=Release
 % cmake --build <build_dir> -j 8      (equivalent to cd <build_dir> && make -j 8)
 ```
 

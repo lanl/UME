@@ -16,6 +16,12 @@ catch_discover_tests(ume_tests)
 
 # UME GPU-enabled tests
 
+# Build option to force the use of the Kokkos::Serial backend.
+option(UME_SERIAL "Enable the Kokkos::Serial backend")
+if (UME_SERIAL)
+  add_compile_definitions(UME_SERIAL)
+endif()
+
 add_executable(ume_gpu_tests
   test_scratch_arrays.cc
   custom_main.cc

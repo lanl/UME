@@ -15,6 +15,7 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
+#include "Ume/mem_exec_spaces.hh"
 #include <cassert>
 #include <iostream>
 
@@ -95,31 +96,30 @@ bool Points::VAR_point_norm::init_() const {
 
   point_norm.resize(pll, Vec3(0.0));
 
-  using ExecSpace = Kokkos::HostSpace::execution_space;
-  Kokkos::View<Vec3 *, Kokkos::HostSpace> h_point_norm_k(&point_norm[0], sl);
-  Kokkos::View<const Vec3 *, Kokkos::HostSpace> h_side_surz(
+  Kokkos::View<Vec3 *, HostSpace> h_point_norm_k(&point_norm[0], sl);
+  Kokkos::View<const Vec3 *, HostSpace> h_side_surz(
       &side_surz[0], side_surz.size());
-  Kokkos::View<const int *, Kokkos::HostSpace> h_s2p1(s2p1.data(), s2p1.size());
-  Kokkos::View<const int *, Kokkos::HostSpace> h_s2p2(s2p2.data(), s2p2.size());
-  Kokkos::View<const int *, Kokkos::HostSpace> h_s2s2(s2s2.data(), s2s2.size());
-  Kokkos::View<const short *, Kokkos::HostSpace> h_smask(
+  Kokkos::View<const int *, HostSpace> h_s2p1(s2p1.data(), s2p1.size());
+  Kokkos::View<const int *, HostSpace> h_s2p2(s2p2.data(), s2p2.size());
+  Kokkos::View<const int *, HostSpace> h_s2s2(s2s2.data(), s2s2.size());
+  Kokkos::View<const short *, HostSpace> h_smask(
       &smask[0], smask.size());
-  Kokkos::View<const short *, Kokkos::HostSpace> h_pmask(
+  Kokkos::View<const short *, HostSpace> h_pmask(
       &pmask[0], pmask.size());
 
-  Kokkos::parallel_for("Var_point_norm", Kokkos::RangePolicy<ExecSpace>(0, sl),
+  Kokkos::parallel_for("Var_point_norm", Kokkos::RangePolicy<HostExecSpace>(0, sl),
       [&](const int s) {
         if (h_smask(s) == -1) { // boundary side (outside of real mesh)
           int const s2 = h_s2s2(s); // the corresponding real side
           int const p1 = h_s2p1(s2);
           int const p2 = h_s2p2(s2);
-          if (std::is_same_v<ExecSpace, Kokkos::Serial>) {
-            h_point_norm_k(p1) += h_side_surz(s2);
-            h_point_norm_k(p2) += h_side_surz(s2);
-          } else {
-            Kokkos::atomic_add(&h_point_norm_k(p1), h_side_surz(s2));
-            Kokkos::atomic_add(&h_point_norm_k(p2), h_side_surz(s2));
-          }
+#if defined(UME_SERIAL)
+          h_point_norm_k(p1) += h_side_surz(s2);
+          h_point_norm_k(p2) += h_side_surz(s2);
+#else
+          Kokkos::atomic_add(&h_point_norm_k(p1), h_side_surz(s2));
+          Kokkos::atomic_add(&h_point_norm_k(p2), h_side_surz(s2));
+#endif
         }
       });
 
@@ -128,7 +128,7 @@ bool Points::VAR_point_norm::init_() const {
   points().gathscat(Comm::Op::SUM, point_norm);
 
   Kokkos::parallel_for("normalize_point_norm",
-      Kokkos::RangePolicy<ExecSpace>(0, pl), [&](const int p) {
+      Kokkos::RangePolicy<HostExecSpace>(0, pl), [&](const int p) {
         if (h_pmask(p) < 0) {
           normalize(h_point_norm_k(p));
         }

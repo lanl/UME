@@ -14,6 +14,7 @@
 */
 
 #include "Ume/face_area.hh"
+#include "Ume/mem_exec_spaces.hh"
 
 namespace Ume {
 
@@ -35,32 +36,31 @@ void calc_face_area(Mesh &mesh, DBLV_T &face_area) {
   std::fill(face_area.begin(), face_area.end(), 0.0);
   INTV_T side_tag(sll, 0);
 
-#define HOST_SPACE Kokkos::HostSpace
-  using ExecSpace = Kokkos::DefaultExecutionSpace;
-  using space_t = Kokkos::DefaultExecutionSpace::memory_space;
-
-  Kokkos::View<double *, HOST_SPACE> h_face_area(
+  Kokkos::View<double *, HostSpace> h_face_area(
       &face_area[0], face_area.size());
-  Kokkos::View<const int *, HOST_SPACE> h_s_to_f_map(
+  Kokkos::View<const int *, HostSpace> h_s_to_f_map(
       &s_to_f_map[0], s_to_f_map.size());
-  Kokkos::View<const int *, HOST_SPACE> h_s_to_s2_map(
+  Kokkos::View<const int *, HostSpace> h_s_to_s2_map(
       &s_to_s2_map[0], s_to_s2_map.size());
-  Kokkos::View<const Vec3 *, HOST_SPACE> h_surz(&surz[0], surz.size());
-  Kokkos::View<int *, HOST_SPACE> h_side_tag(&side_tag[0], side_tag.size());
-  Kokkos::View<const short *, HOST_SPACE> h_side_type(
+  Kokkos::View<const Vec3 *, HostSpace> h_surz(&surz[0], surz.size());
+  Kokkos::View<int *, HostSpace> h_side_tag(&side_tag[0], side_tag.size());
+  Kokkos::View<const short *, HostSpace> h_side_type(
       &side_type[0], side_type.size());
-  Kokkos::View<const int *, HOST_SPACE> h_face_comm_type(
+  Kokkos::View<const int *, HostSpace> h_face_comm_type(
       &face_comm_type[0], face_comm_type.size());
 
-  auto d_face_area = create_mirror_view(space_t(), h_face_area);
-  auto d_s_to_f_map = create_mirror_view(space_t(), h_s_to_f_map);
-  auto d_s_to_s2_map = create_mirror_view(space_t(), h_s_to_s2_map);
-  auto d_surz = create_mirror_view(space_t(), h_surz);
-  auto d_side_tag = create_mirror_view(space_t(), h_side_tag);
-  auto d_side_type = create_mirror_view(space_t(), h_side_type);
-  auto d_face_comm_type = create_mirror_view(space_t(), h_face_comm_type);
+  auto d_face_area = create_mirror_view(DevExecMemSpace(), h_face_area);
+  auto d_s_to_f_map = create_mirror_view(DevExecMemSpace(), h_s_to_f_map);
+  auto d_s_to_s2_map = create_mirror_view(DevExecMemSpace(), h_s_to_s2_map);
+  auto d_surz = create_mirror_view(DevExecMemSpace(), h_surz);
+  auto d_side_tag = create_mirror_view(DevExecMemSpace(), h_side_tag);
+  auto d_side_type = create_mirror_view(DevExecMemSpace(), h_side_type);
+  auto d_face_comm_type =
+      create_mirror_view(DevExecMemSpace(), h_face_comm_type);
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if !defined(UME_SERIAL)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::deep_copy(d_face_area, h_face_area);
   Kokkos::deep_copy(d_s_to_f_map, h_s_to_f_map);
   Kokkos::deep_copy(d_s_to_s2_map, h_s_to_s2_map);
@@ -69,27 +69,32 @@ void calc_face_area(Mesh &mesh, DBLV_T &face_area) {
   Kokkos::deep_copy(d_side_type, h_side_type);
   Kokkos::deep_copy(d_face_comm_type, h_face_comm_type);
 #endif
+#endif
 
   Kokkos::parallel_for(
-      "face_area", sl, KOKKOS_LAMBDA(const int s) {
+      "face_area", Kokkos::RangePolicy<DevExecSpace>(0, sl),
+      KOKKOS_LAMBDA(const int s) {
         if (d_side_type(s) >= 1 && d_side_tag(s) != 1) {
           int const f = d_s_to_f_map(s);
           if (d_face_comm_type(f) < 3) { // Internal or master face
             double const side_area = vectormag(d_surz(s)); // Flat area
-            if (std::is_same_v<ExecSpace, Kokkos::Serial>) {
-              d_face_area(f) += side_area;
-            } else {
-              Kokkos::atomic_add(&d_face_area(f), side_area);
-            }
+#if defined(UME_SERIAL)
+            d_face_area(f) += side_area;
+#else
+            Kokkos::atomic_add(&d_face_area(f), side_area);
+#endif
             int const s2 = d_s_to_s2_map(s);
             d_side_tag(s2) = 1;
           }
         }
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if !defined(UME_SERIAL)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   Kokkos::fence();
   Kokkos::deep_copy(h_face_area, d_face_area);
+#endif
 #endif
 
   mesh.faces.scatter(face_area);
