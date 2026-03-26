@@ -36,6 +36,12 @@
  *    [Heterogeneous Memory Management (HMM)](https://www.kernel.org/doc/html/v5.0/vm/hmm.html)
  *    and XNACK must be enabled by the kernel.
  * 4) HSA_XNACK=1 must be set in the environment.
+ * TODO: figure out the simplest and most portable way to enable the XNACK
+ * feature when available. This will allow us to use the shared memory spaces
+ * HIPManagedSpace and SYCLSharedUSMSpace in the HIP and SYCL GPU programming
+ * environments without severe performance impact. This will also allow us to
+ * do things like embed ASAN symbols in device code which currently cannot be
+ * done without XNACK (for code development, debugging, and validation).
  */
 
 #include <Kokkos_Core.hpp>
