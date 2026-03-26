@@ -117,8 +117,8 @@ bool Points::VAR_point_norm::init_() const {
           h_point_norm_k(p1) += h_side_surz(s2);
           h_point_norm_k(p2) += h_side_surz(s2);
 #else
-          Kokkos::atomic_add(&h_point_norm_k(p2), h_side_surz(s2));
           Kokkos::atomic_add(&h_point_norm_k(p1), h_side_surz(s2));
+          Kokkos::atomic_add(&h_point_norm_k(p2), h_side_surz(s2));
 #endif
         }
       });
