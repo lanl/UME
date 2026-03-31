@@ -119,15 +119,6 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
         }
       });
 
-#if !defined(UME_SERIAL)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  Kokkos::fence();
-  Kokkos::deep_copy(h_point_volume, d_point_volume);
-  Kokkos::deep_copy(h_point_gradient, d_point_gradient);
-#endif
-#endif
-
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_volume);
   mesh.points.gathscat(Ume::Comm::Op::SUM, point_gradient);
 
@@ -160,6 +151,13 @@ void gradzatz(Ume::SOA_Idx::Mesh &mesh, DBLV_T const &zone_field,
 #endif
 
   mesh.points.scatter(point_gradient);
+
+#if !defined(UME_SERIAL)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+  Kokkos::deep_copy(d_point_gradient, h_point_gradient);
+#endif
+#endif
 
   /* Accumulate the zone volume.  Note that we need to allocate a zone field for
      volume, as we are accumulating from corners */

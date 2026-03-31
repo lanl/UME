@@ -266,7 +266,6 @@ void check_gradzatz_diffs(Mesh const &mesh, int const &centered_zone_index,
   double tol = 1e-6;
 
   if (zgrad != zgrad_invert) {
-    if (mesh.mype == 0) {
       for (int z = 0; z < mesh.zones.size(); ++z) {
         // Compute the difference between zone gradient from original and inverted algorithm
         auto diff = zgrad[z] - zgrad_invert[z];
@@ -278,12 +277,10 @@ void check_gradzatz_diffs(Mesh const &mesh, int const &centered_zone_index,
           std::cout << "PE" << mesh.mype << " zgrad != zgrad_invert" << " Z" << z << " " 
                   << mesh.zones.mask[z] << ": " << zgrad[z]  << " vs. " << zgrad_invert[z] << "\n";
         }
-      }
     }
   }
 
   if (pgrad != pgrad_invert) {
-    if (mesh.mype == 0) {
       for (int p = 0; p < mesh.points.size(); ++p) {
         // Compute the difference between point gradient from original and inverted algorithm
         auto diff = pgrad[p] - pgrad_invert[p];
@@ -296,7 +293,6 @@ void check_gradzatz_diffs(Mesh const &mesh, int const &centered_zone_index,
           << mesh.points.mask[p] << ": " << pgrad[p] << " vs. " << pgrad_invert[p] << "\n";
         }
       }
-    }
   }
 
   auto const &z2pz = mesh.ds->caccess_intrr("m:z>pz");
