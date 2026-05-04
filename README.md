@@ -77,6 +77,10 @@ CMake options that are not package-specific include:
 % cmake --build <build_dir> -j 8      (equivalent to cd <build_dir> && make -j 8)
 ```
 
+### Building for AMD MI300
+
+Refer to the [this guide](docs/building-mi300.doc) on how to build UME for the MI300.
+
 ### Generated Executables
 
 After a successful build, two example driver executables will be
