@@ -19,7 +19,7 @@ Clone all of the repositories from GitHub somewhere into the source directory.
 
 ```bash
 pushd $source_path
-git clone --branch 5.2.0 https://github.com/kokkos/Kokkos.git $source_path/kokkos
+git clone --branch 4.7.00 https://github.com/kokkos/Kokkos.git $source_path/kokkos
 git clone https://github.com/catchorg/Catch2.git $source_path/catch2
 git clone https://github.com/lanl/UME.git $source_path/ume
 popd
@@ -30,13 +30,12 @@ We also need to specify our compilers for building. Set the following variables 
 ```bash
 CC=amd-clang
 CXX=amd-clang++
-MPICH_CXX=mpic++
 ```
 
 Configure and build Kokkos with the following command. 
 
 ```bash
-mkdiCC=hipcc CXX=hipcc cmake $source_path/kokkos \
+cmake $source_path/kokkos \
 		-B $build_path/kokkos \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="$install_path" \
@@ -50,8 +49,7 @@ mkdiCC=hipcc CXX=hipcc cmake $source_path/kokkos \
 		-DKokkos_ENABLE_SERIAL=ON \
 		-DKokkos_ENABLE_HIP=ON \
 		-DKokkos_ENABLE_DEBUG=OFF \
-		-DKokkos_ARCH_AMD_GFX942_APU=ONr -p $build_path/kokkos
-
+		-DKokkos_ARCH_AMD_GFX942_APU=ON
 ```
 
 Configure and build Catch2 with the following command.
@@ -87,9 +85,7 @@ cmake $source_path/ume \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_BUILD_TESTING=YES \
 		-DCMAKE_PREFIX_PATH=$install_path \
-		-DUME_SERIAL=YES \
-		-DUME_HUGEPAGES=YES \
-		-DUME_SANITIZE=YES
+		-DUME_HUGEPAGES=YES
 ```
 
 > If `ctest` fails when compiling, try disabling the UME tests by setting `UME_TESTS=OFF`. Catch2 is no longer needed if this option is set.
@@ -130,18 +126,15 @@ UME_SETUP_BUILD_PATH=/var/tmp/$USER/ume/build
 UME_SETUP_SKIP_TESTS=true
 UME_SETUP_DELETE_CACHE=true
 UME_SETUP_CONCURRENT_JOBS=16
-#CC_COMPILER=/opt/rocm-6.4.2/llvm/bin/clang
-#CXX_COMPILER=/opt/rocm-6.4.2/llvm/bin/clang++
-C_COMPILER=/opt/rocm-6.4.3/bin/amdclang
-CXX_COMPILER=/opt/rocm-6.4.3/bin/amdclang++
 MPICC=$(command -v mpicc)
 MPICXX=$(command -v mpicxx)
 GCC_ROOT=$(command -v gcc)
-GCC_VERSION=13.3.1-magic	# set version for compatibility
-CRAY_MPICH=8.1.33		# set version for compatibility
-ROCM_VERSION=6.4.2		# set version for compatibility
+GCC_VERSION=13.3.1-magic               # set version for compatibility
+CRAY_MPICH=8.1.33                      # set version for compatibility
+ROCM_VERSION=6.4.2                     # set version for compatibility
 ROCM_PATH=/opt/rocm-${ROCM_VERSION}/
-
+C_COMPILER=${ROCM_PATH/bin/amdclang
+CXX_COMPILER=${ROCM_PATH}/bin/amdclang++
 
 export CRAYPE_LINK_TYPE=dynamic
 export HSA_XNACK=1
@@ -272,7 +265,7 @@ function build() {
 	# build kokkos
 	mkdir -p kokkos
 	pushd kokkos
-	CC=hipcc CXX=hipcc cmake $UME_SETUP_SRC_PATH/kokkos \
+	cmake $UME_SETUP_SRC_PATH/kokkos \
 		-B $UME_SETUP_BUILD_PATH/kokkos \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX="$UME_SETUP_INSTALL_PATH" \
@@ -325,9 +318,7 @@ function build() {
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_BUILD_TESTING=$BUILD_TESTING \
 		-DCMAKE_PREFIX_PATH=$UME_SETUP_INSTALL_PATH \
-		-DUME_SERIAL=YES \
-		-DUME_HUGEPAGES=YES \
-		-DUME_SANITIZE=NO
+		-DUME_HUGEPAGES=YES
 
 	make -j $UME_SETUP_CONCURRENT_JOBS
 
@@ -404,11 +395,13 @@ If you are on an HPC system with Lmod, you will need load the modules that provi
 # flux: --job-name=ume-{{id}}      # job name
 # flux: --exclusive
 # flux: --setattr=hugepages=512GB
+# flux: --setattr=gpumode=TPX
 # flux: --output={{id}}.out
 # flux: --error={{id}}.err
 # flux: --env=HUGETLB_MORECORE=yes
 # flux: --env=HUGETLB_DEBUG=yes
 # flux: --env=HUGETLB_VERBOSE=4
+# flux: --env=HUGETLB_ELFMAP=no
 
 # Set the UME setup variables
 export UME_SETUP="${HOME}/bin/setup/ume.sh"
