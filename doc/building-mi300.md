@@ -35,6 +35,7 @@ CXX=amd-clang++
 Configure and build Kokkos with the following command. 
 
 ```bash
+mkdir -p $build_path/kokkos
 cmake $source_path/kokkos \
 		-B $build_path/kokkos \
 		-DCMAKE_BUILD_TYPE=Release \
