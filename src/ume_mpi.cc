@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
   Ume::Comm::MPI comm(&argc, &argv);
 
   /* Initialize Kokkos and the memory pool. This should happen right
-   * after the call the MPI_Init for best performance. */
+   * after the call to MPI_Init for best performance. */
   Ume::initialize(argc, argv);
 
   /* Create a mesh instance and attach the communicator to the mesh. */
