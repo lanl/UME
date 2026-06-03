@@ -49,14 +49,15 @@ void check_gradzatz_diffs(Mesh const &mesh, int const &centered_zone_index,
     VEC3V_T const &pgrad_invert);
 
 int main(int argc, char *argv[]) {
+  /* Initialize MPI and instantiate the MPI Transport. */
+  Ume::Comm::MPI comm(&argc, &argv);
+
+  /* Initialize Kokkos and the memory pool. This should happen right
+   * after the call to MPI_Init for best performance. */
   Ume::initialize(argc, argv);
 
-  /* We will read in the mesh */
+  /* Create a mesh instance and attach the communicator to the mesh. */
   Mesh mesh;
-  /* We need to instantiate the MPI Transport in order to get the PE
-   * number used to form our filename and attach the communicator to
-   * the mesh. */
-  Ume::Comm::MPI comm(&argc, &argv);
   mesh.comm = &comm;
 
   if (comm.pe() == 0)
@@ -181,8 +182,8 @@ int main(int argc, char *argv[]) {
   if (comm.pe() == 0)
     std::cout << "Done." << std::endl;
 
-  comm.stop();
   Ume::finalize();
+  comm.stop();
   return EXIT_SUCCESS;
 }
 
