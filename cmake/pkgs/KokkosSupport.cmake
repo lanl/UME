@@ -1,4 +1,5 @@
-find_package(Kokkos REQUIRED)
+find_package(Kokkos 4.6 REQUIRED)
+message(STATUS "Found Kokkos: ${Kokkos_DIR} (version \"${Kokkos_VERSION}\")")
 
 set(COMMON_LINK_LIBRARIES Kokkos::kokkos)
 # Link CUDART for CUDA backend
