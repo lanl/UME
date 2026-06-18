@@ -120,10 +120,16 @@ target_compile_options(Ume
   )
 
 if (Kokkos_ENABLE_CUDA)
-  target_compile_options(Ume PUBLIC "--expt-relaxed-constexpr")
-  if (NOT CMAKE_BUILD_TYPE STREQUAL "Release")
-    # NVCC requires this to get full device symbols
-    target_compile_options(Ume PUBLIC "-G")
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # Clang offload
+    target_compile_options(Ume PUBLIC -Wno-unknown-cuda-version -Wno-deprecated-attributes)
+  else()
+    # nvcc + GNU
+    target_compile_options(Ume PUBLIC --expt-relaxed-constexpr)
+    if (NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+      # NVCC requires this to get full device symbols
+      target_compile_options(Ume PUBLIC -G)
+    endif()
   endif()
 endif()
 
