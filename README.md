@@ -79,7 +79,7 @@ CMake options that are not package-specific include:
 
 ### Building for AMD MI300
 
-Refer to the [this guide](docs/building-mi300.doc) on how to build UME for the MI300.
+Refer to the [this guide](doc/building-mi300.md) on how to build UME for the MI300.
 
 ### Generated Executables
 
