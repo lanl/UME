@@ -20,7 +20,6 @@
 namespace Ume {
 
 void DS_Entry::set_type(DS_Entry::Types type) {
-  type_ = type;
   switch (type) {
   case Types::INT:
     data_ = INT_T();
@@ -48,6 +47,7 @@ void DS_Entry::set_type(DS_Entry::Types type) {
     break;
   case Types::VEC3RR:
     data_ = VEC3RR_T();
+    break;
   case Types::NONE:
     break;
   }

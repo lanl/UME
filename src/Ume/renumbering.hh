@@ -33,9 +33,11 @@
 #ifndef UME_RENUMBERING_HH
 #define UME_RENUMBERING_HH 1
 
-#include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/DS_Types.hh"
+#include "Ume/SOA_Idx_Mesh.hh"
+#include <algorithm>
 #include <cassert>
+#include <numeric>
 
 namespace Ume {
 
@@ -43,8 +45,9 @@ namespace Ume {
 void renumber_mesh(SOA_Idx::Mesh &mesh);
 
 //! Get a new mesh ordering for points.
-/*! Renumber points via advancing wavefront. */
-void renumber_p(SOA_Idx::Mesh &mesh);
+/*! Renumber points via advancing wavefront. Returns the new number of
+ * each point, or -1 for a point the wavefront did not reach. */
+DS_Types::INTV_T renumber_p(SOA_Idx::Mesh &mesh);
 
 //! Get a new mesh ordering for sides.
 /*! Renumber sides via min/max point number. */
@@ -96,19 +99,20 @@ void new_numbering(MeshEntity1 const &x, MeshEntity2 const &y,
     storage_locations[y_idx + 1] += 1;
   }
 
-  /* Sum storage locations. */
-  for (int y_idx : std::ranges::iota_view{1, yl1 - 1}) {
-    storage_locations[y_idx] += storage_locations[y_idx - 1];
-  }
+  /* Sum storage locations: storage_locations[y_idx] becomes the first new
+   * number of the x attached to y_idx. */
+  std::partial_sum(storage_locations.begin(), storage_locations.end(),
+      storage_locations.begin());
 
-  /* Set new numbers. */
+  /* Set new numbers, consecutive among the x attached to one y. */
   for (int x_idx : x.local_indices()) {
     if (x_type[x_idx] == 0)
       continue;
 
     int const y_idx = x_to_y_map[x_idx];
-    x_to_xnew_map[x_idx] = storage_locations[y_idx];
-    x_max = std::max(x_max, storage_locations[y_idx]);
+    int const x_new = storage_locations[y_idx]++;
+    x_to_xnew_map[x_idx] = x_new;
+    x_max = std::max(x_max, x_new);
   }
 }
 

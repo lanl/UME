@@ -13,9 +13,13 @@
   \file Ume/utils.cc
 */
 
+#include "Ume/utils.hh"
+#include <chrono>
 #include <cstdlib>
+#include <format>
 #include <iostream>
 #include <sys/types.h>
+#include <thread>
 #include <unistd.h>
 
 #ifdef HAVE_MPI
@@ -25,7 +29,9 @@
 namespace Ume {
 
 void debug_attach_point(int const mype) {
-  int release = 0;
+  // volatile: the debugger writes this behind the compiler's back. Without it
+  // the loop below compiles to an unconditional one at -O2.
+  volatile int release = 0;
   char const *const envvalue = std::getenv("UME_DEBUG_RANK");
   if (envvalue == nullptr)
     return;
@@ -35,17 +41,28 @@ void debug_attach_point(int const mype) {
               << " because the environment variable\nUME_DEBUG_RANK is set. "
               << "If you are debugging a segfault, add the\n"
               << "\"-mca orte_abort_on_non_zero_status 0\" option to mpirun.\n"
-              << "In gdb, go 'up' to the the debug_attach_point frame, and do\n"
-              << "`setvar release = 1`\n"
+              << "In the debugger, go 'up' to the debug_attach_point frame, "
+              << "and do\n`expr release = 1` (lldb) or `set var release = 1` "
+              << "(gdb)\n"
               << std::endl;
 
+    using namespace std::chrono_literals;
     while (!release) {
-      sleep(5);
+      std::this_thread::sleep_for(5s);
     }
   }
 #ifdef HAVE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
+}
+
+std::string mesh_filename(std::string_view const basename, int const pe) {
+  return std::format("{}.{:05d}.ume", basename, pe);
+}
+
+std::string mesh_filename(
+    std::string_view const basename, int const scale, int const pe) {
+  return std::format("{}.{:05d}.{:05d}.ume", basename, scale, pe);
 }
 
 int init_depth(int const delta) {

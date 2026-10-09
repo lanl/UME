@@ -38,6 +38,12 @@ struct Neighbor {
 
 using Neighbors = std::vector<Neighbor>;
 
+//! Whether no element appears twice in `neighs`, under one remote or two
+/*! An Entity's myCpys has to pass: a copy has one source, and a scatter
+    overwrites each copy from the one buffer entry that names it.  Its mySrcs
+    need not, since a source can have a copy on several remotes. */
+bool elements_unique(Neighbors const &neighs);
+
 } // namespace Comm
 
 //! Binary write specialization for Ume::Comm::Neighbors

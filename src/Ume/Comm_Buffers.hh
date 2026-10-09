@@ -18,6 +18,7 @@
 
 #include "Ume/Comm_Neighbors.hh"
 #include "Ume/DS_Types.hh"
+#include <algorithm>
 #include <iterator>
 #include <type_traits>
 
@@ -28,14 +29,18 @@ namespace Comm {
 //! Operations performed during gather communications
 enum class Op { OVERWRITE, MAX, MIN, SUM };
 
+//! Write `val` into the buffer, returning the position after it
+/*! The return value is the buffer cursor, and it has to advance by the whole
+    element: `unpack` below advances by `elem_len`, so a `pack` that does not
+    would write every element of a multi-component field over the first one. */
 template <class DST, class OutputIt>
 OutputIt pack(DST const &val, OutputIt d_first) {
   if constexpr (std::is_scalar_v<DST>) {
     *d_first++ = val;
+    return d_first;
   } else {
-    std::copy(std::begin(val), std::end(val), d_first);
+    return std::copy(std::begin(val), std::end(val), d_first);
   }
-  return d_first;
 }
 
 template <class InputIt, class DST> InputIt unpack(InputIt first, DST &val) {

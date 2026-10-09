@@ -13,6 +13,8 @@
   \file Ume/SOA_Entity.cc
 */
 #include "Ume/SOA_Entity.hh"
+#include "Ume/Mesh_Base.hh"
+#include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/utils.hh"
 #include <cassert>
 
@@ -39,9 +41,11 @@ void write_bin<Ume::SOA_Idx::Entity::Subset>(
 template <>
 void read_bin<Ume::SOA_Idx::Entity::Subset>(
     std::istream &is, std::vector<Ume::SOA_Idx::Entity::Subset> &data) {
-  size_t len;
+  size_t len{0};
   read_bin(is, len);
-  if (len == 0) {
+  // A stream that ends inside the length word leaves the bytes it got in
+  // `len`; a failed read is an empty one.
+  if (!is || len == 0) {
     data.clear();
   } else {
     data.resize(len);
@@ -99,6 +103,20 @@ bool Entity::operator==(Entity const &rhs) const {
       mySrcs == rhs.mySrcs && subsets == rhs.subsets);
 }
 
+Datastore &Entity::ds() { return *static_cast<Mesh_Base *>(mesh_)->ds; }
+
+Datastore const &Entity::ds() const {
+  return *static_cast<Mesh_Base const *>(mesh_)->ds;
+}
+
+Ume::Comm::Transport &Entity::comm() {
+  return *static_cast<Mesh_Base *>(mesh_)->comm;
+}
+
+Ume::Comm::Transport const &Entity::comm() const {
+  return *static_cast<Mesh_Base const *>(mesh_)->comm;
+}
+
 void Entity::resize(int const local, int const total, int const ghost) {
   mask.resize(total);
   comm_type.resize(total);
@@ -111,6 +129,8 @@ void Entity::resize(int const local, int const total, int const ghost) {
 
 template <typename FT> void Entity::gather(Comm::Op const op, FT &field) {
   assert(static_cast<int>(field.size()) == size());
+  if (!comm().does_exchanges())
+    return;
   Comm::Buffers<FT> cpyBufs(myCpys);
   Comm::Buffers<FT> srcBufs(mySrcs);
   cpyBufs.pack(field);
@@ -120,6 +140,8 @@ template <typename FT> void Entity::gather(Comm::Op const op, FT &field) {
 
 template <typename FT> void Entity::scatter(FT &field) {
   assert(static_cast<int>(field.size()) == size());
+  if (!comm().does_exchanges())
+    return;
   Comm::Buffers<FT> cpyBufs(myCpys);
   Comm::Buffers<FT> srcBufs(mySrcs);
   srcBufs.pack(field);
@@ -129,6 +151,8 @@ template <typename FT> void Entity::scatter(FT &field) {
 
 template <typename FT> void Entity::gathscat(Comm::Op const op, FT &field) {
   assert(static_cast<int>(field.size()) == size());
+  if (!comm().does_exchanges())
+    return;
   Comm::Buffers<FT> cpyBufs(myCpys);
   Comm::Buffers<FT> srcBufs(mySrcs);
   cpyBufs.pack(field);

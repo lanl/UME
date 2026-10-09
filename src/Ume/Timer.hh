@@ -24,7 +24,10 @@ namespace Ume {
 
 //! A simple elapsed-time class
 class Timer {
-  typedef std::chrono::system_clock CLOCK_T;
+  using CLOCK_T = std::chrono::steady_clock;
+  // An elapsed time is a difference of two readings; a clock that can be
+  // set back, as system_clock is by NTP, can make it negative.
+  static_assert(CLOCK_T::is_steady, "Timer needs a monotonic clock");
 
 public:
   void start() {

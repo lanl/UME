@@ -169,3 +169,55 @@ NVIDIA Linux Driver: 560.35.03
 Kokkos: 4.6.2, 4.7.0, 4.7.1, 5.0.0, 5.0.2, 5.1.1
 MPI: OpenMPI v5.0.6 (MPI 3.1)
 ```
+
+## Tests whose failure needs a Debug build
+
+Some regression tests catch the defect they guard against only in a
+Debug build. Without the fix, the code has undefined behavior that a
+Debug build stops at, but that an optimized build may run through and
+still produce the expected output. So a passing Release build (the
+`release` cell of `.github/workflows/ci.yml`) says nothing about these
+tests; only the Debug builds do.
+
+- A libstdc++ assertion (`_GLIBCXX_ASSERTIONS`, which g++ 15 and later
+  define at `-O0`, and which the Debug cells of the CI define for its
+  older g++):
+  - `comm MPI: exchange with empty remotes and map virtual ranks`
+    (MPI builds only): `&buf[offset]` one past the end of the buffer,
+    for a remote with no elements.
+  - `an empty mesh can still derive its variables`: `&v[0]` on an
+    empty vector.
+  - `MemoryPoolAllocation releases a claim that is not the last`: an
+    index past the end of the list of claims.
+  - `entity index ranges are empty on an empty entity`: an `iota_view`
+    whose bound is below its start.
+  - `txt2bin_truncated_input`: `back()` on an empty string. Without
+    the assertion, the code reads the byte before the buffer and
+    usually prints the same message, so the test passes without the fix.
+- A fill pattern standing in for uninitialized storage. At `-O2` the
+  compiler may delete the fill as a dead store:
+  - `mesh: default construction sets every header scalar`: a `Mesh`
+    constructed with placement new over storage filled with `0xA5`.
+  - `std::string binary read from an empty stream`,
+    `vector<int> binary read from an empty stream`,
+    `Neighbors binary read from a stream that ends after the tag` and
+    `vector<Entity::Subset> binary read from an empty stream`:
+    `scribble_stack()` writes `0xA5` where the next call's locals will
+    be, which is reliable only at `-O0`.
+- An `assert`:
+  - `error_stop_pool_exhausted`: the memory pool's `Finalize` asserts
+    that no claims are outstanding. When `error_stop` finalized before
+    printing, a Debug build died at that assertion before printing its
+    message; under `NDEBUG` the message still printed. Any `Finalize`
+    on the error path, explicit or from a static destructor that
+    `std::exit` runs, is the same red: a Debug build dies on `SIGABRT`
+    instead of exiting with a failure status, and under `NDEBUG` the
+    probe still exits 1.
+  - `ume_mpi_interior_zones_in_lower_half` (MPI builds only): the
+    search for an interior zone ran off the end of the zone range,
+    which a Debug build asserted on.
+- A signed overflow:
+  - `scale_mesh_bad_scale_-2147483648`: the power-of-2 check
+    `scale & (scale - 1)` accepted the most negative `int` only because
+    `scale - 1` wraps around, which `-O0` does and an optimizer is not
+    required to do.

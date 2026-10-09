@@ -17,36 +17,64 @@
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
+#include "Ume/process_mgmt.hh"
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 using namespace Ume::SOA_Idx;
 
-std::vector<Mesh> read_meshes(int argc, char *argv[]);
+using Mesh_Ptr = std::unique_ptr<Mesh>;
+
+std::vector<Mesh_Ptr> read_meshes(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
-  std::vector<Mesh> ranks{read_meshes(argc, argv)};
-  if (ranks.empty())
-    return 1;
-
-  Ume::Comm::Dummy_Transport comm;
-  ranks[0].comm = &comm;
-
-  [[maybe_unused]] auto const &test = ranks[0].ds->caccess_vec3v("corner_csurf");
-  [[maybe_unused]] auto const &test2 = ranks[0].ds->caccess_vec3v("side_surz");
-  [[maybe_unused]] auto const &test3 = ranks[0].ds->caccess_vec3v("point_norm");
-
-  return 0;
-}
-
-std::vector<Mesh> read_meshes(int const argc, char *argv[]) {
-  std::vector<Mesh> ranks;
-  ranks.resize(argc - 1);
-  bool need_sort{false};
   if (argc == 1) {
     std::cerr << "Usage: ume_serial <ume file>+" << std::endl;
-    std::exit(1);
+    return 1;
+  }
+
+  /* The derived mesh variables are computed with Kokkos kernels, so Kokkos has
+     to be up before anything touches the Datastore.  This also strips the
+     --kokkos-* arguments before the file names are read. */
+  Ume::initialize(argc, argv);
+  int status = 0;
+  {
+    std::vector<Mesh_Ptr> ranks{read_meshes(argc, argv)};
+    if (ranks.empty()) {
+      status = 1;
+    } else {
+      Ume::Comm::Dummy_Transport comm;
+      ranks[0]->comm = &comm;
+
+      [[maybe_unused]] auto const &test =
+          ranks[0]->ds->caccess_vec3v("corner_csurf");
+      [[maybe_unused]] auto const &test2 =
+          ranks[0]->ds->caccess_vec3v("side_surz");
+      [[maybe_unused]] auto const &test3 =
+          ranks[0]->ds->caccess_vec3v("point_norm");
+    }
+  }
+  Ume::finalize();
+  return status;
+}
+
+/*! A Mesh cannot be moved (see the note on Mesh's deleted move constructor),
+    so the meshes are held by pointer: sorting the ranks below then permutes
+    pointers and leaves every Mesh at the address it was constructed at. */
+std::vector<Mesh_Ptr> read_meshes(int const argc, char *argv[]) {
+  std::vector<Mesh_Ptr> ranks;
+  bool need_sort{false};
+  /* Reachable even though main() checks argc too: Ume::initialize() takes argc
+     by reference and strips the --kokkos-* arguments, so `ume_serial
+     --kokkos-num-threads=4` arrives here with nothing left.  Return rather than
+     std::exit, which would skip the Ume::finalize() main() is structured to
+     reach; an empty result is already how main() reports failure. */
+  if (argc == 1) {
+    std::cerr << "Usage: ume_serial <ume file>+" << std::endl;
+    return ranks;
   }
   for (int i = 1; i < argc; ++i) {
     std::cout << "Reading: " << argv[i] << '\n';
@@ -54,13 +82,19 @@ std::vector<Mesh> read_meshes(int const argc, char *argv[]) {
     if (!is) {
       std::cerr << "Unable to open file \"" << argv[i] << "\" for reading."
                 << std::endl;
-      return std::vector<Mesh>{};
+      return std::vector<Mesh_Ptr>{};
     }
-    ranks[i - 1].read(is);
-    if (ranks[i - 1].mype != i - 1)
+    ranks.push_back(std::make_unique<Mesh>());
+    ranks.back()->read(is);
+    if (!is) {
+      std::cerr << "Unable to read a mesh from file \"" << argv[i] << "\"."
+                << std::endl;
+      return std::vector<Mesh_Ptr>{};
+    }
+    if (ranks.back()->mype != i - 1)
       need_sort = true;
   }
-  size_t const numpe = static_cast<size_t>(ranks[0].numpe);
+  size_t const numpe = static_cast<size_t>(ranks[0]->numpe);
   if (numpe != ranks.size()) {
     std::cerr << "Warning: the initial mesh had " << numpe
               << " ranks, but only " << ranks.size() << " were read"
@@ -69,7 +103,7 @@ std::vector<Mesh> read_meshes(int const argc, char *argv[]) {
   if (need_sort) {
     std::cerr << "Warning: sorting input ranks" << std::endl;
     std::sort(ranks.begin(), ranks.end(),
-        [](Mesh const &a, Mesh const &b) { return a.mype < b.mype; });
+        [](Mesh_Ptr const &a, Mesh_Ptr const &b) { return a->mype < b->mype; });
   }
 
   return ranks;

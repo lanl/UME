@@ -14,14 +14,13 @@
 */
 
 #include "Ume/face_area.hh"
+#include "Ume/atomic_add.hh"
 #include "Ume/mem_exec_spaces.hh"
 
 namespace Ume {
 
 using Mesh = SOA_Idx::Mesh;
 using DBLV_T = DS_Types::DBLV_T;
-using INTV_T = DS_Types::INTV_T;
-using VEC3V_T = DS_Types::VEC3V_T;
 
 void calc_face_area(Mesh &mesh, DBLV_T &face_area) {
   auto const &side_type = mesh.sides.mask;
@@ -30,72 +29,53 @@ void calc_face_area(Mesh &mesh, DBLV_T &face_area) {
   auto const &s_to_s2_map = mesh.ds->caccess_intv("m:s>s2");
   auto const &surz = mesh.ds->caccess_vec3v("side_surz");
 
-  int const sll = mesh.sides.size();
   int const sl = mesh.sides.local_size();
 
   std::fill(face_area.begin(), face_area.end(), 0.0);
-  INTV_T side_tag(sll, 0);
 
   Kokkos::View<double *, HostSpace> h_face_area(
-      &face_area[0], face_area.size());
+      face_area.data(), face_area.size());
   Kokkos::View<const int *, HostSpace> h_s_to_f_map(
-      &s_to_f_map[0], s_to_f_map.size());
+      s_to_f_map.data(), s_to_f_map.size());
   Kokkos::View<const int *, HostSpace> h_s_to_s2_map(
-      &s_to_s2_map[0], s_to_s2_map.size());
-  Kokkos::View<const Vec3 *, HostSpace> h_surz(&surz[0], surz.size());
-  Kokkos::View<int *, HostSpace> h_side_tag(&side_tag[0], side_tag.size());
+      s_to_s2_map.data(), s_to_s2_map.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_surz(surz.data(), surz.size());
   Kokkos::View<const short *, HostSpace> h_side_type(
-      &side_type[0], side_type.size());
+      side_type.data(), side_type.size());
   Kokkos::View<const int *, HostSpace> h_face_comm_type(
-      &face_comm_type[0], face_comm_type.size());
+      face_comm_type.data(), face_comm_type.size());
 
-  auto d_face_area = create_mirror_view(DevExecMemSpace(), h_face_area);
-  auto d_s_to_f_map = create_mirror_view(DevExecMemSpace(), h_s_to_f_map);
-  auto d_s_to_s2_map = create_mirror_view(DevExecMemSpace(), h_s_to_s2_map);
-  auto d_surz = create_mirror_view(DevExecMemSpace(), h_surz);
-  auto d_side_tag = create_mirror_view(DevExecMemSpace(), h_side_tag);
-  auto d_side_type = create_mirror_view(DevExecMemSpace(), h_side_type);
+  auto d_face_area =
+      Kokkos::create_mirror_view_and_copy(DevExecMemSpace(), h_face_area);
+  auto d_s_to_f_map =
+      Kokkos::create_mirror_view_and_copy(DevExecMemSpace(), h_s_to_f_map);
+  auto d_s_to_s2_map =
+      Kokkos::create_mirror_view_and_copy(DevExecMemSpace(), h_s_to_s2_map);
+  auto d_surz = Kokkos::create_mirror_view_and_copy(DevExecMemSpace(), h_surz);
+  auto d_side_type =
+      Kokkos::create_mirror_view_and_copy(DevExecMemSpace(), h_side_type);
   auto d_face_comm_type =
-      create_mirror_view(DevExecMemSpace(), h_face_comm_type);
-
-#if !defined(UME_SERIAL)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  Kokkos::deep_copy(d_face_area, h_face_area);
-  Kokkos::deep_copy(d_s_to_f_map, h_s_to_f_map);
-  Kokkos::deep_copy(d_s_to_s2_map, h_s_to_s2_map);
-  Kokkos::deep_copy(d_surz, h_surz);
-  Kokkos::deep_copy(d_side_tag, h_side_tag);
-  Kokkos::deep_copy(d_side_type, h_side_type);
-  Kokkos::deep_copy(d_face_comm_type, h_face_comm_type);
-#endif
-#endif
+      Kokkos::create_mirror_view_and_copy(DevExecMemSpace(), h_face_comm_type);
 
   Kokkos::parallel_for(
       "face_area", Kokkos::RangePolicy<DevExecSpace>(0, sl),
       KOKKOS_LAMBDA(const int s) {
-        if (d_side_type(s) >= 1 && d_side_tag(s) != 1) {
+        /* A side and its partner s2 cover the same part of the face, so take
+           the lower-numbered of a real pair, or the real one if s2 is not; a
+           side that is its own partner is the only one.  The pair relation is
+           static and symmetric, so the choice does not depend on which of the
+           two another thread has reached. */
+        int const s2 = d_s_to_s2_map(s);
+        if (d_side_type(s) >= 1 && (s <= s2 || d_side_type(s2) < 1)) {
           int const f = d_s_to_f_map(s);
           if (d_face_comm_type(f) < 3) { // Internal or master face
             double const side_area = vectormag(d_surz(s)); // Flat area
-#if defined(UME_SERIAL)
-            d_face_area(f) += side_area;
-#else
-            Kokkos::atomic_add(&d_face_area(f), side_area);
-#endif
-            int const s2 = d_s_to_s2_map(s);
-            d_side_tag(s2) = 1;
+            ume_atomic_add(&d_face_area(f), side_area);
           }
         }
       });
 
-#if !defined(UME_SERIAL)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  Kokkos::fence();
   Kokkos::deep_copy(h_face_area, d_face_area);
-#endif
-#endif
 
   mesh.faces.scatter(face_area);
 }

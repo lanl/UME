@@ -15,16 +15,23 @@
 
 #include "Ume/renumbering.hh"
 
-#define INVALID_INDEX (-1)
-#define START_INDEX 0
+#include <array>
 
 namespace Ume {
 
 using Mesh = SOA_Idx::Mesh;
 using INTV_T = DS_Types::INTV_T;
 
-enum OPS { MIN = 1, MAX, NONE };
-typedef int Op_t;
+namespace {
+
+constexpr int INVALID_INDEX{-1};
+constexpr int START_INDEX{0};
+
+//! The two passes of a min/max renumbering, in the order they run.
+enum class MinMax { MIN, MAX };
+constexpr std::array<MinMax, 2> min_max_passes{MinMax::MIN, MinMax::MAX};
+
+} // namespace
 
 /* Renumber_MeshMaps[RenumWaveMinMax]-->RenumWaveMinMax */
 void renumber_mesh(Mesh &mesh) {
@@ -39,7 +46,7 @@ void renumber_mesh(Mesh &mesh) {
 }
 
 /* Renumber_P[kkpll]-->Renumb_P */
-void renumber_p(Mesh &mesh) {
+INTV_T renumber_p(Mesh &mesh) {
   /* Get sizes for general use. */
   int const pll = mesh.points.size();
   int const pgll = mesh.points.ghost_size();
@@ -186,7 +193,7 @@ void renumber_p(Mesh &mesh) {
         if (num_p_currfront == 0 && (pnew + 1) != totp) {
           /* Find a new seed point. */
           { /* Wave_seed */
-            pseed = 0;
+            pseed = INVALID_INDEX;
             int max_s = 0, num_s;
 
             /* Take as the seed point the inactive point with the
@@ -204,7 +211,7 @@ void renumber_p(Mesh &mesh) {
           }
 
           /* Rebuild front for next pass if not finished yet. */
-          if (pseed != 0) {
+          if (pseed != INVALID_INDEX) {
             num_p_currfront = 1;
             currfront_p[START_INDEX] = pseed;
             pnew += 1;
@@ -217,6 +224,8 @@ void renumber_p(Mesh &mesh) {
 
   { /* ReshapeP() */
   }
+
+  return p_to_pnew_map;
 }
 
 /* Renumber_S[kksll]-->Renumb_S */
@@ -241,8 +250,7 @@ void renumber_s(Mesh &mesh) {
     for (int s : mesh.sides.all_indices())
       s_to_snew_map[s] = s;
 
-    Op_t op = MIN;
-    do { /* Sides_minmax */
+    for (MinMax const op : min_max_passes) { /* Sides_minmax */
       /* Access database. */
       auto const &side_type = mesh.sides.mask;
       auto const &ghost_side_type = mesh.sides.ghost_mask;
@@ -266,9 +274,9 @@ void renumber_s(Mesh &mesh) {
         int const p1 = s_to_p1_map[s];
         int const p2 = s_to_p2_map[s];
 
-        if (MIN == op) {
+        if (MinMax::MIN == op) {
           s_to_p_map_new[snew] = std::min(p1, p2);
-        } else if (MAX == op) {
+        } else if (MinMax::MAX == op) {
           s_to_p_map_new[snew] = std::max(p1, p2);
         }
       }
@@ -301,9 +309,7 @@ void renumber_s(Mesh &mesh) {
           s_to_snew_map[s] = s_max;
         }
       }
-
-      op += 1;
-    } while (op <= MAX);
+    }
   }
 
   /* Now that we have new local maps, we need to reshape db arrays for
@@ -387,8 +393,7 @@ void renumber_z(Mesh &mesh) {
     for (int z : mesh.zones.all_indices())
       z_to_znew_map[z] = z;
 
-    Op_t op = MIN;
-    do { /* Zones_minmax */
+    for (MinMax const op : min_max_passes) { /* Zones_minmax */
       /* Access database. */
       auto const &side_type = mesh.sides.mask;
       auto const &ghost_zone_type = mesh.zones.ghost_mask;
@@ -408,7 +413,7 @@ void renumber_z(Mesh &mesh) {
        * (for max sort) or 2*kkpll (for min sort). */
       int p = 0;
 
-      if (MIN == op)
+      if (MinMax::MIN == op)
         p = 2 * mesh.points.size();
 
       for (int z : mesh.zones.local_indices()) {
@@ -426,10 +431,10 @@ void renumber_z(Mesh &mesh) {
         int const znew = z_to_znew_map[z];
         int const p = z_to_p_map_new[znew];
 
-        if (MIN == op) {
+        if (MinMax::MIN == op) {
           int const temp = std::min(p1, p2);
           z_to_p_map_new[znew] = std::min(temp, p);
-        } else if (MAX == op) {
+        } else if (MinMax::MAX == op) {
           int const temp = std::max(p1, p2);
           z_to_p_map_new[znew] = std::max(temp, p);
         }
@@ -463,9 +468,7 @@ void renumber_z(Mesh &mesh) {
           z_to_znew_map[z] = z_max;
         }
       }
-
-      op += 1;
-    } while (op <= MAX);
+    }
   }
 
   { /* ReshapeZ() */
@@ -546,8 +549,7 @@ void renumber_e(Mesh &mesh) {
     for (int e : mesh.edges.all_indices())
       e_to_enew_map[e] = e;
 
-    Op_t op = MIN;
-    do { /* Edges_minmax */
+    for (MinMax const op : min_max_passes) { /* Edges_minmax */
       /* Access database. */
       auto const &edge_type = mesh.edges.mask;
       auto const &e_to_p1_map = mesh.ds->caccess_intv("m:e>p1");
@@ -569,9 +571,9 @@ void renumber_e(Mesh &mesh) {
         int const p1 = e_to_p1_map[e];
         int const p2 = e_to_p2_map[e];
 
-        if (MIN == op) {
+        if (MinMax::MIN == op) {
           e_to_p_map_new[enew] = std::min(p1, p2);
-        } else if (MAX == op) {
+        } else if (MinMax::MAX == op) {
           e_to_p_map_new[enew] = std::max(p1, p2);
         }
       }
@@ -593,9 +595,7 @@ void renumber_e(Mesh &mesh) {
         int const enew2 = enew_to_enew2_map[enew];
         e_to_enew_map[e] = enew2;
       }
-
-      op += 1;
-    } while (op <= MAX);
+    }
   }
 
   { /* ReshapeE() */

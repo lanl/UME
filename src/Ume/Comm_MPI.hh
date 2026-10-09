@@ -37,6 +37,7 @@ public:
       Buffers<DS_Types::DBLV_T> &recvs) override;
   void exchange(Buffers<DS_Types::VEC3V_T> const &sends,
       Buffers<DS_Types::VEC3V_T> &recvs) override;
+  bool does_exchanges() const override { return true; }
   int stop() override;
   void abort(char const *const message) override;
 

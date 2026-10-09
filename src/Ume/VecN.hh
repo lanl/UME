@@ -150,7 +150,7 @@ public:
   constexpr bool operator==(const_ref rhs) const = default;
   constexpr bool operator==(T const &rhs) const {
     return std::all_of(
-        data_.begin(), data_.end(), [rhs](int i) { return i == rhs; });
+        data_.begin(), data_.end(), [&rhs](T const &v) { return v == rhs; });
   }
   constexpr bool operator!=(T const &rhs) const { return !(*this == rhs); }
  

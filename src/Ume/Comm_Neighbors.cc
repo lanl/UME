@@ -14,9 +14,17 @@
 */
 
 #include "Ume/Comm_Neighbors.hh"
-#include <cassert>
+#include <algorithm>
 
 namespace Ume {
+
+bool Comm::elements_unique(Neighbors const &neighs) {
+  std::vector<int> all;
+  for (auto const &n : neighs)
+    all.insert(all.end(), n.elements.begin(), n.elements.end());
+  std::ranges::sort(all);
+  return std::ranges::adjacent_find(all) == all.end();
+}
 
 template <>
 void write_bin<Comm::Neighbors>(
@@ -35,12 +43,13 @@ void write_bin<Comm::Neighbors>(
 
 template <>
 void read_bin<Comm::Neighbors>(std::istream &is, Ume::Comm::Neighbors &nvec) {
-  size_t len;
-  std::string dummy;
-  read_bin(is, dummy);
-  assert(dummy == "neighbors");
+  if (!read_tag(is, "neighbors"))
+    return;
+  size_t len{0};
   read_bin(is, len);
-  if (len == 0) {
+  // A stream that ends inside the length word leaves the bytes it got in
+  // `len`; a failed read is an empty one.
+  if (!is || len == 0) {
     Ume::Comm::Neighbors foo;
     nvec.swap(foo);
   } else {

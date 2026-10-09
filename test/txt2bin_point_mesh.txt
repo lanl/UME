@@ -1,0 +1,54 @@
+Input version:        20250722
+Total ranks:          1
+This rank:            0
+Num dims:             3
+Geometry type:        0
+Iotas dumped:         false
+Point total:          1
+Point local:          1
+Point ghost:          0
+Zone total:           0
+Zone local:           0
+Zone ghost:           0
+Side total:           0
+Side local:           0
+Side ghost:           0
+Edge total:           0
+Edge local:           0
+Edge ghost:           0
+Face total:           0
+Face local:           0
+Face ghost:           0
+Corner total:         0
+Corner local:         0
+Corner ghost:         0
+Iota total:           0
+Iota local:           0
+Iota ghost:           0
+Points
+ idx mask comm_type x y z
+1 1 1 0.5 1.5 2.5
+Ghost Points
+ idx cpy_idx ghost_mask src_idx src_pe
+Zones
+ idx mask comm_type
+Ghost Zones
+ idx cpy_idx ghost_mask src_idx src_pe
+Sides
+ idx mask comm_type z p1 p2 e f c1 c2 s2 s3 s4 s5
+Ghost Sides
+ idx cpy_idx ghost_mask src_idx src_pe
+Edges
+ idx mask comm_type p1 p2
+Ghost Edges
+ idx cpy_idx ghost_mask src_idx src_pe
+Faces
+ idx mask comm_type z1 z2
+Ghost Faces
+ idx cpy_idx ghost_mask src_idx src_pe
+Corners
+ idx mask comm_type p z
+Ghost Corners
+ idx cpy_idx ghost_mask src_idx src_pe
+Has MPI connectivity: 0
+Num materials:        0

@@ -45,16 +45,10 @@ public:
 protected:
   friend class Datastore;
 
-  //! The DS_Type that is currently stored in the `data_` variant
-  Types type_;
-
   //! The DS_Types that can be stored in an DS_Entry
   mutable std::variant<INT_T, INTV_T, INTRR_T, DBL_T, DBLV_T, DBLRR_T, VEC3_T,
       VEC3V_T, VEC3RR_T>
       data_;
-
-  //! This is changed to true when accessed through a non-const access stmt
-  mutable bool dirty_ = false;
 
   //! A list of states that this entry can be in
   /*! The IN_PROGRESS state is set at the begining of the initialization
@@ -128,12 +122,11 @@ public:
   inline T &access_##Y(char const *const name) { \
     auto ptr = find_or_die(name); \
     ptr->init_(); \
-    ptr->dirty_ = true; \
     return std::get<T>(ptr->data_); \
   } \
   inline T const &caccess_##Y(char const *const name) const { \
     auto ptr = cfind_or_die(name); \
-    ptr->dirty_ = ptr->init_(); \
+    ptr->init_(); \
     return std::get<T>(ptr->data_); \
   }
 

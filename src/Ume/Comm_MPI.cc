@@ -42,8 +42,9 @@ void MPI::set_virtual_rank(int const virtual_rank) {
   use_virtual_ranks_ = true;
   std::vector<int> r2v(numpe_, -1);
   r2v[rank_] = virtual_rank;
-  MPI_Allgather(MPI_IN_PLACE, numpe_, MPI_INT, r2v.data(), numpe_, MPI_INT,
-      MPI_COMM_WORLD);
+  // One int from each rank; the count is per rank, not the total.
+  MPI_Allgather(
+      MPI_IN_PLACE, 1, MPI_INT, r2v.data(), 1, MPI_INT, MPI_COMM_WORLD);
   for (int i = 0; i < numpe_; ++i) {
     v2r_rank_.insert(std::make_pair(r2v[i], i));
   }
@@ -76,9 +77,12 @@ int exchange_impl(MPI &comm_mpi, Buffers<T> const &sends, Buffers<T> &recvs) {
   size_t const nsends = sends.remotes.size();
   std::vector<MPI_Request> reqs(nrecvs + nsends);
 
+  /* An empty remote can have buf_offset == buf.size(), so the start addresses
+     are offsets from data() rather than &buf[buf_offset], which would index
+     one past the end. */
   /* Post the non-blocking receives */
   for (size_t i = 0; i < nrecvs; ++i) {
-    base_type *start = &(recvs.buf[recvs.remotes[i].buf_offset]);
+    base_type *start = recvs.buf.data() + recvs.remotes[i].buf_offset;
     int const rmtpe = comm_mpi.translate_pe(recvs.remotes[i].pe);
     int stat = MPI_Irecv(start, recvs.remotes[i].buf_len, msgtype, rmtpe, tag,
         MPI_COMM_WORLD, &(reqs[i]));
@@ -87,7 +91,7 @@ int exchange_impl(MPI &comm_mpi, Buffers<T> const &sends, Buffers<T> &recvs) {
 
   /* Post non-blocking sends */
   for (size_t i = 0; i < nsends; ++i) {
-    base_type const *start = &(sends.buf[sends.remotes[i].buf_offset]);
+    base_type const *start = sends.buf.data() + sends.remotes[i].buf_offset;
     int const rmtpe = comm_mpi.translate_pe(sends.remotes[i].pe);
     int stat = MPI_Isend(start, sends.remotes[i].buf_len, msgtype, rmtpe, tag,
         MPI_COMM_WORLD, &(reqs[i + nrecvs]));

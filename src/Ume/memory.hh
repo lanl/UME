@@ -168,7 +168,7 @@ public:
       // Try space after last claim
       {
         auto pos_of_next_claim = claims_.back().start + claims_.back().length;
-        if (num_blocks_ - pos_of_next_claim > num_blocks_needed) {
+        if (num_blocks_ - pos_of_next_claim >= num_blocks_needed) {
           claims_.push_back(BlockClaim(pos_of_next_claim, num_blocks_needed));
           return GetPtrToOffsetInPool(pos_of_next_claim);
         }
@@ -177,7 +177,7 @@ public:
 
       for (auto i = 0; i < static_cast<int>(claims_.size()) - 1; ++i) {
         auto this_claim_end = claims_[i].start + claims_[i].length;
-        if (claims_[i + 1].start - this_claim_end > num_blocks_needed) {
+        if (claims_[i + 1].start - this_claim_end >= num_blocks_needed) {
           claims_.insert(claims_.begin() + i + 1,
               BlockClaim(this_claim_end, num_blocks_needed));
           return GetPtrToOffsetInPool(claims_[i + 1].start);
@@ -194,7 +194,7 @@ public:
    * Returns number of bytes released.
    * This does not free any memory. */
   size_t Release(void *p) {
-    for (int i = static_cast<int>(claims_.size()) - 1; i >= 0; ++i) {
+    for (int i = static_cast<int>(claims_.size()) - 1; i >= 0; --i) {
       if (p == GetPtrToOffsetInPool(claims_[i].start)) {
         size_t const bytes = claims_[i].length * block_size_;
         claims_.erase(claims_.begin() + i);

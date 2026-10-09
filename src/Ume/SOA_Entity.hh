@@ -18,7 +18,6 @@
 #include "Ume/Comm_Neighbors.hh"
 #include "Ume/Comm_Transport.hh"
 #include "Ume/Datastore.hh"
-#include "Ume/Mesh_Base.hh"
 #include <iosfwd>
 #include <ranges>
 #include <string>
@@ -33,6 +32,15 @@ struct Mesh;
 struct Entity {
   Entity() = delete;
   explicit Entity(Mesh *mesh) : mesh_{mesh} {}
+  /* An Entity caches the Mesh it was constructed against, so a copy or a move
+     would silently keep pointing at the original: `auto z = mesh.zones;` would
+     hand back something whose ds() and comm() resolve to another mesh.  This is
+     also what makes Mesh non-relocatable -- the deletions there are the same
+     invariant stated where a reader of Mesh will meet it. */
+  Entity(Entity const &) = delete;
+  Entity &operator=(Entity const &) = delete;
+  Entity(Entity &&) = delete;
+  Entity &operator=(Entity &&) = delete;
   enum CommTypes {
     INTERNAL = 1, //!< Not on a communication boundary
     SOURCE, //!< The source entity in a group of shared copies
@@ -101,12 +109,18 @@ struct Entity {
   Ume::Comm::Neighbors mySrcs;
 
   //! Do a remote gather for a `field` on this entity, combined with `op`
+  /*! Leaves `field` unchanged when the transport does not exchange
+      (Comm::Transport::does_exchanges() is false, as for Dummy_Transport). */
   template <typename FT> void gather(Comm::Op const op, FT &field);
 
   //! Do a scatter to remotes for a `field` on this entity
+  /*! Leaves `field` unchanged when the transport does not exchange
+      (Comm::Transport::does_exchanges() is false, as for Dummy_Transport). */
   template <typename FT> void scatter(FT &field);
 
   //! Combined gather-scatter operation
+  /*! Leaves `field` unchanged when the transport does not exchange
+      (Comm::Transport::does_exchanges() is false, as for Dummy_Transport). */
   template <typename FT> void gathscat(Comm::Op const op, FT &field);
 
   //! Define a named subset of this Entity's elements
@@ -117,7 +131,8 @@ struct Entity {
     std::vector<int> elements;
     std::vector<short> mask;
     inline bool operator==(Subset const &rhs) const {
-      return (rhs.name == name && rhs.elements == elements && rhs.mask == mask);
+      return (rhs.name == name && rhs.lsize == lsize &&
+          rhs.elements == elements && rhs.mask == mask);
     }
   };
 
@@ -131,26 +146,26 @@ struct Entity {
   constexpr int local_size() const { return lsize_; }
   //! Return the number of ghost elements in this Entity.
   constexpr int ghost_local_size() const { return size() - lsize_; }
-  //! Return the maximum number of ghost elements in this Entity.
-  constexpr int ghost_size() const { return std::max(1, ghost_local_size()); }
+  //! Return the number of ghost elements in this Entity, which may be zero.
+  constexpr int ghost_size() const { return ghost_local_size(); }
 
-  /* Element sequences for iterating over. */
-  //! Return a sequence over all indices.
+  /* Element sequences for iterating over.  Each is half-open, and empty when
+     there are no such elements. */
+  //! Return a sequence over all indices, [0, size()).
   constexpr auto all_indices() const {
-    return std::ranges::iota_view{0, size() - 1};
+    return std::ranges::iota_view{0, size()};
   }
-  //! Return a sequence over non-ghost indices.
+  //! Return a sequence over non-ghost indices, [0, local_size()).
   constexpr auto local_indices() const {
-    return std::ranges::iota_view{0, lsize_ - 1};
+    return std::ranges::iota_view{0, lsize_};
   }
-  //! Return a sequence over ghost indices.
-  //! This requires at least one ghost to make sense.
+  //! Return a sequence over ghost indices, [local_size(), size()).
   constexpr auto ghost_indices() const {
-    return std::ranges::iota_view{lsize_, size() - 1};
+    return std::ranges::iota_view{lsize_, size()};
   }
-  //! Return a sequence over ghost indices offset to 0.
+  //! Return a sequence over ghost indices offset to 0, [0, ghost_size()).
   constexpr auto ghost_indices_offset() const {
-    return std::ranges::iota_view{0, ghost_size() - 1};
+    return std::ranges::iota_view{0, ghost_size()};
   }
 
   virtual void write(std::ostream &os) const = 0;
@@ -158,20 +173,21 @@ struct Entity {
   virtual void resize(int const local, int const total, int const ghost);
   bool operator==(Entity const &rhs) const;
 
+  /* ds() and comm() are defined in SOA_Entity.cc, where Mesh is complete:
+     here it is only forward-declared, and a cast to its Mesh_Base base would
+     have to be a reinterpret_cast that ignores the base's offset. */
   //! Return the Datastore of the mesh that this Entity belongs to
-  Datastore &ds() { return *(((Mesh_Base *)mesh_)->ds); }
+  Datastore &ds();
   //! Return the Datastore of the mesh that this Entity belongs to (const)
-  Datastore const &ds() const { return *(((Mesh_Base *)mesh_)->ds); }
+  Datastore const &ds() const;
   //! Return the Mesh that this Entity belongs to
   constexpr Mesh &mesh() { return *mesh_; }
   //! Return the Mesh that this Entity belongs to (const)
   constexpr Mesh const &mesh() const { return *mesh_; }
   //! Return the Transport that this Entity belongs to
-  Ume::Comm::Transport &comm() { return *(((Mesh_Base *)mesh_)->comm); }
+  Ume::Comm::Transport &comm();
   //! Return the Transport that this Entity belongs to (const)
-  Ume::Comm::Transport const &comm() const {
-    return *(((Mesh_Base *)mesh_)->comm);
-  }
+  Ume::Comm::Transport const &comm() const;
 
 private:
   Mesh *mesh_;
@@ -180,6 +196,20 @@ private:
 };
 
 } // namespace SOA_Idx
+
+/* Declared here so that a caller outside SOA_Entity.cc reaches these rather
+   than instantiating the generic std::vector overloads, which would copy the
+   Subset objects' bytes. */
+//! Binary write specialization for std::vector<Entity::Subset>
+template <>
+void write_bin<SOA_Idx::Entity::Subset>(
+    std::ostream &os, std::vector<SOA_Idx::Entity::Subset> const &data);
+
+//! Binary read specialization for std::vector<Entity::Subset>
+template <>
+void read_bin<SOA_Idx::Entity::Subset>(
+    std::istream &is, std::vector<SOA_Idx::Entity::Subset> &data);
+
 } // namespace Ume
 
 #endif

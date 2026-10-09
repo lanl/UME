@@ -14,9 +14,9 @@
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
-#include "Ume/soa_idx_helpers.hh"
+#include "Ume/atomic_add.hh"
 #include "Ume/mem_exec_spaces.hh"
-#include <cassert>
+#include "Ume/soa_idx_helpers.hh"
 
 namespace Ume {
 namespace SOA_Idx {
@@ -39,9 +39,8 @@ void Faces::write(std::ostream &os) const {
 }
 
 void Faces::read(std::istream &is) {
-  std::string dummy;
-  read_bin(is, dummy);
-  assert(dummy == "faces");
+  if (!read_tag(is, "faces"))
+    return;
   Entity::read(is);
   IVREAD("m:f>z1");
   IVREAD("m:f>z2");
@@ -72,11 +71,9 @@ bool Faces::VAR_fcoord::init_() const {
 
   std::vector<int> num_face_pts(fl, 0);
 
-  Kokkos::View<Vec3 *, HostSpace> h_fcoord(&fcoord[0], fcoord.size());
-  Kokkos::View<const Vec3 *, HostSpace> h_pcoord(
-      &pcoord[0], pcoord.size());
-  Kokkos::View<const short *, HostSpace> h_smask(
-      &smask[0], smask.size());
+  Kokkos::View<Vec3 *, HostSpace> h_fcoord(fcoord.data(), fcoord.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_pcoord(pcoord.data(), pcoord.size());
+  Kokkos::View<const short *, HostSpace> h_smask(smask.data(), smask.size());
   Kokkos::View<const int *, HostSpace> h_s2f(s2f.data(), s2f.size());
   Kokkos::View<const int *, HostSpace> h_s2p1(s2p1.data(), s2p1.size());
   Kokkos::View<int *, HostSpace> h_num_face_pts(
@@ -86,18 +83,13 @@ bool Faces::VAR_fcoord::init_() const {
       "VAR_fcoord-1", Kokkos::RangePolicy<HostExecSpace>(0, sl), [&](const int s) {
         if (h_smask(s)) {
           int const f = h_s2f(s);
-#if defined(UME_SERIAL)
-          h_fcoord(f) += h_pcoord(h_s2p1(s));
-#else
-          Kokkos::atomic_add(&h_fcoord(f), h_pcoord(h_s2p1(s)));
-#endif
-          h_num_face_pts.access(f) += 1;
+          ume_atomic_add(&h_fcoord(f), h_pcoord(h_s2p1(s)));
+          ume_atomic_add(&h_num_face_pts(f), 1);
         }
       });
   auto const &fmask{faces().mask};
 
-  Kokkos::View<const short *, HostSpace> h_fmask(
-      &fmask[0], fmask.size());
+  Kokkos::View<const short *, HostSpace> h_fmask(fmask.data(), fmask.size());
   Kokkos::parallel_for(
       "VAR_fcoord-2", Kokkos::RangePolicy<HostExecSpace>(0, fl), [&](const int f) {
         if (h_fmask(f)) {

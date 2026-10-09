@@ -17,8 +17,8 @@
 #include "memory.hh"
 
 #include <charconv>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -33,12 +33,11 @@ static bool ume_is_initialized = false;
 [[maybe_unused]] static bool ume_is_finalized = false;
 
 namespace {
-extern "C" {
 
 void show_backtrace() {
 #ifndef __CUDACC__
 #ifdef NO_LIBUNWIND
-  printf("No libunwind backtrace available on this platform.\n");
+  std::printf("No libunwind backtrace available on this platform.\n");
 #else
   /* Limit on the number of stack frames output.
    * Set to a large number to disable. */
@@ -47,13 +46,13 @@ void show_backtrace() {
 
   unw_context_t uc;
   if (unw_getcontext(&uc)) {
-    printf("<stack trace unavailable>\n");
+    std::printf("<stack trace unavailable>\n");
     return;
   }
 
   unw_cursor_t cursor;
   if (unw_init_local(&cursor, &uc)) {
-    printf("<stack trace unavailable>\n");
+    std::printf("<stack trace unavailable>\n");
     return;
   }
 
@@ -64,34 +63,48 @@ void show_backtrace() {
     if (stack_frame_count < max_stack_frames) {
       name_status = unw_get_proc_name(&cursor, procname, namelen, &offset);
       if (name_status) {
-        printf("%2d: <no information>\n", stack_frame_count);
+        std::printf("%2d: <no information>\n", stack_frame_count);
       } else {
         if (unw_get_reg(&cursor, UNW_REG_IP, &ip))
           ip = 0xDEADBEEF;
         if (unw_get_reg(&cursor, UNW_REG_SP, &sp))
           sp = 0xDEADBEEF;
-        printf("%2d: ip = %#010lx, sp = %#014lx: %s\n", stack_frame_count,
-            (unsigned long)ip, (unsigned long)sp, procname);
+        std::printf("%2d: ip = %#010lx, sp = %#014lx: %s\n", stack_frame_count,
+            static_cast<unsigned long>(ip), static_cast<unsigned long>(sp),
+            procname);
       }
     }
     stack_frame_count += 1;
   } while ((step_status = unw_step(&cursor)) > 0);
   if (step_status < 0) {
-    printf("<stack trace truncated by libunwind error>\n\t%s\n",
+    std::printf("<stack trace truncated by libunwind error>\n\t%s\n",
         unw_strerror(step_status));
   } else if (stack_frame_count >= max_stack_frames) {
-    printf("<stack trace output truncated at %d/%d frames>\n", max_stack_frames,
-        stack_frame_count);
+    std::printf("<stack trace output truncated at %d/%d frames>\n",
+        max_stack_frames, stack_frame_count);
   }
 #endif
 #endif
 }
 
-void halt_with_backtrace(char const msg[], bool const show_bt) {
-  printf("\n%s\n", msg);
+/* Flush, so that the message survives the exit that follows: halt() leaves
+ * through MPI_Abort or std::_Exit, and neither need flush stdio buffers, while
+ * stdout is fully buffered when redirected to a file or pipe. */
+void report_error(char const msg[], bool const show_bt) {
+  std::printf("\n%s\n", msg);
   if (show_bt)
     show_backtrace();
+  std::fflush(stdout);
+}
 
+/* Every exit is std::_Exit, not std::exit: the error path runs no static
+ * destructors or atexit handlers, so the memory pool's Finalize (called by the
+ * destructor of the function-local static behind GetMemPool()) and its
+ * assertion that no claims are outstanding never run, and nothing is freed
+ * under a Kokkos that may already be gone.  report_error has flushed stdout;
+ * stderr is unbuffered.  _Exit is also the fallback for an MPI_Abort that
+ * returns. */
+void halt() {
 #ifdef HAVE_MPI
   int mpi_is_initialized, mpi_is_finalized, err = 0;
   MPI_Initialized(&mpi_is_initialized);
@@ -100,15 +113,13 @@ void halt_with_backtrace(char const msg[], bool const show_bt) {
   if (mpi_is_initialized && !mpi_is_finalized) {
     err = MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     if (err)
-      std::exit(EXIT_FAILURE);
+      std::_Exit(EXIT_FAILURE);
   } else
-    std::exit(EXIT_FAILURE);
+    std::_Exit(EXIT_FAILURE);
 #else
-  std::exit(EXIT_FAILURE);
+  std::_Exit(EXIT_FAILURE);
 #endif
 }
-
-} // extern "C"
 
 std::optional<size_t> get_env_size(char const name[]) {
   if (char const *const s = std::getenv(name)) {
@@ -163,10 +174,13 @@ void finalize() {
 
 /* With error condition and backtrace, abort the job (if have MPI)
  * or process exit (if no MPI). This is an asynchronous operation:
- * all calling processes will write to standard out. */
+ * all calling processes will write to standard out.
+ * Finalizes nothing: the memory pool's Finalize asserts that no claims are
+ * outstanding, which pool exhaustion leaves behind, and a process about to
+ * abort or exit needs neither the pool freed nor Kokkos finalized. */
 extern "C" void error_stop(char const msg[]) {
-  finalize();
-  halt_with_backtrace(msg, true);
+  report_error(msg, true);
+  halt();
 }
 
 } // namespace Ume

@@ -14,9 +14,9 @@
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
-#include "Ume/soa_idx_helpers.hh"
+#include "Ume/atomic_add.hh"
 #include "Ume/mem_exec_spaces.hh"
-#include <cassert>
+#include "Ume/soa_idx_helpers.hh"
 #include <iostream>
 
 namespace Ume {
@@ -39,9 +39,8 @@ void Points::write(std::ostream &os) const {
 }
 
 void Points::read(std::istream &is) {
-  std::string dummy;
-  read_bin(is, dummy);
-  assert(dummy == "points");
+  if (!read_tag(is, "points"))
+    return;
   Entity::read(is);
   read_bin(is, ds().access_vec3v("pcoord"));
 }
@@ -96,16 +95,15 @@ bool Points::VAR_point_norm::init_() const {
 
   point_norm.resize(pll, Vec3(0.0));
 
-  Kokkos::View<Vec3 *, HostSpace> h_point_norm_k(&point_norm[0], sl);
+  Kokkos::View<Vec3 *, HostSpace> h_point_norm_k(
+      point_norm.data(), point_norm.size());
   Kokkos::View<const Vec3 *, HostSpace> h_side_surz(
-      &side_surz[0], side_surz.size());
+      side_surz.data(), side_surz.size());
   Kokkos::View<const int *, HostSpace> h_s2p1(s2p1.data(), s2p1.size());
   Kokkos::View<const int *, HostSpace> h_s2p2(s2p2.data(), s2p2.size());
   Kokkos::View<const int *, HostSpace> h_s2s2(s2s2.data(), s2s2.size());
-  Kokkos::View<const short *, HostSpace> h_smask(
-      &smask[0], smask.size());
-  Kokkos::View<const short *, HostSpace> h_pmask(
-      &pmask[0], pmask.size());
+  Kokkos::View<const short *, HostSpace> h_smask(smask.data(), smask.size());
+  Kokkos::View<const short *, HostSpace> h_pmask(pmask.data(), pmask.size());
 
   Kokkos::parallel_for("Var_point_norm", Kokkos::RangePolicy<HostExecSpace>(0, sl),
       [&](const int s) {
@@ -113,13 +111,8 @@ bool Points::VAR_point_norm::init_() const {
           int const s2 = h_s2s2(s); // the corresponding real side
           int const p1 = h_s2p1(s2);
           int const p2 = h_s2p2(s2);
-#if defined(UME_SERIAL)
-          h_point_norm_k(p1) += h_side_surz(s2);
-          h_point_norm_k(p2) += h_side_surz(s2);
-#else
-          Kokkos::atomic_add(&h_point_norm_k(p1), h_side_surz(s2));
-          Kokkos::atomic_add(&h_point_norm_k(p2), h_side_surz(s2));
-#endif
+          ume_atomic_add(&h_point_norm_k(p1), h_side_surz(s2));
+          ume_atomic_add(&h_point_norm_k(p2), h_side_surz(s2));
         }
       });
 

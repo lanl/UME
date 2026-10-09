@@ -1,0 +1,43 @@
+# Ume/test/ubsan.ignorelist
+#
+# Compile-time sanitizer ignorelist for a UME_SANITIZE build, passed to every
+# target as -fsanitize-ignorelist by src/Ume/CMakeLists.txt; nothing is
+# passed at run time.  -fsanitize=integer includes checks for unsigned
+# wraparound and for implicit conversions that change a value, which are well
+# defined in C++ and are reported because they are so often a bug in index
+# arithmetic (len - 1 on an empty range).  That is why the checks stay on for
+# UME's own code.  libstdc++'s and Kokkos's headers do both on purpose, and
+# instrumented with UME's flags those reports bury any real one, so the
+# integer checks are not compiled into code whose source file is a libstdc++
+# header, or a Kokkos header named by file, since the Kokkos install prefix
+# differs between machines.  Only the [integer] section names them: ASan and
+# the rest of UBSan still instrument these headers.  Overflow in UME's code
+# that is passed on to a library (a size of n - 1 handed to a std::vector
+# constructor) is reported in UME's file, not here.
+#
+# This replaces a runtime suppressions file (UBSAN_OPTIONS=suppressions=),
+# whose matching by file name let a few suppressed reports through when
+# several OpenMP threads reached the same location at once.
+[integer]
+# libstdc++, with g++ 16's headers:
+#   bits/stl_uninitialized.h   __uninitialized_fill_n's "for (; __n--; ...)"
+#                              loop counter, from the std::vector fill
+#                              constructors
+#   bits/random.h, random.tcc  std::mt19937 seeding, twist and max(), and its
+#                              tempering, "__z ^= (__z << __s) & __b", which
+#                              shifts set bits out of an unsigned result_type
+#   bits/uniform_int_dist.h    uniform_int_distribution's negation of an
+#                              unsigned range
+# and libstdc++ 14's <format>, outside bits/: the int -1 that std::format's
+# scanner passes as a size_t argument count ("implicit conversion from type
+# 'int' of value -1 ... to type 'size_t'"); libstdc++ 16 writes (size_t)-1
+# there and does not report.  The + signs are escaped: clang 17 and later
+# read these patterns as globs, where \+ is a plus, but clang 16 and earlier
+# read them as regular expressions, where an unescaped "c++" is a malformed
+# repetition that fails every compile.
+src:*/include/c\+\+/*
+# OpenMP/Kokkos_OpenMP_Parallel_For.hpp: the "for (auto iwork = begin; iwork <
+# end; ++iwork)" loop under "#pragma omp parallel for", whose static chunking
+# in clang's OpenMP lowering computes - 1 and + 1 on the unsigned member_type
+# and wraps at 0 and at its maximum.  Reached only with UME_SERIAL=OFF.
+src:*/Kokkos_*.hpp

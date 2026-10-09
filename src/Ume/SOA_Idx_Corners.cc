@@ -14,8 +14,9 @@
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
-#include "Ume/soa_idx_helpers.hh"
+#include "Ume/atomic_add.hh"
 #include "Ume/mem_exec_spaces.hh"
+#include "Ume/soa_idx_helpers.hh"
 
 namespace Ume {
 namespace SOA_Idx {
@@ -40,9 +41,8 @@ void Corners::write(std::ostream &os) const {
 }
 
 void Corners::read(std::istream &is) {
-  std::string dummy;
-  read_bin(is, dummy);
-  assert(dummy == "corners");
+  if (!read_tag(is, "corners"))
+    return;
   Entity::read(is);
   IVREAD("m:c>p");
   IVREAD("m:c>z");
@@ -72,24 +72,18 @@ bool Corners::VAR_corner_vol::init_() const {
 
   Kokkos::View<const int *, HostSpace> h_s2c1(s2c1.data(), s2c1.size());
   Kokkos::View<const int *, HostSpace> h_s2c2(s2c2.data(), s2c2.size());
-  Kokkos::View<const short *, HostSpace> h_smask(
-      &smask[0], smask.size());
+  Kokkos::View<const short *, HostSpace> h_smask(smask.data(), smask.size());
   Kokkos::View<double *, HostSpace> h_corner_vol(
-      &corner_vol[0], corner_vol.size());
+      corner_vol.data(), corner_vol.size());
   Kokkos::View<const double *, HostSpace> h_side_vol(
-      &side_vol[0], side_vol.size());
+      side_vol.data(), side_vol.size());
 
   Kokkos::parallel_for("VAR_corner_vol", Kokkos::RangePolicy<HostExecSpace>(0, sl),
       [&](const int s) {
         if (h_smask(s) > 0) {
           double const hsv = 0.5 * h_side_vol(s);
-#if defined(UME_SERIAL)
-          h_corner_vol(h_s2c1(s)) += hsv;
-          h_corner_vol(h_s2c2(s)) += hsv;
-#else
-          Kokkos::atomic_add(&h_corner_vol(h_s2c1(s)), hsv);
-          Kokkos::atomic_add(&h_corner_vol(h_s2c2(s)), hsv);
-#endif
+          ume_atomic_add(&h_corner_vol(h_s2c1(s)), hsv);
+          ume_atomic_add(&h_corner_vol(h_s2c2(s)), hsv);
         }
       });
 
@@ -109,24 +103,22 @@ bool Corners::VAR_corner_csurf::init_() const {
   auto &corner_csurf = mydata_vec3v();
   corner_csurf.assign(cll, Vec3(0.0));
 
-  Kokkos::View<Vec3 *, HostSpace> h_corner_csurf(&corner_csurf[0], sl);
+  /* Indexed by corner, not by side: the loop below runs over sides but writes
+     through m:s>c1 / m:s>c2, so the extent is the corner count. */
+  Kokkos::View<Vec3 *, HostSpace> h_corner_csurf(
+      corner_csurf.data(), corner_csurf.size());
   Kokkos::View<const Vec3 *, HostSpace> h_side_surf(
-      &side_surf[0], side_surf.size());
+      side_surf.data(), side_surf.size());
   Kokkos::View<const int *, HostSpace> h_s2c1(s2c1.data(), s2c1.size());
   Kokkos::View<const int *, HostSpace> h_s2c2(s2c2.data(), s2c2.size());
-  Kokkos::View<const short *, HostSpace> h_smask(
-      &smask[0], smask.size());
+  Kokkos::View<const short *, HostSpace> h_smask(smask.data(), smask.size());
 
   Kokkos::parallel_for("VAR_corner_csurf",
       Kokkos::RangePolicy<HostExecSpace>(0, sl), [&](const int s) {
         if (h_smask(s)) {
-#if defined(UME_SERIAL)
-          h_corner_csurf(h_s2c1(s)) += h_side_surf(s);
-          h_corner_csurf(h_s2c2(s)) -= h_side_surf(s);
-#else
-          Kokkos::atomic_add(&h_corner_csurf(h_s2c1(s)), h_side_surf(s));
-          Kokkos::atomic_sub(&h_corner_csurf(h_s2c2(s)), h_side_surf(s));
-#endif
+          ume_atomic_add(&h_corner_csurf(h_s2c1(s)), h_side_surf(s));
+          /* x + (-y) is x - y exactly in IEEE arithmetic. */
+          ume_atomic_add(&h_corner_csurf(h_s2c2(s)), h_side_surf(s) * -1.0);
         }
       });
 

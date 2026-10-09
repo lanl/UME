@@ -16,6 +16,8 @@
 #include "Ume/memory.hh"
 #include <catch2/catch_test_macros.hpp>
 #include <concepts>
+#include <cstddef>
+#include <vector>
 
 TEST_CASE("1D int scratch array"
           "[ArrayRank1<int>]") {
@@ -36,13 +38,7 @@ TEST_CASE("1D int scratch array"
       "assign 1D int scratch array", Kokkos::RangePolicy<DevExecSpace>(0, dim0),
       KOKKOS_LAMBDA(const int i) { scratch_array(i) = i; });
 
-#if !defined(UME_SERIAL)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
-#endif
-#endif
 
   REQUIRE(host_scratch_array(0) == 0);
   REQUIRE(host_scratch_array(dim0 - 1) == dim0 - 1);
@@ -71,13 +67,7 @@ TEST_CASE("2D int scratch array"
           scratch_array(j, i) = j * i;
       });
 
-#if !defined(UME_SERIAL)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
-#endif
-#endif
 
   REQUIRE(host_scratch_array(0, 0) == 0);
   REQUIRE(host_scratch_array(0, dim0 - 1) == 0);
@@ -108,13 +98,7 @@ TEST_CASE("1D double scratch array"
         scratch_array(i) = static_cast<double>(i);
       });
 
-#if !defined(UME_SERIAL)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
-#endif
-#endif
 
   REQUIRE(host_scratch_array(0) == static_cast<double>(0));
   REQUIRE(host_scratch_array(dim0 - 1) == static_cast<double>(dim0 - 1));
@@ -144,13 +128,7 @@ TEST_CASE("2D double scratch array"
           scratch_array(j, i) = static_cast<double>(j * i);
       });
 
-#if !defined(UME_SERIAL)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
-#endif
-#endif
 
   REQUIRE(host_scratch_array(0, 0) == static_cast<double>(0));
   REQUIRE(host_scratch_array(0, dim0 - 1) == static_cast<double>(0));
@@ -183,13 +161,7 @@ TEST_CASE("1D Vec3 scratch array"
         scratch_array(i) = Ume::Vec3(static_cast<double>(i));
       });
 
-#if !defined(UME_SERIAL)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  Kokkos::fence();
   Kokkos::deep_copy(host_scratch_array, scratch_array);
-#endif
-#endif
 
   REQUIRE(host_scratch_array(0) == Ume::Vec3(0));
   REQUIRE(host_scratch_array(dim0 - 1) == Ume::Vec3(dim0 - 1));
@@ -200,37 +172,120 @@ TEST_CASE("STL vector view copy/set/copy-back"
   constexpr int dim0 = 512;
 
   Ume::DS_Types::DBLV_T var(dim0, 0.0);
-  Kokkos::View<double *, HostSpace> host_var(&var[0], var.size());
-  auto device_var = create_mirror_view(DevExecMemSpace(), host_var);
+  Kokkos::View<double *, HostSpace> host_var(var.data(), var.size());
+  auto device_var =
+      Kokkos::create_mirror_view_and_copy(DevExecMemSpace(), host_var);
 
   Ume::DS_Types::DBLV_T const const_var(dim0, 777777777.0);
   Kokkos::View<double const *, HostSpace> host_const_var(
-      &const_var[0], const_var.size());
+      const_var.data(), const_var.size());
   auto const device_const_var =
-      create_mirror_view(DevExecMemSpace(), host_const_var);
-
-#if !defined(UME_SERIAL)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  Kokkos::deep_copy(device_var, host_var);
-  Kokkos::deep_copy(device_const_var, host_const_var);
-#endif
-#endif
+      Kokkos::create_mirror_view_and_copy(DevExecMemSpace(), host_const_var);
 
   Kokkos::parallel_for(
       "assign to STL vector", Kokkos::RangePolicy<DevExecSpace>(0, dim0),
       KOKKOS_LAMBDA(const int i) { device_var(i) = device_const_var(i); });
 
-#if !defined(UME_SERIAL)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  Kokkos::fence();
   Kokkos::deep_copy(host_var, device_var);
-#endif
-#endif
 
   REQUIRE(host_var(0) == host_const_var(0));
   REQUIRE(var[0] == const_var[0]);
   REQUIRE(host_var(dim0 - 1) == host_const_var(dim0 - 1));
   REQUIRE(var[dim0 - 1] == const_var[dim0 - 1]);
+}
+
+namespace {
+
+/* A MemoryPoolAllocation over a host buffer the test owns, so the pool's
+   offsets can be checked as plain pointer arithmetic on any backend. */
+class TestPool {
+public:
+  static constexpr unsigned block_size = 64;
+
+  explicit TestPool(std::size_t const num_blocks)
+      : storage_(num_blocks * block_size / sizeof(std::size_t)),
+        pool_(
+            num_blocks * block_size, block_size,
+            [this](std::size_t const) -> void * { return storage_.data(); },
+            [](void *) {}) {}
+
+  MemoryPoolAllocation<HostSpace> &operator*() { return pool_; }
+  MemoryPoolAllocation<HostSpace> *operator->() { return &pool_; }
+
+  /* Address of block `b` of the pool. */
+  void *block(std::size_t const b) {
+    return reinterpret_cast<std::byte *>(storage_.data()) + b * block_size;
+  }
+
+private:
+  std::vector<std::size_t> storage_;
+  MemoryPoolAllocation<HostSpace> pool_;
+};
+
+} // namespace
+
+TEST_CASE("MemoryPoolAllocation releases a claim that is not the last",
+    "[MemoryPoolAllocation]") {
+  constexpr auto bs = TestPool::block_size;
+  TestPool pool(4);
+
+  void *const a = pool->Claim(bs);
+  void *const b = pool->Claim(bs);
+  void *const c = pool->Claim(bs);
+  REQUIRE(a == pool.block(0));
+  REQUIRE(b == pool.block(1));
+  REQUIRE(c == pool.block(2));
+
+  // a is the first of three claims; Release walks claims_ from the back.
+  CHECK(pool->Release(a) == bs);
+  // Positive control: a is no longer claimed, so releasing it again finds
+  // nothing.
+  CHECK(pool->Release(a) == 0);
+
+  // The freed block before the first claim is reused.
+  void *const d = pool->Claim(bs);
+  CHECK(d == pool.block(0));
+
+  CHECK(pool->Release(b) == bs);
+  CHECK(pool->Release(c) == bs);
+  CHECK(pool->Release(d) == bs);
+}
+
+TEST_CASE("MemoryPoolAllocation claims an exact fit after the last claim",
+    "[MemoryPoolAllocation]") {
+  constexpr auto bs = TestPool::block_size;
+  TestPool pool(4);
+
+  void *const a = pool->Claim(3 * bs);
+  REQUIRE(a == pool.block(0));
+
+  // One block remains after a, and one block is asked for.
+  void *const b = pool->Claim(bs);
+  CHECK(b == pool.block(3));
+
+  CHECK(pool->Release(b) == bs);
+  CHECK(pool->Release(a) == 3 * bs);
+}
+
+TEST_CASE("MemoryPoolAllocation claims an exact fit between claims",
+    "[MemoryPoolAllocation]") {
+  constexpr auto bs = TestPool::block_size;
+  TestPool pool(5);
+
+  void *const a = pool->Claim(bs);
+  void *const b = pool->Claim(2 * bs);
+  void *const c = pool->Claim(bs);
+  REQUIRE(a == pool.block(0));
+  REQUIRE(b == pool.block(1));
+  REQUIRE(c == pool.block(3));
+
+  // Leaves a two-block gap at [1, 3) and one block after c, so a two-block
+  // claim fits only in the gap, exactly.
+  CHECK(pool->Release(b) == 2 * bs);
+  void *const d = pool->Claim(2 * bs);
+  CHECK(d == pool.block(1));
+
+  CHECK(pool->Release(a) == bs);
+  CHECK(pool->Release(c) == bs);
+  CHECK(pool->Release(d) == 2 * bs);
 }

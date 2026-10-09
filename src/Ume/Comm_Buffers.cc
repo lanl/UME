@@ -16,8 +16,7 @@
 */
 
 #include "Ume/Comm_Buffers.hh"
-#include <cassert>
-#include <set>
+#include <algorithm>
 
 namespace Ume {
 namespace Comm {
@@ -74,14 +73,11 @@ template <class T> void Buffers<T>::unpack(T &field, Op op) {
     }
   } break;
   case Op::OVERWRITE: {
-    /* This includes a sanity check to make sure an entry is not overwritten
-       more than once.  This should be removed when everything is working */
-    std::set<size_t> entries; // debug
-    for (size_t i = 0; i < N; ++i) {
+    /* An entry listed twice would be overwritten by whichever comes last.
+       Mesh::read refuses a mesh whose copies are listed twice, once, rather
+       than every unpack checking its map. */
+    for (size_t i = 0; i < N; ++i)
       buf = Comm::unpack(buf, field[map[i]]);
-      assert(entries.count(map[i]) == 0); // debug
-      entries.insert(map[i]); // debug
-    }
   } break;
   case Op::SUM: {
     typename T::value_type val;

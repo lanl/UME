@@ -16,7 +16,6 @@
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
 #include "Ume/mem_exec_spaces.hh"
-#include <cassert>
 
 namespace Ume {
 namespace SOA_Idx {
@@ -39,9 +38,8 @@ void Edges::write(std::ostream &os) const {
 }
 
 void Edges::read(std::istream &is) {
-  std::string dummy;
-  read_bin(is, dummy);
-  assert(dummy == "edges");
+  if (!read_tag(is, "edges"))
+    return;
   Entity::read(is);
   IVREAD("m:e>p1");
   IVREAD("m:e>p2");
@@ -69,11 +67,9 @@ bool Edges::VAR_ecoord::init_() const {
   auto &ecoord = mydata_vec3v();
   ecoord.resize(ell);
 
-  Kokkos::View<Vec3 *, HostSpace> h_ecoord(&ecoord[0], ecoord.size());
-  Kokkos::View<const Vec3 *, HostSpace> h_pcoord(
-      &pcoord[0], pcoord.size());
-  Kokkos::View<const short *, HostSpace> h_emask(
-      &emask[0], emask.size());
+  Kokkos::View<Vec3 *, HostSpace> h_ecoord(ecoord.data(), ecoord.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_pcoord(pcoord.data(), pcoord.size());
+  Kokkos::View<const short *, HostSpace> h_emask(emask.data(), emask.size());
   Kokkos::View<const int *, HostSpace> h_e2p2(e2p2.data(), e2p2.size());
   Kokkos::View<const int *, HostSpace> h_e2p1(e2p1.data(), e2p1.size());
 

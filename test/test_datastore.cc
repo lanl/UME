@@ -13,6 +13,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 using dsptr = Ume::Datastore::dsptr;
@@ -106,4 +107,51 @@ TEST_CASE("DS boring insert", "[Datastore]") {
   root->insert("boring", std::make_unique<Boring>());
   auto const &d = root->caccess_intv("boring");
   REQUIRE(d.size() == 50);
+}
+
+/* insert refuses a key that is already present, says so, and leaves the entry
+   that holds the key in place: the first insert wins. */
+TEST_CASE("DS insert refuses a duplicate key", "[Datastore]") {
+  using Types = Ume::Datastore::Types;
+  dsptr root = Ume::Datastore::create_root();
+  REQUIRE(root->insert("key", std::make_unique<Ume::DS_Entry>(Types::INT)));
+  root->access_int("key") = 1;
+  int const *const first = &root->caccess_int("key");
+
+  CHECK_FALSE(root->insert("key", std::make_unique<Ume::DS_Entry>(Types::INT)));
+  CHECK(&root->caccess_int("key") == first);
+  CHECK(root->caccess_int("key") == 1);
+
+  /* Positive control: a new key is accepted, and is an entry of its own. */
+  CHECK(root->insert("other", std::make_unique<Ume::DS_Entry>(Types::INT)));
+  CHECK(&root->caccess_int("other") != first);
+  CHECK(root->caccess_int("other") == 0);
+}
+
+/* A name that a datastore does not hold is looked up in its parent, and so on
+   up to the root, through both the mutable and the const accessors.  The
+   nearest datastore that holds the name wins. */
+TEST_CASE("DS lookup falls back to the parent chain", "[Datastore]") {
+  using Types = Ume::Datastore::Types;
+  dsptr root = Ume::Datastore::create_root();
+  wptr child = Ume::Datastore::create_child(root.get(), "child");
+  wptr grandchild = Ume::Datastore::create_child(child, "grandchild");
+  REQUIRE(root->insert("shared", std::make_unique<Ume::DS_Entry>(Types::INT)));
+  root->access_int("shared") = 7;
+  int const *const in_root = &root->caccess_int("shared");
+
+  CHECK(&child->access_int("shared") == in_root);
+  CHECK(&child->caccess_int("shared") == in_root);
+  CHECK(&grandchild->access_int("shared") == in_root);
+  CHECK(&grandchild->caccess_int("shared") == in_root);
+  CHECK(grandchild->caccess_int("shared") == 7);
+
+  /* Positive control: the same name in the child shadows the root's for the
+     child and the grandchild, and not for the root. */
+  REQUIRE(child->insert("shared", std::make_unique<Ume::DS_Entry>(Types::INT)));
+  int const *const in_child = &child->caccess_int("shared");
+  CHECK(in_child != in_root);
+  CHECK(&grandchild->access_int("shared") == in_child);
+  CHECK(&grandchild->caccess_int("shared") == in_child);
+  CHECK(&root->caccess_int("shared") == in_root);
 }

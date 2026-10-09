@@ -1,0 +1,400 @@
+# Continuous integration for UME, on GitHub-hosted ubuntu-24.04 runners.
+#
+#   gate          The four gate trees (USE_MPI x UME_SERIAL, Debug, g++), plus
+#                 a Release tree and an ASan/UBSan tree built with clang++.
+#                 Each one builds UME and runs ctest.
+#   cuda-compile  Builds UME and its tests against a CUDA Kokkos with nvcc.
+#                 There is no GPU on the runner, so nothing is run.
+#   hip-compile   The same against a HIP Kokkos with hipcc.
+#
+# Kokkos is built from source once per toolchain and kept in actions/cache.
+# Changing KOKKOS_VERSION rebuilds it; so does bumping KOKKOS_CACHE_REV, which
+# is what to do after changing a Kokkos configure line below.
+#
+# The shell steps read the matrix through environment variables rather than
+# through ${{ }} expressions, so that each one can also be run by hand.
+
+name: CI
+
+# A push to any branch of this repository runs every job, whether or not the
+# branch has a pull request open.  A pull request also triggers the workflow,
+# and would run the matrix a second time for each push to its branch, so every
+# job carries the same `if:`, which skips a pull_request run whose head branch
+# is in this repository: the push run has already built and tested that head
+# commit.  (What is given up is a test of the head merged into the base, which
+# is what a pull_request run checks out.)  A pull request from a fork, whose
+# pushes do not run here, keeps its run.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  KOKKOS_VERSION: "4.6.02"
+  KOKKOS_CACHE_REV: "1"
+
+jobs:
+  gate:
+    name: gate (${{ matrix.cell }})
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # The first four cells are the 2x2 over USE_MPI and UME_SERIAL that
+        # the local gate builds, named as its trees are.  g++ 15 and later
+        # define _GLIBCXX_ASSERTIONS at -O0, and the local trees are built
+        # with g++ 16; ubuntu-24.04's g++ is 13, and the sanitize cell's
+        # clang++ uses the runner's gcc 14 libstdc++, which does not either,
+        # so the Debug cells define it themselves.  Several tests fail on the
+        # defect they guard against only through those assertions
+        # (doc/testing.md lists them).
+        #
+        # release: the only cell that runs the code the benchmarks run.
+        # sanitize: the project's UME_SANITIZE (ASan, UBSan and its integer
+        # and nullability groups), which needs an LLVM compiler.  It also
+        # fails on an unannotated switch fallthrough, which g++ does not
+        # diagnose at any warning level.
+        include:
+          - cell: nompi-noomp
+            use_mpi: "OFF"
+            ume_serial: "ON"
+            build_type: Debug
+            cxx: g++
+            cxx_flags: -D_GLIBCXX_ASSERTIONS
+            ume_sanitize: "OFF"
+          - cell: nompi-omp
+            use_mpi: "OFF"
+            ume_serial: "OFF"
+            build_type: Debug
+            cxx: g++
+            cxx_flags: -D_GLIBCXX_ASSERTIONS
+            ume_sanitize: "OFF"
+          - cell: mpi-noomp
+            use_mpi: "ON"
+            ume_serial: "ON"
+            build_type: Debug
+            cxx: g++
+            cxx_flags: -D_GLIBCXX_ASSERTIONS
+            ume_sanitize: "OFF"
+          - cell: mpi-omp
+            use_mpi: "ON"
+            ume_serial: "OFF"
+            build_type: Debug
+            cxx: g++
+            cxx_flags: -D_GLIBCXX_ASSERTIONS
+            ume_sanitize: "OFF"
+          - cell: release
+            use_mpi: "OFF"
+            ume_serial: "OFF"
+            build_type: Release
+            cxx: g++
+            cxx_flags: ""
+            ume_sanitize: "OFF"
+          - cell: sanitize
+            use_mpi: "OFF"
+            ume_serial: "OFF"
+            build_type: Debug
+            cxx: clang++
+            cxx_flags: >-
+              -D_GLIBCXX_ASSERTIONS
+              -Wimplicit-fallthrough -Werror=implicit-fallthrough
+            ume_sanitize: "ON"
+            packages: clang libomp-dev llvm
+    env:
+      CXX: ${{ matrix.cxx }}
+      CXX_FLAGS: ${{ matrix.cxx_flags }}
+      BUILD_TYPE: ${{ matrix.build_type }}
+      USE_MPI: ${{ matrix.use_mpi }}
+      UME_SERIAL: ${{ matrix.ume_serial }}
+      UME_SANITIZE: ${{ matrix.ume_sanitize }}
+      EXTRA_PACKAGES: ${{ matrix.packages }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install packages
+        # ubuntu-24.04's catch2 is 3.4, which satisfies find_package(Catch2 3).
+        run: |
+          sudo apt-get update
+          # EXTRA_PACKAGES is a list of package names, split on purpose.
+          # shellcheck disable=SC2086
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build catch2 libopenmpi-dev openmpi-bin $EXTRA_PACKAGES
+
+      - name: Restore Kokkos
+        id: kokkos
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/kokkos
+          key: kokkos-${{ env.KOKKOS_VERSION }}-r${{ env.KOKKOS_CACHE_REV }}-${{ runner.os }}-ubuntu-24.04-${{ matrix.cxx }}-serial-openmp
+
+      - name: Build Kokkos
+        if: steps.kokkos.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$KOKKOS_VERSION" \
+            https://github.com/kokkos/kokkos.git "$RUNNER_TEMP/kokkos-src"
+          cmake -S "$RUNNER_TEMP/kokkos-src" -B "$RUNNER_TEMP/kokkos-build" \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER="$CXX" \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_INSTALL_PREFIX="$HOME/kokkos" \
+            -DKokkos_ENABLE_SERIAL=ON \
+            -DKokkos_ENABLE_OPENMP=ON
+          cmake --build "$RUNNER_TEMP/kokkos-build"
+          cmake --install "$RUNNER_TEMP/kokkos-build"
+
+      - name: Save Kokkos
+        # Saved now, not when the job ends: actions/cache saves only from a
+        # job that succeeds, and a red UME build or test should not cost the
+        # next run a Kokkos build.
+        if: steps.kokkos.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/kokkos
+          key: ${{ steps.kokkos.outputs.cache-primary-key }}
+
+      - name: Configure UME
+        # The MPI cells also register the tests that run on two ranks under
+        # mpiexec, which the local gate's sandbox cannot run.
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_CXX_COMPILER="$CXX" \
+            -DCMAKE_CXX_FLAGS="$CXX_FLAGS" \
+            -DCMAKE_PREFIX_PATH="$HOME/kokkos" \
+            -DUSE_CATCH2=ON \
+            -DUSE_MPI="$USE_MPI" \
+            -DUME_MULTIRANK_TESTS="$USE_MPI" \
+            -DUME_SERIAL="$UME_SERIAL" \
+            -DUME_SANITIZE="$UME_SANITIZE"
+
+      - name: Build UME
+        run: cmake --build build
+
+      - name: Test UME
+        # --timeout bounds the tests that set no TIMEOUT of their own, as the
+        # local gate does.  ASan stops the test at its first report.  UBSan
+        # reports and carries on, as clang does by default, so a report from
+        # a test that passes would never be shown: its reports go to files,
+        # which the next step summarizes and fails the cell on, once this
+        # step has reported the tests' own results.
+        # log_path is common to every sanitizer in the process, so ASan and
+        # LeakSanitizer reports go to those files too, not to the test's
+        # output: a test that fails on one shows its report in the next step.
+        # The integer reports from inside libstdc++'s and Kokkos's headers,
+        # which would otherwise be in every run's summary, are not compiled
+        # in: test/ubsan.ignorelist is applied at build time.  The sanitizer
+        # runtime does not expand shell variables in its options, so the path
+        # is an expression, not $RUNNER_TEMP.
+        env:
+          OMP_PROC_BIND: "false"
+          UBSAN_OPTIONS: print_stacktrace=1:log_path=${{ runner.temp }}/sanitizer/report
+        run: |
+          mkdir -p "$RUNNER_TEMP/sanitizer"
+          ctest --test-dir build --output-on-failure --timeout 300
+
+      - name: Summarize sanitizer reports
+        if: always() && matrix.ume_sanitize == 'ON'
+        run: |
+          shopt -s nullglob
+          reports=("$RUNNER_TEMP"/sanitizer/report.*)
+          # UBSan's "runtime error" lines, and the "==pid==ERROR:" line that
+          # opens an ASan or LeakSanitizer report: one line per report.  Not
+          # the lines naming a source file, which a report's SUMMARY: line
+          # also does.
+          errors=""
+          if (( ${#reports[@]} > 0 )); then
+            errors=$({ grep -hE 'runtime error|^==[0-9]+==ERROR: ' "${reports[@]}" || true; } \
+              | sed -E 's/^==[0-9]+==//')
+          fi
+          {
+            echo "### Sanitizer reports: ${#reports[@]} file(s)"
+            if (( ${#reports[@]} > 0 )); then
+              echo '```'
+              if [[ -n $errors ]]; then
+                sort <<< "$errors" | uniq -c | sort -rn
+              fi
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          if (( ${#reports[@]} > 0 )); then
+            cat "${reports[@]}"
+          fi
+          # test/ubsan.ignorelist compiles out the third-party headers'
+          # integer reports, so a report left here is UME's own.
+          if [[ -n $errors ]]; then
+            echo "$(grep -c '' <<< "$errors") sanitizer report(s); see the step summary." >&2
+            exit 1
+          fi
+
+  cuda-compile:
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    env:
+      CUDA_VERSION: "12.9"
+      CUDA_PACKAGE_VERSION: "12-9"
+      CUDA_HOME: /usr/local/cuda-12.9
+      CUDAToolkit_ROOT: /usr/local/cuda-12.9
+      NVCC_WRAPPER_DEFAULT_COMPILER: g++
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install the CUDA toolkit
+        # The compiler, the runtime and driver API stubs, and the CUDA C++
+        # core library headers: what nvcc and Kokkos need to compile and link,
+        # without the rest of cuda-toolkit.
+        run: |
+          wget -q -O "$RUNNER_TEMP/cuda-keyring.deb" \
+            https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
+          sudo dpkg -i "$RUNNER_TEMP/cuda-keyring.deb"
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build catch2 \
+            "cuda-nvcc-$CUDA_PACKAGE_VERSION" \
+            "cuda-cudart-dev-$CUDA_PACKAGE_VERSION" \
+            "cuda-driver-dev-$CUDA_PACKAGE_VERSION" \
+            "cuda-cccl-$CUDA_PACKAGE_VERSION"
+          echo "$CUDA_HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Restore Kokkos
+        id: kokkos
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/kokkos
+          key: kokkos-${{ env.KOKKOS_VERSION }}-r${{ env.KOKKOS_CACHE_REV }}-${{ runner.os }}-ubuntu-24.04-cuda-${{ env.CUDA_VERSION }}-ampere86
+
+      - name: Build Kokkos
+        # No device to detect, so the architecture is named: Ampere, sm_86.
+        if: steps.kokkos.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$KOKKOS_VERSION" \
+            https://github.com/kokkos/kokkos.git "$RUNNER_TEMP/kokkos-src"
+          cmake -S "$RUNNER_TEMP/kokkos-src" -B "$RUNNER_TEMP/kokkos-build" \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER="$RUNNER_TEMP/kokkos-src/bin/nvcc_wrapper" \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_INSTALL_PREFIX="$HOME/kokkos" \
+            -DKokkos_ENABLE_SERIAL=ON \
+            -DKokkos_ENABLE_CUDA=ON \
+            -DKokkos_ARCH_AMPERE86=ON
+          cmake --build "$RUNNER_TEMP/kokkos-build"
+          cmake --install "$RUNNER_TEMP/kokkos-build"
+
+      - name: Save Kokkos
+        # Saved now, not when the job ends: actions/cache saves only from a
+        # job that succeeds, and a red UME build or test should not cost the
+        # next run a Kokkos build.
+        if: steps.kokkos.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/kokkos
+          key: ${{ steps.kokkos.outputs.cache-primary-key }}
+
+      - name: Configure UME
+        # catch_discover_tests runs each test binary after linking it to list
+        # its tests, which a binary that needs a GPU cannot do here; PRE_TEST
+        # defers that to ctest, which this job does not run.
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_CXX_COMPILER="$HOME/kokkos/bin/nvcc_wrapper" \
+            -DCMAKE_PREFIX_PATH="$HOME/kokkos" \
+            -DUSE_CATCH2=ON \
+            -DCMAKE_CATCH_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST \
+            -DUSE_MPI=OFF \
+            -DUME_SERIAL=OFF
+
+      - name: Build UME
+        run: cmake --build build
+
+  hip-compile:
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-24.04
+    env:
+      ROCM_VERSION: "6.4.2"
+      ROCM_PATH: /opt/rocm
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install ROCm
+        # hipcc, the HIP headers and runtime, and the ROCm LLVM behind them,
+        # without the math libraries.  The pin keeps apt from preferring an
+        # Ubuntu package of the same name.
+        run: |
+          sudo mkdir -p --mode=0755 /etc/apt/keyrings
+          wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key \
+            | gpg --dearmor | sudo tee /etc/apt/keyrings/rocm.gpg > /dev/null
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/$ROCM_VERSION noble main" \
+            | sudo tee /etc/apt/sources.list.d/rocm.list
+          printf 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600\n' \
+            | sudo tee /etc/apt/preferences.d/rocm-pin-600
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build catch2 rocm-hip-runtime-dev
+          echo "$ROCM_PATH/bin" >> "$GITHUB_PATH"
+
+      - name: Restore Kokkos
+        id: kokkos
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/kokkos
+          key: kokkos-${{ env.KOKKOS_VERSION }}-r${{ env.KOKKOS_CACHE_REV }}-${{ runner.os }}-ubuntu-24.04-rocm-${{ env.ROCM_VERSION }}-gfx942
+
+      - name: Build Kokkos
+        # gfx942 is the MI300 of doc/building-mi300.md.  rocThrust is not
+        # installed and UME does not use it.
+        if: steps.kokkos.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$KOKKOS_VERSION" \
+            https://github.com/kokkos/kokkos.git "$RUNNER_TEMP/kokkos-src"
+          cmake -S "$RUNNER_TEMP/kokkos-src" -B "$RUNNER_TEMP/kokkos-build" \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER=hipcc \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_INSTALL_PREFIX="$HOME/kokkos" \
+            -DKokkos_ENABLE_SERIAL=ON \
+            -DKokkos_ENABLE_HIP=ON \
+            -DKokkos_ARCH_AMD_GFX942=ON \
+            -DKokkos_ENABLE_ROCTHRUST=OFF
+          cmake --build "$RUNNER_TEMP/kokkos-build"
+          cmake --install "$RUNNER_TEMP/kokkos-build"
+
+      - name: Save Kokkos
+        # Saved now, not when the job ends: actions/cache saves only from a
+        # job that succeeds, and a red UME build or test should not cost the
+        # next run a Kokkos build.
+        if: steps.kokkos.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/kokkos
+          key: ${{ steps.kokkos.outputs.cache-primary-key }}
+
+      - name: Configure UME
+        # PRE_TEST for the reason given in cuda-compile.
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_CXX_COMPILER=hipcc \
+            -DCMAKE_PREFIX_PATH="$HOME/kokkos;$ROCM_PATH" \
+            -DUSE_CATCH2=ON \
+            -DCMAKE_CATCH_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST \
+            -DUSE_MPI=OFF \
+            -DUME_SERIAL=OFF
+
+      - name: Build UME
+        run: cmake --build build

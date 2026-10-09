@@ -15,9 +15,9 @@
 
 #include <istream>
 #include <limits>
-#include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #ifndef UME_UTILS_HH
@@ -50,14 +50,15 @@ inline void write_bin<std::string>(std::ostream &os, std::string const &data) {
 //! String binary read
 template <>
 inline void read_bin<std::string>(std::istream &is, std::string &data) {
-  size_t len;
+  size_t len{0};
   read_bin(is, len);
-  if (len == 0) {
+  // A stream that ends inside the length word leaves the bytes it got in
+  // `len`; a failed read is an empty one.
+  if (!is || len == 0) {
     data.clear();
   } else {
-    std::unique_ptr<char[]> buf(new char[len]);
-    is.read(buf.get(), len);
-    data = std::string{buf.get(), len};
+    data.resize(len);
+    is.read(data.data(), static_cast<std::streamsize>(len));
   }
 }
 
@@ -74,9 +75,11 @@ void write_bin(std::ostream &os, std::vector<T> const &data) {
 
 //! Binary read for std::vector
 template <class T> void read_bin(std::istream &is, std::vector<T> &data) {
-  size_t len;
+  size_t len{0};
   read_bin(is, len);
-  if (len == 0) {
+  // A stream that ends inside the length word leaves the bytes it got in
+  // `len`; a failed read is an empty one.
+  if (!is || len == 0) {
     std::vector<T> foo;
     data.swap(foo);
   } else {
@@ -85,6 +88,19 @@ template <class T> void read_bin(std::istream &is, std::vector<T> &data) {
         static_cast<std::streamsize>(sizeof(T) * len));
   }
   Ume::skip_line(is);
+}
+
+//! Read a tag written as a string, and fail the stream unless it reads as
+//! `expected`.  Returns whether the stream is still good.
+[[nodiscard]] inline bool read_tag(
+    std::istream &is, std::string_view const expected) {
+  std::string tag;
+  read_bin(is, tag);
+  if (!is || tag != expected) {
+    is.setstate(std::ios::failbit);
+    return false;
+  }
+  return true;
 }
 
 inline std::string ltrim(const std::string &s) {
@@ -100,6 +116,12 @@ inline std::string rtrim(const std::string &s) {
 }
 
 inline std::string trim(const std::string &s) { return rtrim(ltrim(s)); }
+
+//! The partition file name "<basename>.<pe>.ume", pe zero-filled to five digits
+std::string mesh_filename(std::string_view basename, int pe);
+//! The scaled partition file name "<basename>.<scale>.<pe>.ume", both fields
+//! zero-filled to five digits; the arguments come in the order of the fields
+std::string mesh_filename(std::string_view basename, int scale, int pe);
 
 int init_depth(int const delta);
 void debug_attach_point(int const mype);

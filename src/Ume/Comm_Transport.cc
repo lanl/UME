@@ -29,7 +29,7 @@ Dummy_Transport::Dummy_Transport() {
   std::cerr << "\n* WARNING * WARNING * WARNING * WARNING * WARNING "
                "* WARNING * WARNING *\n"
             << "\tA dummy transport mechanism was instantiated:\n"
-            << "\tAll communications will silently fail!\n"
+            << "\tEvery gather and scatter will leave its field unchanged!\n"
             << "* WARNING * WARNING * WARNING * WARNING * WARNING "
                "* WARNING * WARNING *\n"
             << std::endl;

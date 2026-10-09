@@ -235,3 +235,35 @@ TEST_CASE("V3 normalize", "[vecN]") {
   double mag = Ume::dotprod(a, a);
   REQUIRE_THAT(mag, Catch::Matchers::WithinULP(1.0, 1));
 }
+
+/* Scalar comparison */
+
+TEST_CASE("Scalar == compares components as T", "[vecN]") {
+  // Each component truncates to 0 as an int, and none of them is 0.0.
+  Ume::Vec3 const fractional({0.4, -0.7, 0.9});
+  REQUIRE_FALSE(fractional == 0.0);
+  REQUIRE(fractional != 0.0);
+
+  // Positive control: the all-zero vector is equal to 0.0, and moving one
+  // component off zero by less than one flips the comparison.
+  Ume::Vec3 v(0.0);
+  REQUIRE(v == 0.0);
+  REQUIRE_FALSE(v != 0.0);
+  v[1] = 0.5;
+  REQUIRE_FALSE(v == 0.0);
+  REQUIRE(v != 0.0);
+
+  // A non-integral scalar compares equal to itself.
+  Ume::Vec3 const half(0.5);
+  REQUIRE(half == 0.5);
+  REQUIRE_FALSE(half != 0.5);
+}
+
+TEST_CASE("Scalar == on integer components", "[vecN]") {
+  Ume::VecN<int, 2> const a({3, 3});
+  REQUIRE(a == 3);
+  REQUIRE_FALSE(a == 4);
+  Ume::VecN<int, 2> const b({3, 4});
+  REQUIRE_FALSE(b == 3);
+  REQUIRE(b != 3);
+}

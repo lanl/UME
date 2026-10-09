@@ -12,27 +12,35 @@
 /*!
   \file scale_mesh.cc
 
-  This is an example of MPI-based driver that reads one partition of an Ume
-  binary mesh into each rank, and then performs (and tests) a gradient
-  operation.
+  Reads a whole (single-rank, ghost-free) Ume binary mesh, stitches copies of
+  it together to make a mesh `scale` times larger, and writes the result.
 
-  Note that there must be as many *.ume files as there are MPI ranks, and they
-  should have filenames of the form '<basename>.<pe>.ume', where <basename> is
-  an arbitray string provided on the command line, and <pe> is a rank number
-  with a printf format of "%05d" (zero-filled, five digits)
+  The input is '<basename>.00000.ume'; a partitioned mesh, or one with ghosts,
+  is refused.  The output is '<basename>.<scale>.00000.ume', both numbers
+  zero-filled to five digits.  `scale` has to be a power of 2.
 */
 
 #include "Ume/Comm_MPI.hh"
 #include "Ume/DS_Types.hh"
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/utils.hh"
+#include <algorithm>
 #include <cassert>
-#include <cstdio>
+#include <charconv>
 #include <fstream>
 #include <iostream>
+#include <iterator>
+#include <ranges>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <utility>
+#include <vector>
 
 bool read_mesh(
     char const *const basename, int const mype, Ume::SOA_Idx::Mesh &mesh);
+
+bool is_serial(Ume::SOA_Idx::Mesh const &mesh);
 
 void scale_mesh(int const scale, Ume::SOA_Idx::Mesh &mesh);
 
@@ -53,6 +61,23 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  /* The whole argument has to be the number, and it has to be positive before
+     `scale & (scale - 1)` means anything: on the most negative int the
+     subtraction overflows.  Checked before the mesh is read, as ume_mpi checks
+     its arguments, so that a mistyped scale fails before a read that can take
+     minutes rather than after it; and before MPI starts, so that this exit,
+     like the usage one above, has no MPI to finalize. */
+  std::string_view const scale_arg{argv[2]};
+  int scale = 0;
+  auto const [end, ec] = std::from_chars(
+      scale_arg.data(), scale_arg.data() + scale_arg.size(), scale);
+  if (ec != std::errc{} || end != scale_arg.data() + scale_arg.size() ||
+      scale < 1 || (scale & (scale - 1)) != 0) {
+    std::cerr << "Scale must be a power of 2, got \"" << scale_arg << '"'
+              << std::endl;
+    return 1;
+  }
+
   Ume::SOA_Idx::Mesh mesh;
 
   int mype = 0;
@@ -65,96 +90,145 @@ int main(int argc, char *argv[]) {
   if (mype == 0)
     std::cout << "Initializing mesh..." << std::endl;
 
-  if (!read_mesh(argv[1], mype, mesh)) {
+  /* From here on every exit goes through the one comm.stop() below: a failure
+     that returned from main left MPI unfinalized, which a launcher reports as
+     an improper exit. */
+  int status = 0;
+  if (!read_mesh(argv[1], mype, mesh) || !is_serial(mesh)) {
     std::cerr << "Aborting." << std::endl;
-    return 1;
+    status = 1;
+  } else {
+    if (mype == 0)
+      std::cout << "Scaling mesh by a factor of " << scale << "..."
+                << std::endl;
+
+    scale_mesh(scale, mesh);
+
+    if (mype == 0)
+      std::cout << "Writing scaled mesh..." << std::endl;
+
+    if (!write_mesh(argv[1], mype, scale, mesh)) {
+      std::cerr << "Aborting." << std::endl;
+      status = 1;
+    } else if (mype == 0) {
+      std::cout << "Done." << std::endl;
+    }
   }
-
-  int scale = atoi(argv[2]);
-  if ((scale == 0) || ((scale & (scale - 1)) != 0)) {
-    std::cerr << "Scale must be a power of 2" << std::endl;
-    return 1;
-  }
-
-  if (mype == 0)
-    std::cout << "Scaling mesh by a factor of " << scale << "..." << std::endl;
-
-  scale_mesh(scale, mesh);
-
-  if (mype == 0)
-    std::cout << "Writing scaled mesh..." << std::endl;
-
-  if (!write_mesh(argv[1], mype, scale, mesh)) {
-    std::cerr << "Aborting." << std::endl;
-    return 1;
-  }
-
-  if (mype == 0)
-    std::cout << "Done." << std::endl;
 #ifdef HAVE_MPI
   comm.stop();
 #endif
-  return 0;
+  return status;
 }
 
 bool read_mesh(
     char const *const basename, int const mype, Ume::SOA_Idx::Mesh &mesh) {
-  char fname[80];
-  sprintf(fname, "%s.%05d.ume", basename, mype);
+  std::string const fname = Ume::mesh_filename(basename, mype);
   std::ifstream is(fname);
   if (!is) {
     std::cerr << "Unable to open file \"" << fname << "\" for reading."
               << std::endl;
+    return false;
   }
   mesh.read(is);
   is.close();
+  if (!is) {
+    std::cerr << "Unable to read a mesh from file \"" << fname << "\"."
+              << std::endl;
+    return false;
+  }
   return true;
 }
 
-double get_bounding_dim(Ume::SOA_Idx::Mesh &mesh, int dim) {
-  auto const &pcoord = mesh.ds->caccess_vec3v("pcoord");
-
-  double num_points = mesh.points.size();
-  double p_max = 0;
-  for (int p = 0; p < num_points; ++p) {
-    double x = pcoord[p][dim];
-
-    if (x > p_max)
-      p_max = x;
+/*! Whether `mesh` is one whole mesh: one rank, and no ghosts on any entity.
+    stitch() copies each entity's elements in a block after the originals, and
+    has no exchange lists to give the copies; a ghost's copy would also land
+    among the local elements, where nothing expects a ghost.  Says why not on
+    std::cerr when it is not. */
+bool is_serial(Ume::SOA_Idx::Mesh const &mesh) {
+  if (mesh.numpe != 1) {
+    std::cerr << "scale_mesh needs a single-rank mesh; this is rank "
+              << mesh.mype << " of " << mesh.numpe << '.' << std::endl;
+    return false;
   }
-
-  return p_max;
+  std::pair<char const *, Ume::SOA_Idx::Entity const *> const entities[] = {
+      {"points", &mesh.points}, {"edges", &mesh.edges}, {"faces", &mesh.faces},
+      {"sides", &mesh.sides}, {"corners", &mesh.corners},
+      {"zones", &mesh.zones}, {"iotas", &mesh.iotas}};
+  for (auto const &[name, entity] : entities) {
+    if (entity->ghost_local_size() != 0) {
+      std::cerr << "scale_mesh needs a mesh without ghosts; its " << name
+                << " [" << entity->local_size() << ", " << entity->size()
+                << ") are ghosts." << std::endl;
+      return false;
+    }
+  }
+  return true;
 }
 
-void double_entity_count(Ume::SOA_Idx::Entity &entity) {
-  int original_local = entity.local_size();
-  int original_total = entity.size();
-  int original_ghost = original_total - original_local;
+//! The extent, max - min, of the point coordinates along `dim`; 0 if none.
+double get_extent(Ume::SOA_Idx::Mesh const &mesh, int const dim) {
+  auto const &pcoord = mesh.ds->caccess_vec3v("pcoord");
+  if (pcoord.empty())
+    return 0.0;
+  auto const [lo, hi] = std::ranges::minmax(pcoord |
+      std::views::transform(
+          [dim](Ume::DS_Types::VEC3_T const &p) { return p[dim]; }));
+  return hi - lo;
+}
 
-  int new_local = original_local * 2;
-  int new_total = original_total * 2;
-  int new_ghost = original_ghost * 2;
-  entity.resize(new_local, new_total, new_ghost);
+//! `index` moved by `delta`, or `index` itself if it is a -1 sentinel.
+constexpr int offset_index(int const index, int const delta) {
+  return index < 0 ? index : index + delta;
+}
+
+/*! Double `entity`, with the second half a copy of the first: its mask and
+    communication type, and each subset extended by the copies of its
+    elements.  The entity has no ghosts (is_serial), so every subset element
+    is local and the copies stay in the subset's local range.  The index maps
+    and coordinates the entity's resize() grows are left to the caller. */
+void double_entity_count(Ume::SOA_Idx::Entity &entity) {
+  assert(entity.ghost_local_size() == 0);
+  int const original_total = entity.size();
+  entity.resize(original_total * 2, original_total * 2, 0);
+  std::ranges::copy_n(entity.mask.begin(), original_total,
+      entity.mask.begin() + original_total);
+  std::ranges::copy_n(entity.comm_type.begin(), original_total,
+      entity.comm_type.begin() + original_total);
+
+  for (auto &subset : entity.subsets) {
+    std::vector<int> elements;
+    elements.reserve(subset.elements.size());
+    std::ranges::transform(subset.elements, std::back_inserter(elements),
+        [original_total](
+            int const e) { return offset_index(e, original_total); });
+    subset.elements.insert(
+        subset.elements.end(), elements.begin(), elements.end());
+    std::vector<short> const mask{subset.mask};
+    subset.mask.insert(subset.mask.end(), mask.begin(), mask.end());
+    subset.lsize *= 2;
+  }
 }
 
 void update_coords(Ume::DS_Types::VEC3V_T &coords, const int iter_start,
     const int iter_end, const double delta, const int dim) {
   for (int c = iter_start; c < iter_end; ++c) {
-    coords[c][dim] = coords[c - iter_start][dim] + delta;
+    coords[c] = coords[c - iter_start];
+    coords[c][dim] += delta;
   }
 }
 
 void update_entity(Ume::DS_Types::INTV_T &map, const int iter_start,
     const int iter_end, const int delta) {
   for (int e = iter_start; e < iter_end; ++e) {
-    map[e] = map[e - iter_start] + delta;
+    map[e] = offset_index(map[e - iter_start], delta);
   }
 }
 
 void stitch(Ume::SOA_Idx::Mesh &mesh, const int dim) {
   //! ----- Points -----
   // Double Number of Points
-  double p_max = get_bounding_dim(mesh, dim);
+  // The copy sits against the original's +dim face, whatever its position.
+  double const extent = get_extent(mesh, dim);
 
   int original_points_total = mesh.points.size();
   int new_points_total = original_points_total * 2;
@@ -163,7 +237,7 @@ void stitch(Ume::SOA_Idx::Mesh &mesh, const int dim) {
   // Update Point Coordinates of new Points
   auto &new_pcoords = mesh.ds->access_vec3v("pcoord");
   update_coords(
-      new_pcoords, original_points_total, new_points_total, p_max, dim);
+      new_pcoords, original_points_total, new_points_total, extent, dim);
 
   //! ----- Zones -----
   // Double Number of Zones
@@ -304,14 +378,19 @@ void scale_mesh(int const scale, Ume::SOA_Idx::Mesh &mesh) {
 
 bool write_mesh(char const *const basename, int const mype, int const scale,
     Ume::SOA_Idx::Mesh &mesh) {
-  char fname[80];
-  sprintf(fname, "%s.%05d.%05d.ume", basename, scale, mype);
+  std::string const fname = Ume::mesh_filename(basename, scale, mype);
   std::ofstream os(fname);
   if (!os) {
-    std::cerr << "Unable to open file \"" << fname << "\" for reading."
+    std::cerr << "Unable to open file \"" << fname << "\" for writing."
               << std::endl;
+    return false;
   }
   mesh.write(os);
   os.close();
+  if (!os) {
+    std::cerr << "Unable to write a mesh to file \"" << fname << "\"."
+              << std::endl;
+    return false;
+  }
   return true;
 }

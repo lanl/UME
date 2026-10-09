@@ -29,6 +29,7 @@ set(UME_INCLUDE_FILES
   SOA_Idx_Iotas.hh
   Timer.hh
   VecN.hh
+  atomic_add.hh
   face_area.hh
   gradient.hh
   renumbering.hh
@@ -63,12 +64,8 @@ add_library(Ume
   process_mgmt.cc
   )
 
-# Build option to force the use of the Kokkos::Serial backend.
-option(UME_SERIAL "Enable the Kokkos::Serial backend")
-if (UME_SERIAL)
-  add_compile_definitions(UME_SERIAL)
-  message(STATUS "Using the Kokkos::Serial backend.")
-endif()
+# Note: UME_SERIAL is defined in the top-level CMakeLists.txt, so that every
+# target in the project sees the same execution-space typedefs.
 
 # Build option to compile and link with LLVM ASAN/UBSAN for
 # developement/debugging purposes only.
@@ -77,11 +74,15 @@ if (UME_SANITIZE)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     message(FATAL_ERROR "LLVM Sanitizers require an LLVM-based compiler.")
   endif()
+  # The ignorelist keeps the integer checks out of libstdc++'s and Kokkos's
+  # headers, which wrap unsigned values on purpose (see the file).  It names
+  # a file in the source tree, so it is not exported to an installed Ume.
   target_compile_options(Ume PUBLIC
     -fno-omit-frame-pointer
     -fno-optimize-sibling-calls
     -fsanitize=address,undefined,integer,nullability
     -fsanitize-recover=address
+    $<BUILD_INTERFACE:-fsanitize-ignorelist=${CMAKE_SOURCE_DIR}/test/ubsan.ignorelist>
   )
   target_link_options(Ume PUBLIC
     -fsanitize=address,undefined,integer,nullability
@@ -92,7 +93,6 @@ endif()
 
 set_target_properties(Ume PROPERTIES
   COMPILE_DEFINITIONS "${COMMON_COMPILE_DEFINITIONS}"
-  COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS}"
   OUTPUT_NAME "ume"
   )
 

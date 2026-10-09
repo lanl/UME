@@ -16,7 +16,6 @@
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
 #include "Ume/mem_exec_spaces.hh"
-#include <cassert>
 
 namespace Ume {
 namespace SOA_Idx {
@@ -62,9 +61,8 @@ void Sides::write(std::ostream &os) const {
 }
 
 void Sides::read(std::istream &is) {
-  std::string dummy;
-  read_bin(is, dummy);
-  assert(dummy == "sides");
+  if (!read_tag(is, "sides"))
+    return;
   Entity::read(is);
   IVREAD("m:s>z");
   IVREAD("m:s>p1");
@@ -121,18 +119,18 @@ bool Sides::VAR_side_surf::init_() const {
   auto &side_surf = mydata_vec3v();
   side_surf.assign(sll, VEC3_T(0.0));
 
-  Kokkos::View<Vec3 *, HostSpace> h_side_surf(&side_surf[0], sl);
-  Kokkos::View<const Vec3 *, HostSpace> h_ex(&ex[0], sl);
-  Kokkos::View<const Vec3 *, HostSpace> h_fx(&fx[0], sl);
-  Kokkos::View<const Vec3 *, HostSpace> h_px(&px[0], sl);
-  Kokkos::View<const Vec3 *, HostSpace> h_zx(&zx[0], sl);
-  Kokkos::View<const int *, HostSpace> h_s2p1(&s2p1[0], sl);
-  Kokkos::View<const int *, HostSpace> h_s2p2(&s2p2[0], sl);
-  Kokkos::View<const int *, HostSpace> h_s2e(&s2e[0], sl);
-  Kokkos::View<const int *, HostSpace> h_s2f(&s2f[0], sl);
-  Kokkos::View<const int *, HostSpace> h_s2z(&s2z[0], sl);
-  Kokkos::View<const short *, HostSpace> h_smask(
-      &smask[0], smask.size());
+  Kokkos::View<Vec3 *, HostSpace> h_side_surf(
+      side_surf.data(), side_surf.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_ex(ex.data(), ex.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_fx(fx.data(), fx.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_px(px.data(), px.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_zx(zx.data(), zx.size());
+  Kokkos::View<const int *, HostSpace> h_s2p1(s2p1.data(), s2p1.size());
+  Kokkos::View<const int *, HostSpace> h_s2p2(s2p2.data(), s2p2.size());
+  Kokkos::View<const int *, HostSpace> h_s2e(s2e.data(), s2e.size());
+  Kokkos::View<const int *, HostSpace> h_s2f(s2f.data(), s2f.size());
+  Kokkos::View<const int *, HostSpace> h_s2z(s2z.data(), s2z.size());
+  Kokkos::View<const short *, HostSpace> h_smask(smask.data(), smask.size());
 
   Kokkos::parallel_for(
       "VAR_side_surf", Kokkos::RangePolicy<HostExecSpace>(0, sl), [&](const int s) {
@@ -176,14 +174,14 @@ bool Sides::VAR_side_surz::init_() const {
   auto &side_surz = mydata_vec3v();
   side_surz.assign(sll, VEC3_T(0.0)); //
 
-  Kokkos::View<Vec3 *, HostSpace> h_side_surz_k(&side_surz[0], sl);
-  Kokkos::View<const Vec3 *, HostSpace> h_fx(&fx[0], sl);
-  Kokkos::View<const Vec3 *, HostSpace> h_px(&px[0], sl);
-  Kokkos::View<const int *, HostSpace> h_s2p1(&s2p1[0], sl);
-  Kokkos::View<const int *, HostSpace> h_s2p2(&s2p2[0], sl);
-  Kokkos::View<const int *, HostSpace> h_s2f(&s2f[0], sl);
-  Kokkos::View<const short *, HostSpace> h_smask(
-      &smask[0], smask.size());
+  Kokkos::View<Vec3 *, HostSpace> h_side_surz_k(
+      side_surz.data(), side_surz.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_fx(fx.data(), fx.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_px(px.data(), px.size());
+  Kokkos::View<const int *, HostSpace> h_s2p1(s2p1.data(), s2p1.size());
+  Kokkos::View<const int *, HostSpace> h_s2p2(s2p2.data(), s2p2.size());
+  Kokkos::View<const int *, HostSpace> h_s2f(s2f.data(), s2f.size());
+  Kokkos::View<const short *, HostSpace> h_smask(smask.data(), smask.size());
 
   Kokkos::parallel_for(
       "VAR_side_surz", Kokkos::RangePolicy<HostExecSpace>(0, sl), [&](const int s) {
@@ -218,16 +216,16 @@ bool Sides::VAR_side_vol::init_() const {
   auto &side_vol = mydata_dblv();
   side_vol.assign(sll, 0.0);
 
-  Kokkos::View<double *, HostSpace> h_side_vol_k(&side_vol[0], sl);
-  Kokkos::View<const Vec3 *, HostSpace> h_px(&px[0], px.size());
-  Kokkos::View<const Vec3 *, HostSpace> h_zx(&zx[0], zx.size());
-  Kokkos::View<const Vec3 *, HostSpace> h_fx(&fx[0], fx.size());
+  Kokkos::View<double *, HostSpace> h_side_vol_k(
+      side_vol.data(), side_vol.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_px(px.data(), px.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_zx(zx.data(), zx.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_fx(fx.data(), fx.size());
   Kokkos::View<const int *, HostSpace> h_s2p1(s2p1.data(), s2p1.size());
   Kokkos::View<const int *, HostSpace> h_s2p2(s2p2.data(), s2p2.size());
   Kokkos::View<const int *, HostSpace> h_s2z(s2z.data(), s2z.size());
   Kokkos::View<const int *, HostSpace> h_s2f(s2f.data(), s2f.size());
-  Kokkos::View<const short *, HostSpace> h_smask(
-      &smask[0], smask.size());
+  Kokkos::View<const short *, HostSpace> h_smask(smask.data(), smask.size());
 
   Kokkos::parallel_for(
       "VAR_side_vol", Kokkos::RangePolicy<HostExecSpace>(0, sl), [&](const int s) {

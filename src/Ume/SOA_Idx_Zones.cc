@@ -14,8 +14,9 @@
 */
 
 #include "Ume/SOA_Idx_Mesh.hh"
-#include "Ume/soa_idx_helpers.hh"
+#include "Ume/atomic_add.hh"
 #include "Ume/mem_exec_spaces.hh"
+#include "Ume/soa_idx_helpers.hh"
 #include <set>
 
 namespace Ume {
@@ -36,9 +37,8 @@ void Zones::write(std::ostream &os) const {
 }
 
 void Zones::read(std::istream &is) {
-  std::string dummy;
-  read_bin(is, dummy);
-  assert(dummy == "zones");
+  if (!read_tag(is, "zones"))
+    return;
   Entity::read(is);
 }
 
@@ -66,11 +66,9 @@ bool Zones::VAR_zcoord::init_() const {
 
   std::vector<int> num_zone_pts(zl, 0);
 
-  Kokkos::View<Vec3 *, HostSpace> h_zcoord(&zcoord[0], zcoord.size());
-  Kokkos::View<const Vec3 *, HostSpace> h_pcoord(
-      &pcoord[0], pcoord.size());
-  Kokkos::View<const short *, HostSpace> h_cmask(
-      &cmask[0], cmask.size());
+  Kokkos::View<Vec3 *, HostSpace> h_zcoord(zcoord.data(), zcoord.size());
+  Kokkos::View<const Vec3 *, HostSpace> h_pcoord(pcoord.data(), pcoord.size());
+  Kokkos::View<const short *, HostSpace> h_cmask(cmask.data(), cmask.size());
   Kokkos::View<const int *, HostSpace> h_c2z(c2z.data(), c2z.size());
   Kokkos::View<const int *, HostSpace> h_c2p(c2p.data(), c2p.size());
   Kokkos::View<int *, HostSpace> h_num_zone_pts(
@@ -80,19 +78,14 @@ bool Zones::VAR_zcoord::init_() const {
       "VAR_zcoord-1", Kokkos::RangePolicy<HostExecSpace>(0, cl), [&](const int c) {
         if (h_cmask(c)) {
           int const z = h_c2z(c);
-#if defined(UME_SERIAL)
-          h_zcoord(z) += h_pcoord(h_c2p(c));
-#else
-          Kokkos::atomic_add(&h_zcoord(z), h_pcoord(h_c2p(c)));
-#endif
-          h_num_zone_pts.access(z) += 1;
+          ume_atomic_add(&h_zcoord(z), h_pcoord(h_c2p(c)));
+          ume_atomic_add(&h_num_zone_pts(z), 1);
         }
       });
 
   auto const &zmask{zones().mask};
 
-  Kokkos::View<const short *, HostSpace> h_zmask(
-      &zmask[0], zmask.size());
+  Kokkos::View<const short *, HostSpace> h_zmask(zmask.data(), zmask.size());
 
   Kokkos::parallel_for(
       "VAR_zcoord-2", Kokkos::RangePolicy<HostExecSpace>(0, zl), [&](const int z) {

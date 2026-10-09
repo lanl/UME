@@ -11,8 +11,7 @@ set_target_properties(ume_serial PROPERTIES
 
 add_executable(txt2bin txt2bin.cc)
 target_link_libraries(txt2bin Ume)
-target_compile_options(txt2bin PRIVATE ${WARNING_FLAGS}
-  ${COMMON_COMPILE_OPTIONS})
+target_compile_options(txt2bin PRIVATE ${WARNING_FLAGS})
 
 add_executable(scale_mesh scale_mesh.cc)
 target_link_libraries(scale_mesh Ume)

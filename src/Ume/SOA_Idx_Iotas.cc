@@ -15,7 +15,6 @@
 
 #include "Ume/SOA_Idx_Mesh.hh"
 #include "Ume/soa_idx_helpers.hh"
-#include <cassert>
 
 namespace Ume {
 namespace SOA_Idx {
@@ -44,9 +43,8 @@ void Iotas::write(std::ostream &os) const {
 }
 
 void Iotas::read(std::istream &is) {
-  std::string dummy;
-  read_bin(is, dummy);
-  assert(dummy == "iotas");
+  if (!read_tag(is, "iotas"))
+    return;
   Entity::read(is);
   IVREAD("m:a>z");
   IVREAD("m:a>f");
